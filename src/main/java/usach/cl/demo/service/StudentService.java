@@ -12,32 +12,32 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
-    // Spring inyecta el repositorio automáticamente por el constructor
+    // spring inyecta el repositorio automaticamente por el constructor
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
     }
 
-    // Retorna todos los estudiantes
+    // retorna todos los estudiantes
     public List<Student> findAll() {
         return studentRepository.findAll();
     }
 
-    // Retorna un estudiante por su ID
+    // retorna un estudiante por su ID
     public Optional<Student> findById(Long id) {
         return studentRepository.findById(id);
     }
 
-    // Crea un nuevo estudiante
+    // crea un nuevo estudiante
     public int save(Student student) {
         return studentRepository.save(student);
     }
 
-    // Actualiza los datos de un estudiante existente
+    // actualiza los datos de un estudiante existente
     public int update(Student student) {
         return studentRepository.update(student);
     }
 
-    // Elimina un estudiante por su ID
+    // elimina un estudiante por su ID
     public int deleteById(Long id) {
         return studentRepository.deleteById(id);
     }

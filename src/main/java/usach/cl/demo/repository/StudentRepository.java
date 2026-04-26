@@ -21,7 +21,6 @@ public class StudentRepository {
 
     private static final String DELETE_BY_ID = "DELETE FROM estudiante WHERE id = ?";
 
-    //
     private final JdbcTemplate jdbcTemplate;
 
     public StudentRepository(JdbcTemplate jdbcTemplate) {
@@ -54,8 +53,7 @@ public class StudentRepository {
                 e.getEnrollment(),
                 e.getFirstName(),
                 e.getLastName(),
-                e.getAcademicStatus()
-        );
+                e.getAcademicStatus());
     }
 
     public int update(Student e) {
@@ -63,8 +61,7 @@ public class StudentRepository {
                 e.getFirstName(),
                 e.getLastName(),
                 e.getAcademicStatus(),
-                e.getId()
-        );
+                e.getId());
     }
 
     public int deleteById(Long id) {
