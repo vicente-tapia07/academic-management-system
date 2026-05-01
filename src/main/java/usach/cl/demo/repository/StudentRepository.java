@@ -3,7 +3,7 @@ package usach.cl.demo.repository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import usach.cl.demo.model.Student;
+import usach.cl.demo.model.StudentEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +27,8 @@ public class StudentRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Student> estudianteMapper = (rs, rowNum) -> {
-        Student e = new Student();
+    private final RowMapper<StudentEntity> estudianteMapper = (rs, rowNum) -> {
+        StudentEntity e = new StudentEntity();
         e.setId(rs.getLong("id"));
         e.setUserId(rs.getLong("usuario_id"));
         e.setEnrollment(rs.getString("matricula"));
@@ -38,16 +38,16 @@ public class StudentRepository {
         return e;
     };
 
-    public List<Student> findAll() {
+    public List<StudentEntity> findAll() {
         return jdbcTemplate.query(FIND_ALL, estudianteMapper);
     }
 
-    public Optional<Student> findById(Long id) {
-        List<Student> result = jdbcTemplate.query(FIND_BY_ID, estudianteMapper, id);
+    public Optional<StudentEntity> findById(Long id) {
+        List<StudentEntity> result = jdbcTemplate.query(FIND_BY_ID, estudianteMapper, id);
         return result.stream().findFirst();
     }
 
-    public int save(Student e) {
+    public int save(StudentEntity e) {
         return jdbcTemplate.update(INSERT,
                 e.getUserId(),
                 e.getEnrollment(),
@@ -56,7 +56,7 @@ public class StudentRepository {
                 e.getAcademicStatus());
     }
 
-    public int update(Student e) {
+    public int update(StudentEntity e) {
         return jdbcTemplate.update(UPDATE,
                 e.getFirstName(),
                 e.getLastName(),

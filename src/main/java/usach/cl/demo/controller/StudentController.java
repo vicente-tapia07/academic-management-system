@@ -3,7 +3,7 @@ package usach.cl.demo.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import usach.cl.demo.model.Student;
+import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.service.StudentService;
 
 import java.util.List;
@@ -24,22 +24,22 @@ public class StudentController {
 
     // retorna todos los estudiantes
     @GetMapping
-    public ResponseEntity<List<Student>> getAll() {
-        List<Student> students = studentService.findAll();
-        return ResponseEntity.ok(students);
+    public ResponseEntity<List<StudentEntity>> getAll() {
+        List<StudentEntity> studentEntities = studentService.findAll();
+        return ResponseEntity.ok(studentEntities);
     }
 
     // retorna un estudiante por su ID
     @GetMapping("/{id}")
-    public ResponseEntity<Student> getById(@PathVariable Long id) {
-        Optional<Student> student = studentService.findById(id);
+    public ResponseEntity<StudentEntity> getById(@PathVariable Long id) {
+        Optional<StudentEntity> student = studentService.findById(id);
         return student.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // crea un nuevo estudiante
     @PostMapping
-    public ResponseEntity<String> create(@RequestBody Student student) {
-        int result = studentService.save(student);
+    public ResponseEntity<String> create(@RequestBody StudentEntity studentEntity) {
+        int result = studentService.save(studentEntity);
         if (result > 0) {
             return ResponseEntity.status(HttpStatus.CREATED).body("Student created successfully");
         }
@@ -48,9 +48,9 @@ public class StudentController {
 
     // actualiza un estudiante existente
     @PutMapping("/{id}")
-    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody Student student) {
-        student.setId(id);
-        int result = studentService.update(student);
+    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody StudentEntity studentEntity) {
+        studentEntity.setId(id);
+        int result = studentService.update(studentEntity);
         if (result > 0) {
             return ResponseEntity.ok("Student updated successfully");
         }

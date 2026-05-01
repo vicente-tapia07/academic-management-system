@@ -1,7 +1,7 @@
 package usach.cl.demo.service;
 
 import org.springframework.stereotype.Service;
-import usach.cl.demo.model.Student;
+import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.repository.StudentRepository;
 
 import java.util.List;
@@ -18,23 +18,23 @@ public class StudentService {
     }
 
     // retorna todos los estudiantes
-    public List<Student> findAll() {
+    public List<StudentEntity> findAll() {
         return studentRepository.findAll();
     }
 
     // retorna un estudiante por su ID
-    public Optional<Student> findById(Long id) {
+    public Optional<StudentEntity> findById(Long id) {
         return studentRepository.findById(id);
     }
 
     // crea un nuevo estudiante
-    public int save(Student student) {
-        return studentRepository.save(student);
+    public int save(StudentEntity studentEntity) {
+        return studentRepository.save(studentEntity);
     }
 
     // actualiza los datos de un estudiante existente
-    public int update(Student student) {
-        return studentRepository.update(student);
+    public int update(StudentEntity studentEntity) {
+        return studentRepository.update(studentEntity);
     }
 
     // elimina un estudiante por su ID
