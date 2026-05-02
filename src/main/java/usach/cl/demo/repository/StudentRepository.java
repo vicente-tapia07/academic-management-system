@@ -30,8 +30,8 @@ public class StudentRepository {
     private final RowMapper<StudentEntity> estudianteMapper = (rs, rowNum) -> {
         StudentEntity e = new StudentEntity();
         e.setId(rs.getLong("id"));
-        e.setUserId(rs.getLong("usuario_id"));
-        e.setEnrollment(rs.getString("matricula"));
+        e.setUsuarioId(rs.getLong("usuario_id"));
+        e.setEnrollmentNumber(rs.getString("matricula"));
         e.setFirstName(rs.getString("nombre"));
         e.setLastName(rs.getString("apellido"));
         e.setAcademicStatus(rs.getString("estado_academico"));
@@ -49,8 +49,8 @@ public class StudentRepository {
 
     public int save(StudentEntity e) {
         return jdbcTemplate.update(INSERT,
-                e.getUserId(),
-                e.getEnrollment(),
+                e.getUsuarioId(),
+                e.getEnrollmentNumber(),
                 e.getFirstName(),
                 e.getLastName(),
                 e.getAcademicStatus());

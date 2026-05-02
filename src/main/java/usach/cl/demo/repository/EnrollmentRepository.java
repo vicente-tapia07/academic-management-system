@@ -11,25 +11,25 @@ import java.util.Optional;
 @Repository
 public class EnrollmentRepository {
 
-    // Consultas SQL
+    // CONSULTAS SQL
     private static final String FIND_ALL =
-            "SELECT * FROM inscripcion";
+            "SELECT * FROM enrollment";
 
     private static final String FIND_BY_ID =
-            "SELECT * FROM inscripcion WHERE id = ?";
+            "SELECT * FROM enrollment WHERE id = ?";
 
     private static final String FIND_BY_STUDENT_ID =
-            "SELECT * FROM inscripcion WHERE student_id = ?";
+            "SELECT * FROM enrollment WHERE student_id = ?";
 
     private static final String INSERT =
-            "INSERT INTO inscripcion (student_id, seccion_id, enrollment_date, status) " +
+            "INSERT INTO enrollment (student_id, section_id, enrollment_date, status) " +
                     "VALUES (?, ?, ?, ?)";
 
     private static final String UPDATE_STATUS =
-            "UPDATE inscripcion SET status = ? WHERE id = ?";
+            "UPDATE enrollment SET status = ? WHERE id = ?";
 
     private static final String DELETE_BY_ID =
-            "DELETE FROM inscripcion WHERE id = ?";
+            "DELETE FROM enrollment WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -43,7 +43,7 @@ public class EnrollmentRepository {
         EnrollmentEntity e = new EnrollmentEntity();
         e.setId(rs.getLong("id"));
         e.setStudentId(rs.getLong("student_id"));
-        e.setSectionId(rs.getLong("seccion_id"));
+        e.setSectionId(rs.getLong("section_id"));
         e.setEnrollmentDate(rs.getDate("enrollment_date").toLocalDate());
         e.setStatus(rs.getString("status"));
         return e;

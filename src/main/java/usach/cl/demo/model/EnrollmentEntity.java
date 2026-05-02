@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-// Representa la inscripción de un estudiante en una sección
+// Representa la tabla "enrollment" en la base de datos
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnrollmentEntity {
     private Long id;
-    private Long studentId;        // FK a estudiante
-    private Long sectionId;        // FK a seccion
+    private Long studentId;
+    private Long sectionId;
     private LocalDate enrollmentDate;
-    private String status;         // ACTIVE, CANCELLED, COMPLETED
+    private String status;
 }
