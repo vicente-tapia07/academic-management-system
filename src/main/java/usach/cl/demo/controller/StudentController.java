@@ -3,6 +3,7 @@ package usach.cl.demo.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.service.StudentService;
 
@@ -34,6 +35,16 @@ public class StudentController {
     public ResponseEntity<StudentEntity> getById(@PathVariable Long id) {
         Optional<StudentEntity> student = studentService.findById(id);
         return student.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Retorna la malla curricular de un estudiante
+    @GetMapping("/{id}/curriculum")
+    public ResponseEntity<List<SubjectStatusDTO>> getCurriculum(@PathVariable Long id) {
+        List<SubjectStatusDTO> curriculum = studentService.findCurriculum(id);
+        if (curriculum.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(curriculum);
     }
 
     // crea un nuevo estudiante

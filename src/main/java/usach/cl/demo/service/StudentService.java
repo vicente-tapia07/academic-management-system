@@ -1,6 +1,7 @@
 package usach.cl.demo.service;
 
 import org.springframework.stereotype.Service;
+import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.repository.StudentRepository;
 
@@ -41,4 +42,11 @@ public class StudentService {
     public int deleteById(Long id) {
         return studentRepository.deleteById(id);
     }
+
+
+    // Retorna la malla curricular de un estudiante
+    public List<SubjectStatusDTO> findCurriculum(Long studentId) {
+        return studentRepository.findCurriculum(studentId);
+    }
+
 }
