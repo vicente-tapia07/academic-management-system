@@ -31,6 +31,9 @@ public class EnrollmentRepository {
     private static final String DELETE_BY_ID =
             "DELETE FROM enrollment WHERE id = ?";
 
+    private static final String CALL_ENROLL_STUDENT =
+            "CALL sp_enroll_student(?, ?)";
+
     private final JdbcTemplate jdbcTemplate;
 
     // Spring inyecta el JdbcTemplate automáticamente
@@ -83,5 +86,10 @@ public class EnrollmentRepository {
     // Elimina una inscripción por su ID
     public int deleteById(Long id) {
         return jdbcTemplate.update(DELETE_BY_ID, id);
+    }
+
+    // Llama al stored procedure para inscribir al estudiante
+    public void enrollStudent(Long studentId, Long sectionId) {
+        jdbcTemplate.update(CALL_ENROLL_STUDENT, studentId, sectionId);
     }
 }

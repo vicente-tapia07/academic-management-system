@@ -56,6 +56,23 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating enrollment");
     }
 
+    // Inscribe a un estudiante en una sección usando el stored procedure
+    @PostMapping("/enroll")
+    public ResponseEntity<String> enroll(@RequestBody EnrollmentEntity enrollment) {
+        try {
+            enrollmentService.enrollStudent(
+                    enrollment.getStudentId(),
+                    enrollment.getSectionId()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body("Student enrolled successfully");
+        } catch (Exception e) {
+            // Extraemos solo la primera línea del mensaje de error
+            String fullMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            String cleanMessage = fullMessage.split("\n")[0].replace("ERROR: ", "").trim();
+            return ResponseEntity.badRequest().body(cleanMessage);
+        }
+    }
+
     // Actualiza el estado de una inscripción
     @PatchMapping("/{id}/status")
     public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestBody String status) {

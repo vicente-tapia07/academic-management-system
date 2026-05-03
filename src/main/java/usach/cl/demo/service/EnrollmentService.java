@@ -46,4 +46,9 @@ public class EnrollmentService {
     public int deleteById(Long id) {
         return enrollmentRepository.deleteById(id);
     }
+
+    // Inscribe a un estudiante usando el stored procedure
+    public void enrollStudent(Long studentId, Long sectionId) {
+        enrollmentRepository.enrollStudent(studentId, sectionId);
+    }
 }
