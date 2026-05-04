@@ -82,6 +82,25 @@ CREATE TABLE IF NOT EXISTS public.grade (
     entry_date DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
+--  profesor
+CREATE TABLE IF NOT EXISTS public.professor (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL REFERENCES usuario(id),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL
+);
+
+-- auditoria
+CREATE TABLE IF NOT EXISTS public.audit (
+    id BIGSERIAL PRIMARY KEY,
+    affected_table VARCHAR(50) NOT NULL,
+    operation VARCHAR(10) NOT NULL,
+    usuario_rut VARCHAR(12) NOT NULL,
+    operation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_data JSONB,
+    new_data JSONB
+);
 
 -- TRIGGER 1
 CREATE OR REPLACE FUNCTION fn_check_prerequisites()
@@ -116,5 +135,34 @@ BEGIN
     END IF;
 
     RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Vista Materializada (Tasa de Reprobación Histórica)
+-- Esta consulta une notas, inscripciones y secciones para calcular el % de reprobación.
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_failure_rate AS
+SELECT
+    sub.id AS subject_id,
+    sub.code AS subject_code,
+    sub.name AS subject_name,
+    COUNT(g.id) AS total_grades,
+    SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END) AS failed_grades,
+    CASE
+        WHEN COUNT(g.id) = 0 THEN 0.0
+        ELSE ROUND((SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END)::NUMERIC / COUNT(g.id)) * 100, 2)
+    END AS failure_percentage
+FROM
+    subject sub
+LEFT JOIN section sec ON sub.id = sec.subject_id
+LEFT JOIN enrollment e ON sec.id = e.section_id
+LEFT JOIN grade g ON e.id = g.enrollment_id
+GROUP BY
+    sub.id, sub.code, sub.name;
+
+-- Refrescar la Vista Materializada
+CREATE OR REPLACE FUNCTION refresh_mv_failure_rate()
+RETURNS void AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW public.mv_failure_rate;
 END;
 $$ LANGUAGE plpgsql;
