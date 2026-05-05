@@ -1,12 +1,21 @@
--- asignatura
-CREATE TABLE IF NOT EXISTS public.career (
+-- =============================================
+-- SCHEMA — db_schema.sql
+-- =============================================
+
+-- Extensión para BCrypt
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =============================================
+-- TABLAS
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS career (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL
 );
 
--- semestre
-CREATE TABLE IF NOT EXISTS public.semester (
+CREATE TABLE IF NOT EXISTS semester (
     id BIGSERIAL PRIMARY KEY,
     year INTEGER NOT NULL,
     period VARCHAR(10) NOT NULL,
@@ -18,8 +27,7 @@ CREATE TABLE IF NOT EXISTS public.semester (
         CHECK (status IN ('PLANNED', 'IN_PROGRESS', 'CLOSED'))
 );
 
--- usuario
-CREATE TABLE IF NOT EXISTS public.usuario (
+CREATE TABLE IF NOT EXISTS usuario (
     id BIGSERIAL PRIMARY KEY,
     rut VARCHAR(12) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -27,34 +35,38 @@ CREATE TABLE IF NOT EXISTS public.usuario (
     rol VARCHAR(20) NOT NULL CHECK (rol IN ('STUDENT', 'PROFESSOR', 'ADMIN'))
 );
 
--- carrera
-CREATE TABLE IF NOT EXISTS public.subject (
+CREATE TABLE IF NOT EXISTS subject (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     credits INTEGER NOT NULL,
-    career_id BIGINT REFERENCES career(id)
+    career_id BIGINT REFERENCES career(id) ON DELETE CASCADE
 );
 
--- seccion
-CREATE TABLE IF NOT EXISTS public.section (
+CREATE TABLE IF NOT EXISTS professor (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL REFERENCES usuario(id),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS section (
     id BIGSERIAL PRIMARY KEY,
     subject_id BIGINT REFERENCES subject(id),
-    professor_id BIGINT,
+    professor_id BIGINT REFERENCES professor(id),
     semester_id BIGINT REFERENCES semester(id),
     total_seats INTEGER NOT NULL,
     available_seats INTEGER NOT NULL
 );
 
--- prerequisito
-CREATE TABLE IF NOT EXISTS public.prerequisite (
+CREATE TABLE IF NOT EXISTS prerequisite (
     subject_id BIGINT NOT NULL REFERENCES subject(id),
     prerequisite_subject_id BIGINT NOT NULL REFERENCES subject(id),
     PRIMARY KEY (subject_id, prerequisite_subject_id)
 );
 
--- estudiante
-CREATE TABLE IF NOT EXISTS public.student (
+CREATE TABLE IF NOT EXISTS student (
     id BIGSERIAL PRIMARY KEY,
     usuario_id BIGINT NOT NULL REFERENCES usuario(id),
     enrollment_number VARCHAR(20) NOT NULL UNIQUE,
@@ -64,57 +76,47 @@ CREATE TABLE IF NOT EXISTS public.student (
         CHECK (academic_status IN ('ACTIVE', 'BLOCKED', 'GRADUATED'))
 );
 
--- inscripcion
-CREATE TABLE IF NOT EXISTS public.enrollment (
+CREATE TABLE IF NOT EXISTS enrollment (
     id BIGSERIAL PRIMARY KEY,
     student_id BIGINT NOT NULL REFERENCES student(id),
     section_id BIGINT NOT NULL REFERENCES section(id),
     enrollment_date DATE NOT NULL DEFAULT CURRENT_DATE,
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
-        CHECK (status IN ('ACTIVE', 'CANCELLED', 'COMPLETED'))
+        CHECK (status IN ('ACTIVE', 'CANCELLED', 'COMPLETED')),
+    UNIQUE(student_id, section_id)
 );
 
--- notas
-CREATE TABLE IF NOT EXISTS public.grade (
+CREATE TABLE IF NOT EXISTS grade (
     id BIGSERIAL PRIMARY KEY,
     enrollment_id BIGINT NOT NULL REFERENCES enrollment(id),
     value NUMERIC(4,2) NOT NULL CHECK (value >= 1.0 AND value <= 7.0),
     entry_date DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
---  profesor
-CREATE TABLE IF NOT EXISTS public.professor (
-    id BIGSERIAL PRIMARY KEY,
-    usuario_id BIGINT NOT NULL REFERENCES usuario(id),
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    department VARCHAR(100) NOT NULL
-);
+-- =============================================
+-- ÍNDICES
+-- =============================================
 
--- auditoria
-CREATE TABLE IF NOT EXISTS public.audit (
-    id BIGSERIAL PRIMARY KEY,
-    affected_table VARCHAR(50) NOT NULL,
-    operation VARCHAR(10) NOT NULL,
-    usuario_rut VARCHAR(12) NOT NULL,
-    operation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    old_data JSONB,
-    new_data JSONB
-);
+CREATE INDEX IF NOT EXISTS idx_usuario_rut ON usuario(rut);
+CREATE INDEX IF NOT EXISTS idx_student_enrollment ON student(enrollment_number);
+CREATE INDEX IF NOT EXISTS idx_subject_code ON subject(code);
 
--- TRIGGER 1
+-- =============================================
+-- TRIGGER 1: PRERREQUISITOS
+-- =============================================
+
 CREATE OR REPLACE FUNCTION fn_check_prerequisites()
 RETURNS TRIGGER AS $$
 DECLARE
     v_not_approved INTEGER;
     v_subject_id BIGINT;
 BEGIN
-    -- Primero obtenemos la asignatura de la sección que se quiere inscribir
+    -- Obtener la asignatura de la sección que se quiere inscribir
     SELECT subject_id INTO v_subject_id
     FROM section
     WHERE id = NEW.section_id;
 
-    -- Contamos prerequisitos no aprobados para esa asignatura
+    -- Contar prerequisitos no aprobados
     SELECT COUNT(*)
     INTO v_not_approved
     FROM prerequisite p
@@ -122,14 +124,15 @@ BEGIN
     AND NOT EXISTS (
         SELECT 1
         FROM enrollment e
-        INNER JOIN grade g ON g.enrollment_id = e.id
-        INNER JOIN section sec ON sec.id = e.section_id
+        JOIN grade g ON g.enrollment_id = e.id
+        JOIN section sec ON sec.id = e.section_id
         WHERE e.student_id = NEW.student_id
         AND sec.subject_id = p.prerequisite_subject_id
         AND g.value >= 4.0
+        AND e.status = 'COMPLETED'
     );
 
-    -- Si hay al menos uno no aprobado, bloquea
+    -- Si hay al menos uno no aprobado, bloquear
     IF v_not_approved > 0 THEN
         RAISE EXCEPTION 'El estudiante no ha aprobado todos los prerequisitos necesarios';
     END IF;
@@ -138,110 +141,93 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- =============================================
--- TRIGGER 1: check prerequisites
--- =============================================
-CREATE TRIGGER trg_check_prerequisites
-BEFORE INSERT ON public.enrollment
+CREATE OR REPLACE TRIGGER trg_check_prerequisites
+BEFORE INSERT ON enrollment
 FOR EACH ROW
-EXECUTE FUNCTION public.fn_check_prerequisites();
+EXECUTE FUNCTION fn_check_prerequisites();
 
 -- =============================================
--- ÍNDICES
+-- TRIGGER 2: CALENDARIO DE NOTAS
 -- =============================================
-CREATE INDEX IF NOT EXISTS idx_subject_code ON public.subject(code);
-CREATE INDEX IF NOT EXISTS idx_section_semester ON public.section(semester_id);
 
--- =============================================
--- FUNCIÓN: check calendario notas
--- =============================================
 CREATE OR REPLACE FUNCTION fn_check_calendario_notas()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_grade_start DATE;
-    v_grade_end DATE;
-    v_section_id BIGINT;
+    v_start DATE;
+    v_end DATE;
+    v_status VARCHAR;
 BEGIN
-    SELECT e.section_id
-    INTO v_section_id
-    FROM enrollment e
+    SELECT s.grade_start_date, s.grade_end_date, s.status
+    INTO v_start, v_end, v_status
+    FROM semester s
+    JOIN section sec ON sec.semester_id = s.id
+    JOIN enrollment e ON e.section_id = sec.id
     WHERE e.id = NEW.enrollment_id;
 
-    IF v_section_id IS NULL THEN
-        RAISE EXCEPTION 'No existe la inscripción asociada a la nota';
+    -- Bloquear si el semestre está cerrado
+    IF v_status = 'CLOSED' THEN
+        RAISE EXCEPTION 'Semestre cerrado, no se pueden ingresar notas';
     END IF;
 
-    SELECT s.grade_start_date, s.grade_end_date
-    INTO v_grade_start, v_grade_end
-    FROM semester s
-    INNER JOIN section sec ON sec.semester_id = s.id
-    WHERE sec.id = v_section_id;
-
-    IF v_grade_start IS NULL OR v_grade_end IS NULL THEN
-        RAISE EXCEPTION 'No se pudo determinar el calendario académico de la sección';
-    END IF;
-
-    IF NEW.entry_date < v_grade_start OR NEW.entry_date > v_grade_end THEN
-        RAISE EXCEPTION 'No se pueden ingresar notas fuera del calendario académico';
+    -- Bloquear si está fuera del calendario
+    IF NEW.entry_date < v_start OR NEW.entry_date > v_end THEN
+        RAISE EXCEPTION 'Fuera del calendario académico de notas';
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- =============================================
--- TRIGGER 2: check calendario notas
--- =============================================
-CREATE TRIGGER trg_check_calendario_notas
-BEFORE INSERT OR UPDATE ON public.grade
+CREATE OR REPLACE TRIGGER trg_check_calendario_notas
+BEFORE INSERT OR UPDATE ON grade
 FOR EACH ROW
-EXECUTE FUNCTION public.fn_check_calendario_notas();
+EXECUTE FUNCTION fn_check_calendario_notas();
 
 -- =============================================
--- STORED PROCEDURE 1: cierre de semestre
+-- STORED PROCEDURE 1: CIERRE DE SEMESTRE
 -- =============================================
-CREATE OR REPLACE PROCEDURE public.sp_close_semester(IN p_semester_id bigint)
+
+CREATE OR REPLACE PROCEDURE sp_close_semester(p_semester_id BIGINT)
 LANGUAGE plpgsql
-AS $procedure$
+AS $$
 DECLARE
     v_student_id BIGINT;
-    v_average NUMERIC;
+    v_avg NUMERIC;
 BEGIN
+    -- Por cada estudiante del semestre
     FOR v_student_id IN
         SELECT DISTINCT e.student_id
         FROM enrollment e
         JOIN section sec ON e.section_id = sec.id
         WHERE sec.semester_id = p_semester_id
     LOOP
-        SELECT ROUND(
-            SUM(g.value * sub.credits) / NULLIF(SUM(sub.credits), 0), 2
-        )
-        INTO v_average
+        -- Calcular promedio ponderado
+        SELECT ROUND(SUM(g.value * sub.credits) / NULLIF(SUM(sub.credits), 0), 2)
+        INTO v_avg
         FROM grade g
         JOIN enrollment e ON g.enrollment_id = e.id
         JOIN section sec ON e.section_id = sec.id
         JOIN subject sub ON sec.subject_id = sub.id
         WHERE e.student_id = v_student_id
-          AND sec.semester_id = p_semester_id;
+        AND sec.semester_id = p_semester_id;
 
-        IF v_average IS NOT NULL AND v_average < 4.0 THEN
-            UPDATE student
-            SET academic_status = 'BLOCKED'
+        -- Bloquear si reprobó
+        IF v_avg IS NOT NULL AND v_avg < 4.0 THEN
+            UPDATE student SET academic_status = 'BLOCKED'
             WHERE id = v_student_id;
         END IF;
     END LOOP;
 
-    UPDATE semester
-    SET status = 'CLOSED'
+    -- Cerrar el semestre
+    UPDATE semester SET status = 'CLOSED'
     WHERE id = p_semester_id;
-
-    RAISE NOTICE 'Semestre % cerrado correctamente', p_semester_id;
 END;
-$procedure$;
+$$;
 
 -- =============================================
--- STORED PROCEDURE 2: chequear prerequisitos
+-- STORED PROCEDURE 2: INSCRIPCIÓN SEGURA
 -- =============================================
+
 CREATE OR REPLACE PROCEDURE sp_enroll_student(
     p_student_id BIGINT,
     p_section_id BIGINT
@@ -249,56 +235,47 @@ CREATE OR REPLACE PROCEDURE sp_enroll_student(
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    -- Variable para guardar los cupos disponibles de la sección
-    v_available_seats INTEGER;
+    v_seats INT;
 BEGIN
-    -- Paso 1: Verificamos cuántos cupos quedan en la sección
-    SELECT available_seats INTO v_available_seats
+    -- Verificar cupos disponibles
+    SELECT available_seats INTO v_seats
     FROM section
     WHERE id = p_section_id;
 
-    -- Paso 2: Si no hay cupos, lanzamos error
-    IF v_available_seats <= 0 THEN
+    IF v_seats <= 0 THEN
         RAISE EXCEPTION 'La sección no tiene cupos disponibles';
     END IF;
 
-    -- Paso 3: Inscribimos al estudiante
+    -- Inscribir al estudiante
     INSERT INTO enrollment (student_id, section_id)
     VALUES (p_student_id, p_section_id);
 
-    -- Paso 4: Descontamos un cupo de la sección
+    -- Descontar un cupo
     UPDATE section
     SET available_seats = available_seats - 1
     WHERE id = p_section_id;
-
 END;
 $$;
 
--- Vista Materializada (Tasa de Reprobación Histórica)
--- Esta consulta une notas, inscripciones y secciones para calcular el % de reprobación.
-CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_failure_rate AS
+-- =============================================
+-- VISTA MATERIALIZADA: TASA DE REPROBACIÓN
+-- =============================================
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_failure_rate AS
 SELECT
-    sub.id AS subject_id,
-    sub.code AS subject_code,
-    sub.name AS subject_name,
-    COUNT(g.id) AS total_grades,
+    sub.id              AS subject_id,
+    sub.code            AS subject_code,
+    sub.name            AS subject_name,
+    COUNT(g.id)         AS total_grades,
     SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END) AS failed_grades,
     CASE
         WHEN COUNT(g.id) = 0 THEN 0.0
-        ELSE ROUND((SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END)::NUMERIC / COUNT(g.id)) * 100, 2)
+        ELSE ROUND(
+            SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END)::NUMERIC
+            / COUNT(g.id) * 100, 2)
     END AS failure_percentage
-FROM
-    subject sub
+FROM subject sub
 LEFT JOIN section sec ON sub.id = sec.subject_id
 LEFT JOIN enrollment e ON sec.id = e.section_id
 LEFT JOIN grade g ON e.id = g.enrollment_id
-GROUP BY
-    sub.id, sub.code, sub.name;
-
--- Refrescar la Vista Materializada
-CREATE OR REPLACE FUNCTION refresh_mv_failure_rate()
-RETURNS void AS $$
-BEGIN
-    REFRESH MATERIALIZED VIEW public.mv_failure_rate;
-END;
-$$ LANGUAGE plpgsql;
+GROUP BY sub.id, sub.code, sub.name;

@@ -1,5 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="40181314-13ce-4405-9ed3-f7dd158576e2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/UserDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/AdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/CurriculumDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/ProfessorDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/StudentDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/UserDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/UserEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/UserEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/AdminService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_mock" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_mock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_schema" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_schema" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="77" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="3DJjuqC8HTNV2FYSdjChHkwBY0u" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.DemoApplication.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/papa-vicho/Escritorio/MAINFINAL/backend/src/main/java/usach/cl/demo/dto",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="DemoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <envs>
@@ -24,5 +109,18 @@
         <item itemvalue="Spring Boot.DemoApplication" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="40181314-13ce-4405-9ed3-f7dd158576e2" name="Changes" comment="" />
+      <created>1778007292729</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1778007292729</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
