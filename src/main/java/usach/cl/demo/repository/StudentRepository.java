@@ -16,9 +16,11 @@ public class StudentRepository {
 
     private static final String FIND_BY_ID = "SELECT * FROM estudiante WHERE id = ?";
 
-    private static final String INSERT = "INSERT INTO estudiante (usuario_id, matricula, nombre, apellido, estado_academico) " + "VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT = "INSERT INTO estudiante (usuario_id, matricula, nombre, apellido, estado_academico) " +
+            "VALUES (?, ?, ?, ?, ?)";
 
-    private static final String UPDATE = "UPDATE estudiante SET nombre = ?, apellido = ?, estado_academico = ? " + "WHERE id = ?";
+    private static final String UPDATE = "UPDATE estudiante SET nombre = ?, apellido = ?, estado_academico = ? " +
+            "WHERE id = ?";
 
     private static final String DELETE_BY_ID = "DELETE FROM estudiante WHERE id = ?";
 
@@ -88,7 +90,6 @@ public class StudentRepository {
                     "LEFT JOIN grade g ON g.enrollment_id = e.id " +
                     "ORDER BY sub.id, g.value DESC NULLS LAST";
 
-    // Mapper para convertir cada fila en un SubjectStatusDTO
     private final RowMapper<SubjectStatusDTO> curriculumMapper = (rs, rowNum) -> {
         SubjectStatusDTO dto = new SubjectStatusDTO();
         dto.setSubjectId(rs.getLong("subject_id"));
@@ -96,15 +97,12 @@ public class StudentRepository {
         dto.setSubjectName(rs.getString("subject_name"));
         dto.setCredits(rs.getInt("credits"));
         dto.setStatus(rs.getString("status"));
-        // grade puede ser null si es PENDING o ENROLLED
         double grade = rs.getDouble("grade");
         dto.setGrade(rs.wasNull() ? null : grade);
         return dto;
     };
 
-    // Retorna la malla curricular de un estudiante
     public List<SubjectStatusDTO> findCurriculum(Long studentId) {
         return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId);
     }
-
 }

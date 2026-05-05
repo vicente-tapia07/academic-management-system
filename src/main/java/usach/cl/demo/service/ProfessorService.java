@@ -1,52 +1,90 @@
 package usach.cl.demo.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Nonnull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import usach.cl.demo.entity.Professor;
+import usach.cl.demo.entity.Student;
+import usach.cl.demo.entity.User;
 import usach.cl.demo.model.*;
 import usach.cl.demo.repository.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class ProfessorService {
 
-    @Autowired
-    private GradeRepository gradeRepository;
+    private final ProfessorRepository professorRepository;
+    private final UserService userService;
+    private final GradeRepository gradeRepository;
+    private final FailureRateRepository failureRateRepository;
+    private final AuditRepository auditRepository;
 
-    @Autowired
-    private FailureRateRepository failureRateRepository;
+    public ProfessorService(ProfessorRepository professorRepository,
+                            UserService userService,
+                            GradeRepository gradeRepository,
+                            FailureRateRepository failureRateRepository,
+                            AuditRepository auditRepository) {
+        this.professorRepository = professorRepository;
+        this.userService = userService;
+        this.gradeRepository = gradeRepository;
+        this.failureRateRepository = failureRateRepository;
+        this.auditRepository = auditRepository;
+    }
 
-    @Autowired
-    private AuditRepository auditRepository;
+    @Transactional
+    public Professor create(@Nonnull ProfessorDto dto) throws Exception {
+        User user = userService.create(
+                new UserDto(dto.name(), dto.email(), dto.password(), Role.PROFESSOR)
+        );
+        Professor professor = new Professor(user, dto.department());
+        return professorRepository.save(professor);
+    }
 
-    // 1. Obtener el reporte de reprobación (Tu tarea principal)
+    public Professor getById(int userId) {
+        return professorRepository.findByUserId(userId);
+    }
+
+    public List<Professor> getAll() {
+        return professorRepository.findAll();
+    }
+
+    @Transactional
+    public Professor update(int userId, @Nonnull ProfessorDto dto) {
+        userService.updateUser(userId, dto.name(), dto.email());
+        professorRepository.updateProfessor(userId, dto.department());
+        return getById(userId);
+    }
+
+    @Transactional
+    public void delete(int userId) {
+        professorRepository.deleteByUserId(userId);
+        userService.deleteUser(userId);
+    }
+
     public List<FailureRateDTO> getFailureReport() {
-        // Primero refrescamos la vista para tener datos reales
         failureRateRepository.refreshView();
-        // Luego devolvemos los datos
         return failureRateRepository.getFailureRateReport();
     }
 
-    // 2. Subir una nota con Auditoría automática
     public GradeEntity saveGrade(GradeEntity grade, String professorRut) {
-
-        // Asignar la fecha actual si no viene en el JSON
         if (grade.getEntryDate() == null) {
-            grade.setEntryDate(java.time.LocalDate.now());
+            grade.setEntryDate(LocalDate.now());
         }
 
-        // Guardamos la nota
         GradeEntity savedGrade = gradeRepository.save(grade);
 
-        // Armamos el JSON de los datos nuevos
-        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() + ", \"value\": " + grade.getValue() + "}";
+        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() +
+                ", \"value\": " + grade.getValue() + "}";
 
-        // REGISTRAMOS EN AUDITORÍA forzando la conversión a JSONB
         auditRepository.logAudit(
                 "grade",
                 "INSERT",
                 professorRut,
-                java.time.LocalDateTime.now(),
-                null, // oldData (es null porque es un INSERT, no había datos antes)
+                LocalDateTime.now(),
+                null,
                 newDataJson
         );
 
