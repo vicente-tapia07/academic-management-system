@@ -20,7 +20,7 @@ public class UserRepository {
 
     public User save(@Nonnull User user) {
         var keyHolder = new GeneratedKeyHolder();
-        jdbcClient.sql("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)")
+        jdbcClient.sql("INSERT INTO usuario (name, email, password, role) VALUES (?, ?, ?, ?)")
                 .params(user.getName(), user.getEmail(), user.getPassword(), user.getRole().name())
                 .update(keyHolder);
         var map = keyHolder.getKeys();
@@ -28,34 +28,34 @@ public class UserRepository {
     }
 
     public List<User> findAllByRole(Role role) {
-        return jdbcClient.sql("SELECT * FROM users WHERE role = ?")
+        return jdbcClient.sql("SELECT * FROM usuario WHERE role = ?")
                 .params(role.name())
                 .query(this::mapRowToUser)
                 .list();
     }
 
     public User findById(int id) {
-        return jdbcClient.sql("SELECT * FROM users WHERE id = ?")
+        return jdbcClient.sql("SELECT * FROM usuario WHERE id = ?")
                 .params(id)
                 .query(this::mapRowToUser)
                 .single();
     }
 
     public User findByEmail(@Nonnull String email) {
-        return jdbcClient.sql("SELECT * FROM users WHERE email = ?")
+        return jdbcClient.sql("SELECT * FROM usuario WHERE email = ?")
                 .params(email)
                 .query(this::mapRowToUser)
                 .single();
     }
 
     public void updateUser(int id, String name, String email) {
-        jdbcClient.sql("UPDATE users SET name = ?, email = ? WHERE id = ?")
+        jdbcClient.sql("UPDATE usuario SET name = ?, email = ? WHERE id = ?")
                 .params(name, email, id)
                 .update();
     }
 
     public void deleteById(int id) {
-        jdbcClient.sql("DELETE FROM users WHERE id = ?").params(id).update();
+        jdbcClient.sql("DELETE FROM usuario WHERE id = ?").params(id).update();
     }
 
     private User mapRowToUser(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {

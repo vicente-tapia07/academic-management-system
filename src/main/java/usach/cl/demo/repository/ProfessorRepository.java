@@ -15,7 +15,7 @@ public class ProfessorRepository {
     }
 
     public Professor save(Professor professor) {
-        jdbcClient.sql("INSERT INTO professors (user_id, department) VALUES (?, ?)")
+        jdbcClient.sql("INSERT INTO professor (user_id, department) VALUES (?, ?)")
                 .params(professor.getId(), professor.getDepartment())
                 .update();
         return professor;
@@ -25,8 +25,8 @@ public class ProfessorRepository {
         return jdbcClient.sql("""
                 SELECT u.id, u.name, u.email, u.password, u.role,
                        p.department
-                FROM users u
-                INNER JOIN professors p ON u.id = p.user_id
+                FROM usuario u
+                INNER JOIN professor p ON u.id = p.user_id
                 WHERE u.id = ?
                 """)
                 .params(userId)
@@ -44,8 +44,8 @@ public class ProfessorRepository {
         return jdbcClient.sql("""
                 SELECT u.id, u.name, u.email, u.password, u.role,
                        p.department
-                FROM users u
-                INNER JOIN professors p ON u.id = p.user_id
+                FROM usuario u
+                INNER JOIN professor p ON u.id = p.user_id
                 """)
                 .query((rs, rowNum) -> new Professor(
                         rs.getInt("id"),
@@ -58,12 +58,12 @@ public class ProfessorRepository {
     }
 
     public void updateProfessor(int userId, String department) {
-        jdbcClient.sql("UPDATE professors SET department = ? WHERE user_id = ?")
+        jdbcClient.sql("UPDATE professor SET department = ? WHERE user_id = ?")
                 .params(department, userId)
                 .update();
     }
 
     public void deleteByUserId(int userId) {
-        jdbcClient.sql("DELETE FROM professors WHERE user_id = ?").params(userId).update();
+        jdbcClient.sql("DELETE FROM professor WHERE user_id = ?").params(userId).update();
     }
 }
