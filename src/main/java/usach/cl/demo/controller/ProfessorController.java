@@ -1,16 +1,19 @@
 package usach.cl.demo.controller;
 
-import usach.cl.demo.entity.Professor;
-import usach.cl.demo.model.ProfessorDto;
-import usach.cl.demo.service.ProfessorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usach.cl.demo.entity.Professor;
+import usach.cl.demo.model.ProfessorDto;
+import usach.cl.demo.model.FailureRateDTO;
+import usach.cl.demo.model.GradeEntity;
+import usach.cl.demo.service.ProfessorService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/professors")
 public class ProfessorController {
+
     private final ProfessorService professorService;
 
     public ProfessorController(ProfessorService professorService) {
@@ -28,7 +31,7 @@ public class ProfessorController {
     }
 
     @PostMapping
-    public ResponseEntity<Professor> create(@RequestBody ProfessorDto dto) throws Exception{
+    public ResponseEntity<Professor> create(@RequestBody ProfessorDto dto) throws Exception {
         return ResponseEntity.ok(professorService.create(dto));
     }
 
@@ -41,5 +44,17 @@ public class ProfessorController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         professorService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reports")
+    public List<FailureRateDTO> getReports() {
+        return professorService.getFailureReport();
+    }
+
+    @PostMapping("/grade")
+    public GradeEntity submitGrade(@RequestBody GradeEntity grade, @RequestParam String professorRut) {
+        // En una app real, el RUT del profesor se saca del Token JWT (Keycloak)
+        // Por ahora, lo pasamos por la URL para probar que la Auditoría funciona.
+        return professorService.saveGrade(grade, professorRut);
     }
 }
