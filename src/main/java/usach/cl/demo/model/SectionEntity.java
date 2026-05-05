@@ -4,34 +4,34 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Representa una sección de una asignatura en un semestre
+// entidad que representa una seccion de una asignatura en un semestre
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SectionEntity {
     private Long id;
-    private Long subjectId;       // asignaturaId
-    private Long professorId;     // profesorId
-    private Long semesterId;      // semestreId
-    private int totalSlots;       // cuposTotal
-    private int availableSlots;   // cuposDisponibles
+    private Long subjectId;
+    private Long professorId;
+    private Long semesterId;
+    private int totalSeats;
+    private int availableSeats;
 
-    // Retorna true si hay cupos disponibles en la sección
+    // retorna true si hay cupos disponibles en la seccion
     public boolean isAvailable() {
-        return this.availableSlots > 0;
+        return this.availableSeats > 0;
     }
 
-    // Reduce en 1 el cupo disponible al inscribir un alumno
-    public void reduceSlot() {
-        if (this.availableSlots > 0) {
-            this.availableSlots--;
+    // reduce en 1 el cupo disponible al inscribir un alumno
+    public void reduceSeats() {
+        if (this.availableSeats > 0) {
+            this.availableSeats--;
         }
     }
 
-    // Libera un cupo cuando un alumno se desinscribe
-    public void releaseSlot() {
-        if (this.availableSlots < this.totalSlots) {
-            this.availableSlots++;
+    // libera un cupo cuando un alumno se desinscribe
+    public void releaseSeats() {
+        if (this.availableSeats < this.totalSeats) {
+            this.availableSeats++;
         }
     }
 }
