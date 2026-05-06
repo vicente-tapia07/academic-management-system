@@ -33,30 +33,37 @@ public class SecurityConfig {
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. RUTAS PÚBLICAS
+                        // PÚBLICAS
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/webjars/**"
-                        ).permitAll()
-                        // 2. ADMIN
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // para subir nota
+                        // PROFESOR + ADMIN: subir nota (DEBE IR PRIMERO, antes del /** de POST)
+                        .requestMatchers(HttpMethod.POST, "/api/professors/grade").hasAnyRole("ADMIN", "PROFESSOR")
+
+                        // ADMIN: resto de POST (crear profesor)
+                        .requestMatchers(HttpMethod.POST, "/api/professors").hasRole("ADMIN")
+
+                        // ADMIN: PUT y DELETE
+                        .requestMatchers(HttpMethod.PUT,    "/api/professors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/professors/**").hasRole("ADMIN")
+
+                        // PROFESOR + ADMIN: ver reportes
+                        .requestMatchers(HttpMethod.GET,  "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
+
+                        // TODOS AUTENTICADOS: ver profesores
+                        .requestMatchers(HttpMethod.GET, "/api/professors/**").authenticated()
+
+                        // ADMIN: gestión de estudiantes
                         .requestMatchers("/api/admins/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/admins/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/students/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/students/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,   "/api/students/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/students/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
-                        .requestMatchers("/api/professors/**").hasRole("ADMIN")
-                        // 3. PROFESSOR
-                        .requestMatchers("/api/professor/**")
-                        .hasAnyRole("ADMIN", "PROFESSOR")
-                        // 4. STUDENT + PROFESSOR + ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/students/**")
-                        .hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/api/enrollments/**")
-                        .hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
-                        // 5. TODO LO DEMÁS REQUIERE LOGIN
+
+                        // STUDENT + PROFESSOR + ADMIN: leer estudiantes e inscripciones
+                        .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

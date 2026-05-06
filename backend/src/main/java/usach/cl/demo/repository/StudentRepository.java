@@ -76,13 +76,16 @@ public class StudentRepository {
                     "sub.name AS subject_name, " +
                     "sub.credits, " +
                     "CASE " +
-                    "WHEN e.id IS NULL THEN 'PENDING' " +
-                    "WHEN g.value IS NULL THEN 'ENROLLED' " +
-                    "WHEN g.value >= 4.0 THEN 'APPROVED' " +
-                    "ELSE 'FAILED' " +
+                    "  WHEN e.id IS NULL AND g.value IS NULL THEN 'PENDING' " +
+                    "  WHEN e.id IS NOT NULL AND g.value IS NULL THEN 'ENROLLED' " +
+                    "  WHEN g.value >= 4.0 THEN 'APPROVED' " +
+                    "  ELSE 'FAILED' " +
                     "END AS status, " +
                     "g.value AS grade " +
                     "FROM subject sub " +
+                    // Filtra solo asignaturas de la carrera del estudiante
+                    "JOIN student st ON st.id = ? " +
+                    "JOIN career c ON sub.career_id = c.id " +
                     "LEFT JOIN section sec ON sec.subject_id = sub.id " +
                     "LEFT JOIN enrollment e ON e.section_id = sec.id AND e.student_id = ? " +
                     "LEFT JOIN grade g ON g.enrollment_id = e.id " +
@@ -104,7 +107,7 @@ public class StudentRepository {
 
     // Retorna la malla curricular de un estudiante
     public List<SubjectStatusDTO> findCurriculum(Long studentId) {
-        return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId);
+        return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId, studentId);
     }
 
 }

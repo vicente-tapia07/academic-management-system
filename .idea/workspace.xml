@@ -6,15 +6,22 @@
   <component name="ChangeListManager">
     <list default="true" id="40181314-13ce-4405-9ed3-f7dd158576e2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/ProfessorRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/ProfessorRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/StudentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/StudentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/ProfessorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/ProfessorService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/CareerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/CareerController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SectionController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SectionController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SemesterController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SemesterController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SubjectController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SubjectController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/db_mock" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_mock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/ProfessorController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/ProfessorController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/ProfessorRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/ProfessorRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/StudentRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/StudentRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/ProfessorService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/ProfessorService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/.eslintcache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/.eslintcache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/1.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/1.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/5.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/5.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack.old" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack.old" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/StudentCurriculum.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/StudentCurriculum.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,7 +29,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="113" />
+    <option name="cachedIndexableFilesCount" value="118" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -62,7 +69,7 @@
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/papa-vicho/Escritorio/MAINFINAL/backend/src/main/java/usach/cl/demo/dto&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/papa-vicho/Escritorio/I1&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,

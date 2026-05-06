@@ -1,10 +1,82 @@
 package usach.cl.demo.repository;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 import usach.cl.demo.model.ProfessorEntity;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
-public interface ProfessorRepository extends CrudRepository<ProfessorEntity, Long> {
-    // Hereda métodos como: save(), findById(), findAll(), deleteById()
+public class ProfessorRepository {
+    private final JdbcClient jdbcClient;
+
+    public ProfessorRepository(JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
+    }
+
+    public ProfessorEntity save(ProfessorEntity professor) {
+        jdbcClient.sql("INSERT INTO professor (usuario_id, department, first_name, last_name) VALUES (?, ?, ?, ?)")
+                .params(professor.getUsuarioId(), professor.getDepartment(), professor.getFirstName(), professor.getLastName())
+                .update();
+        return professor;
+    }
+
+    public ProfessorEntity findById(Long id) {
+        return jdbcClient.sql("""
+        SELECT id, usuario_id, first_name, last_name, department
+        FROM professor
+        WHERE id = ?
+        """)
+                .params(id)
+                .query((rs, rowNum) -> new ProfessorEntity(
+                        rs.getLong("id"),
+                        rs.getLong("usuario_id"),
+                        rs.getString("first_name"),
+                        rs.getString("last_name"),
+                        rs.getString("department")
+                ))
+                .single();
+    }
+
+    public ProfessorEntity findByUserId(Long usuarioId) {
+    return jdbcClient.sql("""
+        SELECT p.id, p.usuario_id, p.first_name, p.last_name, p.department
+        FROM professor p
+        WHERE p.usuario_id = ?
+        """)
+        .params(usuarioId)
+        .query((rs, rowNum) -> new ProfessorEntity(
+            rs.getLong("id"),
+            rs.getLong("usuario_id"),
+            rs.getString("first_name"),
+            rs.getString("last_name"),
+            rs.getString("department")
+        ))
+        .single();
+    }
+
+    public List<ProfessorEntity> findAll() {
+    return jdbcClient.sql("""
+        SELECT p.id, p.usuario_id, p.first_name, p.last_name, p.department
+        FROM professor p
+        """)
+        .query((rs, rowNum) -> new ProfessorEntity(
+            rs.getLong("id"),
+            rs.getLong("usuario_id"),
+            rs.getString("first_name"),
+            rs.getString("last_name"),
+            rs.getString("department")
+        ))
+        .list();
+    }
+
+    public void updateProfessor(Long usuarioId, String department, String firstName, String lastName) {
+        jdbcClient.sql("UPDATE professor SET department = ?, first_name = ?, last_name = ? WHERE usuario_id = ?")
+                .params(department, firstName, lastName, usuarioId)
+                .update();
+    }
+
+    public void deleteByUserId(Long usuarioId) {
+        jdbcClient.sql("DELETE FROM professor WHERE usuario_id = ?").params(usuarioId).update();
+    }
 }

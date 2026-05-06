@@ -1,40 +1,67 @@
 package usach.cl.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usach.cl.demo.model.ProfessorEntity;
+import usach.cl.demo.dto.ProfessorDTO;
 import usach.cl.demo.dto.FailureRateDTO;
 import usach.cl.demo.model.GradeEntity;
-import usach.cl.demo.model.ProfessorEntity;
-import usach.cl.demo.repository.ProfessorRepository;
 import usach.cl.demo.service.ProfessorService;
+
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/professor")
+@RequestMapping("/api/professors")
 public class ProfessorController {
 
-    @Autowired
-    private ProfessorService professorService;
+    private final ProfessorService professorService;
 
-    @Autowired
-    private ProfessorRepository professorRepository;
+    public ProfessorController(ProfessorService professorService) {
+        this.professorService = professorService;
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<ProfessorEntity>> getAll() {
+        return ResponseEntity.ok(professorService.getAll());
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfessorEntity> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(professorService.getById(id));
+    }
+
+
+    @PostMapping
+    public ResponseEntity<ProfessorEntity> create(@RequestBody ProfessorDTO dto) throws Exception {
+        return ResponseEntity.ok(professorService.create(dto));
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProfessorEntity> update(@PathVariable Long id, @RequestBody ProfessorDTO dto) {
+        return ResponseEntity.ok(professorService.update(id, dto));
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        professorService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
     @GetMapping("/reports")
     public List<FailureRateDTO> getReports() {
         return professorService.getFailureReport();
     }
 
-    @PostMapping("/grade")
-    public GradeEntity submitGrade(@RequestBody GradeEntity grade,
-                                   @RequestParam String professorRut) {
-        return professorService.saveGrade(grade, professorRut);
-    }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ProfessorEntity> getProfessorById(@PathVariable Long id) {
-        return professorRepository.findById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/grade")
+    public GradeEntity submitGrade(@RequestBody GradeEntity grade, @RequestParam String professorRut) {
+        // En una app real, el RUT del profesor se saca del Token JWT (Keycloak)
+        // Por ahora, lo pasamos por la URL para probar que la Auditoría funciona.
+        return professorService.saveGrade(grade, professorRut);
     }
 }

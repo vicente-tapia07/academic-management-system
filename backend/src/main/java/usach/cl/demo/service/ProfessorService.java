@@ -19,7 +19,54 @@ public class ProfessorService {
     @Autowired
     private AuditRepository auditRepository;
 
-    // 1. Obtener el reporte de reprobación (Tu tarea principal)
+    @Autowired
+    private ProfessorRepository professorRepository;
+    
+    // Obtener todos los profesores
+    public List<ProfessorEntity> getAll() {
+        return professorRepository.findAll();
+    }
+
+
+    public ProfessorEntity getById(Long id) {
+        return professorRepository.findById(id);
+    }
+
+
+    // Crear profesor
+    public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {
+        ProfessorEntity professor = new ProfessorEntity();
+        // El id se genera en la BD, usuarioId se asume igual a id por ahora
+        professor.setUsuarioId(null); // Debe asignarse correctamente según lógica de usuario
+        // Separar nombre completo en firstName y lastName si es posible
+        String[] names = dto.name().split(" ", 2);
+        professor.setFirstName(names.length > 0 ? names[0] : "");
+        professor.setLastName(names.length > 1 ? names[1] : "");
+        professor.setDepartment(dto.department());
+        // El repositorio espera usuarioId, department, firstName, lastName
+        return professorRepository.save(professor);
+    }
+
+    // Actualizar profesor
+    public ProfessorEntity update(Long id, usach.cl.demo.dto.ProfessorDTO dto) {
+        ProfessorEntity existing = professorRepository.findByUserId(id);
+        String[] names = dto.name().split(" ", 2);
+        String firstName = names.length > 0 ? names[0] : "";
+        String lastName = names.length > 1 ? names[1] : "";
+        professorRepository.updateProfessor(id, dto.department(), firstName, lastName);
+        // Retornar el profesor actualizado
+        existing.setFirstName(firstName);
+        existing.setLastName(lastName);
+        existing.setDepartment(dto.department());
+        return existing;
+    }
+
+    // Eliminar profesor
+    public void delete(Long id) {
+        professorRepository.deleteByUserId(id);
+    }
+
+    // Obtener el reporte de reprobación
     public List<FailureRateDTO> getFailureReport() {
         // Primero refrescamos la vista para tener datos reales
         failureRateRepository.refreshView();
@@ -27,7 +74,7 @@ public class ProfessorService {
         return failureRateRepository.getFailureRateReport();
     }
 
-    // 2. Subir una nota con Auditoría automática
+    // Subir una nota con Auditoría automática
     public GradeEntity saveGrade(GradeEntity grade, String professorRut) {
 
         // Asignar la fecha actual si no viene en el JSON

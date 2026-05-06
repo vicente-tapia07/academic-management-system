@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
   APPROVED: { cls: 'bg-success',           label: 'Aprobada',  icon: '✅' },
   FAILED:   { cls: 'bg-danger',            label: 'Reprobada', icon: '❌' },
-  PENDING:  { cls: 'bg-warning text-dark', label: 'Cursando',  icon: '📘' },
-  ENROLLED: { cls: 'bg-info text-dark',    label: 'Inscrita',  icon: '📋' },
+  PENDING:  { cls: 'bg-secondary',         label: 'Pendiente', icon: '⏳' }, // ← cambia esto
+  ENROLLED: { cls: 'bg-warning text-dark', label: 'Cursando',  icon: '📘' }, // ← y esto
 };
 const getStatus = (s) => statusConfig[s] ?? { cls: 'bg-secondary', label: s, icon: '❓' };
 
@@ -41,7 +41,8 @@ export default function StudentCurriculum() {
 
   const approved     = curriculum.filter((c) => c.status === 'APPROVED').length;
   const failed       = curriculum.filter((c) => c.status === 'FAILED').length;
-  const pending      = curriculum.filter((c) => ['PENDING', 'ENROLLED'].includes(c.status)).length;
+  const enrolled     = curriculum.filter((c) => c.status === 'ENROLLED').length;
+  const pending      = curriculum.filter((c) => c.status === 'PENDING').length;
   const totalCredits = curriculum
     .filter((c) => c.status === 'APPROVED')
     .reduce((acc, c) => acc + (c.credits ?? 0), 0);
@@ -70,7 +71,7 @@ export default function StudentCurriculum() {
       </div>
 
       {loading && <p className="text-muted">Cargando malla...</p>}
-      {error   && <div className="alert alert-danger">{error}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
       {!loading && !error && (
         <>
@@ -78,7 +79,7 @@ export default function StudentCurriculum() {
             {[
               { label: 'Aprobadas',  value: approved,      color: 'success'  },
               { label: 'Reprobadas', value: failed,        color: 'danger'   },
-              { label: 'Cursando',   value: pending,       color: 'warning'  },
+              { label: 'Cursando',   value: enrolled,      color: 'warning'  },
               { label: 'Créditos',   value: totalCredits,  color: 'primary'  },
             ].map((stat) => (
               <div key={stat.label} className="col-6 col-sm-3">
