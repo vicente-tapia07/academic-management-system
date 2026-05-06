@@ -1,0 +1,145 @@
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
+
+export default function StudentEnrollments() {
+  const { user }                      = useAuth();
+  const navigate                      = useNavigate();
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 1. Inscripciones del estudiante
+        const enrollRes = await api.get(`/api/enrollments/student/${user.id}`);
+        const raw = enrollRes.data;
+
+        // 2. Por cada inscripción enriquece con sección → subject → professor
+        const enriched = await Promise.all(
+          raw.map(async (e) => {
+            try {
+                const sectionRes = await api.get(`/api/sections/${e.sectionId}`);
+                const section = sectionRes.data;
+
+                // Busca asignatura
+                let subjectName = '—';
+                try {
+                const subjRes = await api.get(`/api/subjects/${section.subjectId}`);
+                subjectName = subjRes.data.name ?? '—';
+                } catch { /* si falla deja — */ }
+
+                // Busca profesor
+                let professorName = '—';
+                    try {
+                    const profRes = await api.get(`/api/professor/${section.professorId}`);
+                    const p = profRes.data;
+                    professorName = `${p.firstName} ${p.lastName}`.trim() || '—';
+                } catch { /* si falla deja — */ }
+
+                return {
+                ...e,
+                subjectName,
+                professorName,
+                availableSeats: section.availableSeats,
+                totalSeats:     section.totalSeats,
+                };
+            } catch {
+                return e;
+            }
+            })
+        );
+
+        setEnrollments(enriched);
+      } catch {
+        setError('No se pudieron cargar las inscripciones.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user.id]);
+
+  return (
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn btn-sm btn-outline-secondary" onClick={() => navigate('/my-dashboard')}>
+            ← Volver
+          </button>
+          <div>
+            <h2 className="fw-bold mb-0">Mis Inscripciones</h2>
+            <p className="text-muted mb-0 small">Cursos inscritos en el semestre activo</p>
+          </div>
+        </div>
+        <Link to="/my-enroll" className="btn btn-primary btn-sm">
+          + Inscribir asignatura
+        </Link>
+      </div>
+
+      {loading && (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status" />
+          <p className="text-muted mt-2">Cargando inscripciones...</p>
+        </div>
+      )}
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      {!loading && !error && (
+        <>
+          <p className="text-muted small mb-2">{enrollments.length} inscripción(es)</p>
+          <div className="card shadow-sm border-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>Asignatura</th>
+                    <th>Sección</th>
+                    <th>Profesor</th>
+                    <th>Cupos</th>
+                    <th>Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center text-muted py-4">
+                        No tienes inscripciones activas
+                      </td>
+                    </tr>
+                  )}
+                  {enrollments.map((e) => (
+                    <tr key={e.enrollmentId ?? e.id}>
+                      <td className="fw-semibold">{e.subjectName}</td>
+                      <td>
+                        <span className="badge bg-secondary">
+                          {e.sectionCode ?? e.sectionId}
+                        </span>
+                      </td>
+                      <td className="text-muted small">{e.professorName}</td>
+                      <td className="text-muted small">
+                        {e.availableSeats != null
+                          ? `${e.availableSeats} / ${e.totalSeats}`
+                          : '—'}
+                      </td>
+                      <td>
+                        {e.grade != null
+                          ? <span className={`fw-bold ${e.grade >= 4 ? 'text-success' : 'text-danger'}`}>
+                              {Number(e.grade).toFixed(1)}
+                            </span>
+                          : <span className="text-muted">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

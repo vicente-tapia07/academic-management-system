@@ -6,10 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="40181314-13ce-4405-9ed3-f7dd158576e2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/UserRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/UserRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/CareerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/CareerController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SectionController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SectionController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SemesterController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SemesterController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SubjectController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/SubjectController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_mock" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_mock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,7 +22,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="77" />
+    <option name="cachedIndexableFilesCount" value="113" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
