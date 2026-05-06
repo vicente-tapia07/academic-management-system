@@ -89,4 +89,23 @@ public class SectionRepository {
             throw new RuntimeException("Error saving section", e);
         }
     }
+
+    // retorna todas las secciones de un profesor específico
+    public List<SectionEntity> findByProfessorId(Long professorId) {
+        String sql = "SELECT * FROM section WHERE professor_id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, professorId);
+            ResultSet rs = ps.executeQuery();
+            List<SectionEntity> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+            return list;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching sections by professor", e);
+        }
+    }
 }

@@ -6,6 +6,7 @@ import usach.cl.demo.model.ProfessorEntity;
 import usach.cl.demo.dto.ProfessorDTO;
 import usach.cl.demo.dto.FailureRateDTO;
 import usach.cl.demo.model.GradeEntity;
+import usach.cl.demo.model.SectionEntity;
 import usach.cl.demo.service.ProfessorService;
 
 import java.util.List;
@@ -63,5 +64,10 @@ public class ProfessorController {
         // En una app real, el RUT del profesor se saca del Token JWT (Keycloak)
         // Por ahora, lo pasamos por la URL para probar que la Auditoría funciona.
         return professorService.saveGrade(grade, professorRut);
+    }
+
+    @GetMapping("/{id}/sections")
+    public ResponseEntity<List<SectionEntity>> getSectionsByProfessor(@PathVariable Long id) {
+        return ResponseEntity.ok(professorService.getSectionsByProfessorId(id));
     }
 }

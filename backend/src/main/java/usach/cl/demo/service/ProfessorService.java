@@ -21,6 +21,9 @@ public class ProfessorService {
 
     @Autowired
     private ProfessorRepository professorRepository;
+
+    @Autowired
+    private SectionRepository sectionRepository;
     
     // Obtener todos los profesores
     public List<ProfessorEntity> getAll() {
@@ -32,6 +35,9 @@ public class ProfessorService {
         return professorRepository.findById(id);
     }
 
+    public List<SectionEntity> getSectionsByProfessorId(Long professorId) {
+        return sectionRepository.findByProfessorId(professorId);
+    }
 
     // Crear profesor
     public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {

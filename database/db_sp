@@ -1,0 +1,73 @@
+-- =============================================
+-- STORED PROCEDURE 1: CIERRE DE SEMESTRE
+-- =============================================
+
+CREATE OR REPLACE PROCEDURE sp_close_semester(p_semester_id BIGINT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_student_id BIGINT;
+    v_avg NUMERIC;
+BEGIN
+    -- Por cada estudiante del semestre
+    FOR v_student_id IN
+        SELECT DISTINCT e.student_id
+        FROM enrollment e
+        JOIN section sec ON e.section_id = sec.id
+        WHERE sec.semester_id = p_semester_id
+    LOOP
+        -- Calcular promedio ponderado
+        SELECT ROUND(SUM(g.value * sub.credits) / NULLIF(SUM(sub.credits), 0), 2)
+        INTO v_avg
+        FROM grade g
+        JOIN enrollment e ON g.enrollment_id = e.id
+        JOIN section sec ON e.section_id = sec.id
+        JOIN subject sub ON sec.subject_id = sub.id
+        WHERE e.student_id = v_student_id
+        AND sec.semester_id = p_semester_id;
+
+        -- Bloquear si reprobó
+        IF v_avg IS NOT NULL AND v_avg < 4.0 THEN
+            UPDATE student SET academic_status = 'BLOCKED'
+            WHERE id = v_student_id;
+        END IF;
+    END LOOP;
+
+    -- Cerrar el semestre
+    UPDATE semester SET status = 'CLOSED'
+    WHERE id = p_semester_id;
+END;
+$$;
+
+-- =============================================
+-- STORED PROCEDURE 2: INSCRIPCIÓN SEGURA
+-- =============================================
+
+CREATE OR REPLACE PROCEDURE sp_enroll_student(
+    p_student_id BIGINT,
+    p_section_id BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_seats INT;
+BEGIN
+    -- Verificar cupos disponibles
+    SELECT available_seats INTO v_seats
+    FROM section
+    WHERE id = p_section_id;
+
+    IF v_seats <= 0 THEN
+        RAISE EXCEPTION 'La sección no tiene cupos disponibles';
+    END IF;
+
+    -- Inscribir al estudiante
+    INSERT INTO enrollment (student_id, section_id)
+    VALUES (p_student_id, p_section_id);
+
+    -- Descontar un cupo
+    UPDATE section
+    SET available_seats = available_seats - 1
+    WHERE id = p_section_id;
+END;
+$$;

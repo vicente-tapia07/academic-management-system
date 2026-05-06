@@ -1,0 +1,81 @@
+-- =============================================
+-- TRIGGER 1: PRERREQUISITOS
+-- =============================================
+
+CREATE OR REPLACE FUNCTION fn_check_prerequisites()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_not_approved INTEGER;
+    v_subject_id BIGINT;
+BEGIN
+    -- Obtener la asignatura de la sección que se quiere inscribir
+    SELECT subject_id INTO v_subject_id
+    FROM section
+    WHERE id = NEW.section_id;
+
+    -- Contar prerequisitos no aprobados
+    SELECT COUNT(*)
+    INTO v_not_approved
+    FROM prerequisite p
+    WHERE p.subject_id = v_subject_id
+    AND NOT EXISTS (
+        SELECT 1
+        FROM enrollment e
+        JOIN grade g ON g.enrollment_id = e.id
+        JOIN section sec ON sec.id = e.section_id
+        WHERE e.student_id = NEW.student_id
+        AND sec.subject_id = p.prerequisite_subject_id
+        AND g.value >= 4.0
+        AND e.status = 'COMPLETED'
+    );
+
+    -- Si hay al menos uno no aprobado, bloquear
+    IF v_not_approved > 0 THEN
+        RAISE EXCEPTION 'El estudiante no ha aprobado todos los prerequisitos necesarios';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_check_prerequisites
+BEFORE INSERT ON enrollment
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_prerequisites();
+
+-- =============================================
+-- TRIGGER 2: CALENDARIO DE NOTAS
+-- =============================================
+
+CREATE OR REPLACE FUNCTION fn_check_calendario_notas()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_start DATE;
+    v_end DATE;
+    v_status VARCHAR;
+BEGIN
+    SELECT s.grade_start_date, s.grade_end_date, s.status
+    INTO v_start, v_end, v_status
+    FROM semester s
+    JOIN section sec ON sec.semester_id = s.id
+    JOIN enrollment e ON e.section_id = sec.id
+    WHERE e.id = NEW.enrollment_id;
+
+    -- Bloquear si el semestre está cerrado
+    IF v_status = 'CLOSED' THEN
+        RAISE EXCEPTION 'Semestre cerrado, no se pueden ingresar notas';
+    END IF;
+
+    -- Bloquear si está fuera del calendario
+    IF NEW.entry_date < v_start OR NEW.entry_date > v_end THEN
+        RAISE EXCEPTION 'Fuera del calendario académico de notas';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_check_calendario_notas
+BEFORE INSERT OR UPDATE ON grade
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_calendario_notas();

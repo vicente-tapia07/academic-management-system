@@ -44,6 +44,15 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollments);
     }
 
+    // Retorna todas las inscripciones de una sección
+    @GetMapping("/section/{sectionId}")
+    public ResponseEntity<List<EnrollmentEntity>> getBySectionId(@PathVariable Long sectionId) {
+        List<EnrollmentEntity> enrollments = enrollmentService.findBySectionId(sectionId);
+        return ResponseEntity.ok(enrollments);
+    }
+
+
+
     // Crea una nueva inscripción
     @PostMapping
     public ResponseEntity<String> create(@RequestBody EnrollmentEntity enrollment) {

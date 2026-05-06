@@ -23,6 +23,10 @@ import StudentDashboard   from '../pages/students/StudentDashboard';
 import StudentProfile     from '../pages/students/StudentProfile';
 import StudentEnrollments from '../pages/students/StudentEnrollments';
 import EnrollForm         from '../pages/students/EnrollForm';
+import ProfessorDashboard from '../pages/professor/ProfessorDashboard';
+import ProfessorCourses   from '../pages/professor/ProfessorCourses';
+import StudentGrades      from '../pages/professor/StudentGrades';
+import GradeForm          from '../pages/professor/GradeForm';
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -56,15 +60,26 @@ export default function AppRouter() {
           <Route path="/semesters/close/:id"     element={<SemesterClose />} />
           <Route path="/students"                element={<StudentList />} />
           <Route path="/students/:id/curriculum" element={<StudentCurriculum />} />
-          <Route path="/reports"                 element={<FailureReport />} />
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']} />}>
-          <Route path="/my-dashboard"   element={<StudentDashboard />}   />
-          <Route path="/my-curriculum"  element={<StudentCurriculum />}  />
+          <Route path="/my-dashboard"   element={<StudentDashboard />} />
+          <Route path="/my-curriculum"  element={<StudentCurriculum />} />
           <Route path="/my-enrollments" element={<StudentEnrollments />} />
-          <Route path="/my-enroll"      element={<EnrollForm />}         />
-          <Route path="/my-profile"     element={<StudentProfile />}     />
+          <Route path="/my-enroll"      element={<EnrollForm />} />
+          <Route path="/my-profile"     element={<StudentProfile />} />
+        </Route>
+
+        <Route element={<PrivateRoute roles={['ROLE_PROFESSOR']} />}>
+          <Route path="/professor"                   element={<ProfessorDashboard />} />
+          <Route path="/professor/courses"           element={<ProfessorCourses />} />
+          <Route path="/professor/grades/:sectionId" element={<StudentGrades />} />
+          <Route path="/professor/grade/new"         element={<GradeForm />} />
+        </Route>
+
+        {/* /reports accesible para ADMIN y PROFESSOR */}
+        <Route element={<PrivateRoute roles={['ROLE_ADMIN', 'ROLE_PROFESSOR']} />}>
+          <Route path="/reports" element={<FailureReport />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

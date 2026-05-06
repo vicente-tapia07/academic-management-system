@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
 export default function SubjectList() {
@@ -7,6 +7,7 @@ export default function SubjectList() {
   const [careers, setCareers]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
+  const navigate = useNavigate();
 
   const load = async () => {
     try {
@@ -41,6 +42,11 @@ export default function SubjectList() {
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn btn-outline-secondary" onClick={() => navigate('/dashboard')}>
+            ← Volver
+          </button>
+        </div>
         <div>
           <h2 className="fw-bold mb-0">Asignaturas</h2>
           <p className="text-muted mb-0">Gestiona el catálogo de asignaturas</p>

@@ -38,6 +38,9 @@ export default function SectionList() {
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
+        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
+          ← Volver
+        </button>
         <div>
           <h2 className="fw-bold mb-0">Secciones</h2>
           <p className="text-muted mb-0">Secciones por semestre y asignatura</p>
@@ -78,8 +81,8 @@ export default function SectionList() {
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${s.available ? 'bg-success' : 'bg-secondary'}`}>
-                        {s.available ? 'Disponible' : 'Cerrada'}
+                      <span className={`badge ${s.availableSeats > 0 ? 'bg-success' : 'bg-secondary'}`}>
+                        {s.availableSeats > 0 ? 'Con cupo' : 'Sin cupo'}
                       </span>
                     </td>
                   </tr>

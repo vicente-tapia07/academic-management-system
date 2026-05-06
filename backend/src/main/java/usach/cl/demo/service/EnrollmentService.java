@@ -51,4 +51,8 @@ public class EnrollmentService {
     public void enrollStudent(Long studentId, Long sectionId) {
         enrollmentRepository.enrollStudent(studentId, sectionId);
     }
+
+    public List<EnrollmentEntity> findBySectionId(Long sectionId) {
+        return enrollmentRepository.findBySectionId(sectionId);
+    }
 }

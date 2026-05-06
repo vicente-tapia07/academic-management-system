@@ -34,7 +34,15 @@ public class EnrollmentRepository {
     private static final String CALL_ENROLL_STUDENT =
             "CALL sp_enroll_student(?, ?)";
 
+    private static final String FIND_BY_SECTION_ID =
+            "SELECT * FROM enrollment WHERE section_id = ?";
+
+
     private final JdbcTemplate jdbcTemplate;
+
+    public List<EnrollmentEntity> findBySectionId(Long sectionId) {
+        return jdbcTemplate.query(FIND_BY_SECTION_ID, enrollmentMapper, sectionId);
+    }
 
     // Spring inyecta el JdbcTemplate automáticamente
     public EnrollmentRepository(JdbcTemplate jdbcTemplate) {

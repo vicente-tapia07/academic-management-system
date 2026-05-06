@@ -37,22 +37,22 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // para subir nota
-                        // PROFESOR + ADMIN: subir nota (DEBE IR PRIMERO, antes del /** de POST)
+                        // PROFESOR + ADMIN: rutas específicas PRIMERO
                         .requestMatchers(HttpMethod.POST, "/api/professors/grade").hasAnyRole("ADMIN", "PROFESSOR")
+                        .requestMatchers(HttpMethod.GET,  "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
 
-                        // ADMIN: resto de POST (crear profesor)
-                        .requestMatchers(HttpMethod.POST, "/api/professors").hasRole("ADMIN")
+                        // NOTAS
+                        .requestMatchers(HttpMethod.GET,  "/api/grades").hasAnyRole("ADMIN", "PROFESSOR")
+                        .requestMatchers(HttpMethod.POST, "/api/grades").hasAnyRole("ADMIN", "PROFESSOR")
+                        .requestMatchers(HttpMethod.PUT,  "/api/grades/**").hasAnyRole("ADMIN", "PROFESSOR")
 
-                        // ADMIN: PUT y DELETE
+                        // ADMIN: crear, editar, eliminar profesores
+                        .requestMatchers(HttpMethod.POST,   "/api/professors").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/professors/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/professors/**").hasRole("ADMIN")
 
-                        // PROFESOR + ADMIN: ver reportes
-                        .requestMatchers(HttpMethod.GET,  "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
-
-                        // TODOS AUTENTICADOS: ver profesores
-                        .requestMatchers(HttpMethod.GET, "/api/professors/**").authenticated()
+                        // TODOS AUTENTICADOS: ver profesores (ruta raíz Y subrutas)
+                        .requestMatchers(HttpMethod.GET, "/api/professors", "/api/professors/**").authenticated()
 
                         // ADMIN: gestión de estudiantes
                         .requestMatchers("/api/admins/**").hasRole("ADMIN")

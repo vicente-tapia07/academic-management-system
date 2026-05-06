@@ -13,7 +13,7 @@ export default function FailureReport() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/api/professor/reports');
+      const res = await api.get('/api/professors/reports');
       // Ordenar de mayor a menor tasa de reprobación
       const sorted = [...res.data].sort((a, b) => b.failurePercentage - a.failurePercentage);
       setReports(sorted);
@@ -41,6 +41,9 @@ export default function FailureReport() {
     <div className="container py-4">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-start mb-4">
+        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
+          ← Volver
+        </button>
         <div>
           <h2 className="fw-bold mb-0">Reporte de Reprobación</h2>
           <p className="text-muted mb-0">

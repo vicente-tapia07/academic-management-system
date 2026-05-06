@@ -23,7 +23,9 @@ export default function Navbar() {
         {/* Logo — lleva al home del rol */}
         <Link className="navbar-brand fw-bold d-flex align-items-center gap-2" to={homeRoute}>
           <span style={{ fontSize: '1.3rem' }}>🎓</span>
-          USACH <span className="fw-light ms-1">Académico</span>
+          USACH <span className="fw-light ms-1">
+            {isAdmin ? 'Admin' : isStudent ? 'Estudiante' : 'Profesor'}
+          </span>
         </Link>
 
         <button className="navbar-toggler" type="button"

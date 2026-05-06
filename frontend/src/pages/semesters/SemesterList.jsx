@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
 const statusBadge = (s) => {
-  if (s.closed) return <span className="badge bg-dark">Cerrado</span>;
-  if (s.active)  return <span className="badge bg-success">Activo</span>;
-  return <span className="badge bg-secondary">Inactivo</span>;
+  if (s.status === 'CLOSED')      return <span className="badge bg-dark">Cerrado</span>;
+  if (s.status === 'IN_PROGRESS') return <span className="badge bg-success">En Curso</span>;
+  return <span className="badge bg-secondary">Planificado</span>;
 };
 
 export default function SemesterList() {
@@ -30,6 +30,9 @@ export default function SemesterList() {
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
+        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
+          ← Volver
+        </button>
         <div>
           <h2 className="fw-bold mb-0">Semestres</h2>
           <p className="text-muted mb-0">Gestiona los períodos académicos</p>
@@ -70,7 +73,7 @@ export default function SemesterList() {
                     </td>
                     <td>{statusBadge(s)}</td>
                     <td className="text-end">
-                      {!s.closed && (
+                      {s.status !== 'CLOSED' && (
                         <>
                           <Link to={`/semesters/edit/${s.id}`} className="btn btn-sm btn-outline-primary me-2">
                             Editar
@@ -80,7 +83,7 @@ export default function SemesterList() {
                           </Link>
                         </>
                       )}
-                      {s.closed && <span className="text-muted small">—</span>}
+                      {s.status === 'CLOSED' && <span className="text-muted small">—</span>}
                     </td>
                   </tr>
                 ))}
