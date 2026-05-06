@@ -1,10 +1,10 @@
 package usach.cl.demo.repository;
 
-import usach.cl.demo.model.UserEntity;
 import usach.cl.demo.model.Role;
 import jakarta.annotation.Nonnull;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import usach.cl.demo.model.UserEntity;
 import java.util.List;
 
 @Repository
@@ -16,7 +16,7 @@ public class UserRepository {
         this.jdbcClient = jdbcClient;
     }
 
-    // Busca usuario por email para el login
+    // Buscar por email — usado por el login
     public UserEntity findByEmail(@Nonnull String email) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE email = ?")
                 .params(email)
@@ -24,7 +24,7 @@ public class UserRepository {
                 .single();
     }
 
-    // Busca usuario por id
+    // Buscar por id
     public UserEntity findById(int id) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE id = ?")
                 .params(id)
@@ -32,7 +32,7 @@ public class UserRepository {
                 .single();
     }
 
-    // Retorna todos los usuarios por rol
+    // Buscar todos por rol
     public List<UserEntity> findAllByRole(Role role) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE rol = ?")
                 .params(role.name())
@@ -40,8 +40,37 @@ public class UserRepository {
                 .list();
     }
 
-    // Convierte una fila SQL en UserEntity
-    private UserEntity mapRowToUser(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+    // Guardar nuevo usuario
+    public UserEntity save(@Nonnull UserEntity user) {
+        jdbcClient.sql(
+                        "INSERT INTO usuario (rut, email, password_hash, rol) VALUES (?, ?, ?, ?)")
+                .params(
+                        user.getRut(),
+                        user.getEmail(),
+                        user.getPassword(),
+                        user.getRole().name()
+                )
+                .update();
+        return user;
+    }
+
+    // Actualizar usuario
+    public void updateUser(int id, String email, String rol) {
+        jdbcClient.sql("UPDATE usuario SET email = ?, rol = ? WHERE id = ?")
+                .params(email, rol, id)
+                .update();
+    }
+
+    // Eliminar por id
+    public void deleteById(int id) {
+        jdbcClient.sql("DELETE FROM usuario WHERE id = ?")
+                .params(id)
+                .update();
+    }
+
+    // Convertir fila SQL a UserEntity
+    private UserEntity mapRowToUser(java.sql.ResultSet rs, int rowNum)
+            throws java.sql.SQLException {
         return new UserEntity(
                 (int) rs.getLong("id"),
                 rs.getString("rut"),
