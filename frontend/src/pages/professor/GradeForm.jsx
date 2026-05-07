@@ -6,18 +6,20 @@ export default function GradeForm() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  if (!state?.enrollmentId) {
+  const enrollmentId = state?.enrollmentId;
+
+  const isEdit = Boolean(state?.existingGrade);
+  const [value, setValue] = useState(state?.existingGrade?.value?.toString() ?? '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  if (!enrollmentId) {
     navigate('/professor');
     return null;
   }
 
-  const { enrollmentId, studentName, existingGrade } = state;
-  const isEdit = Boolean(existingGrade);
-
-  const [value,   setValue]   = useState(existingGrade?.value?.toString() ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState('');
+  const { studentName, existingGrade } = state;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +36,7 @@ export default function GradeForm() {
     const payload = {
       enrollmentId,
       value: numValue,
-      entryDate: new Date().toISOString().split('T')[0], // fecha actual YYYY-MM-DD
+      entryDate: new Date().toISOString().split('T')[0],
     };
 
     try {
@@ -64,30 +66,27 @@ export default function GradeForm() {
         </div>
       </div>
 
-      {error   && <div className="alert alert-danger">{error}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
       <div className="card shadow-sm border-0">
         <div className="card-body p-4">
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label fw-semibold">
-                Nota (1.0 – 7.0)
-              </label>
+              <label className="form-label fw-semibold">Nota (1.0 – 7.0)</label>
               <input
                 type="number"
                 className="form-control form-control-lg"
-                min="1.0" max="7.0" step="0.1"
+                min="1.0"
+                max="7.0"
+                step="0.1"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 required
               />
-              <div className="form-text">
-                Nota de aprobación: 4.0
-              </div>
+              <div className="form-text">Nota de aprobación: 4.0</div>
             </div>
 
-            {/* Vista previa del resultado */}
             {value && !isNaN(parseFloat(value)) && (
               <div className={`alert ${parseFloat(value) >= 4.0 ? 'alert-success' : 'alert-danger'}`}>
                 {parseFloat(value) >= 4.0 ? '✅ Aprobado' : '❌ Reprobado'}
@@ -98,8 +97,11 @@ export default function GradeForm() {
               <button type="submit" className="btn btn-primary flex-grow-1" disabled={loading}>
                 {loading ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Ingresar Nota'}
               </button>
-              <button type="button" className="btn btn-outline-secondary"
-                onClick={() => navigate(-1)}>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => navigate(-1)}
+              >
                 Cancelar
               </button>
             </div>

@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 export default function StudentEnrollments() {
-  const { user }                      = useAuth();
-  const navigate                      = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState('');
-  const [cancelling,  setCancelling]  = useState(null); // ID de la inscripción que se está cancelando
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancelling, setCancelling] = useState(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const enrollRes = await api.get(`/api/enrollments/student/${user.id}`);
@@ -27,21 +27,25 @@ export default function StudentEnrollments() {
             try {
               const subjRes = await api.get(`/api/subjects/${section.subjectId}`);
               subjectName = subjRes.data.name ?? '—';
-            } catch { /* mantiene —  */ }
+            } catch {
+              /* mantiene — */
+            }
 
             let professorName = '—';
             try {
               const profRes = await api.get(`/api/professors/${section.professorId}`);
               const p = profRes.data;
               professorName = `${p.firstName} ${p.lastName}`.trim() || '—';
-            } catch { /* mantiene — */ }
+            } catch {
+              /* mantiene — */
+            }
 
             return {
               ...e,
               subjectName,
               professorName,
               availableSeats: section.availableSeats,
-              totalSeats:     section.totalSeats,
+              totalSeats: section.totalSeats,
             };
           } catch {
             return e;
@@ -55,9 +59,11 @@ export default function StudentEnrollments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
-  useEffect(() => { fetchData(); }, [user.id]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCancel = async (enrollmentId, subjectName) => {
     const confirmar = window.confirm(
@@ -82,7 +88,10 @@ export default function StudentEnrollments() {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center gap-3">
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => navigate('/my-dashboard')}>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => navigate('/my-dashboard')}
+          >
             ← Volver
           </button>
           <div>
@@ -147,14 +156,17 @@ export default function StudentEnrollments() {
                             : '—'}
                         </td>
                         <td>
-                          {tieneNota
-                            ? <span className={`fw-bold ${e.grade >= 4 ? 'text-success' : 'text-danger'}`}>
-                                {Number(e.grade).toFixed(1)}
-                              </span>
-                            : <span className="text-muted">—</span>}
+                          {tieneNota ? (
+                            <span
+                              className={`fw-bold ${e.grade >= 4 ? 'text-success' : 'text-danger'}`}
+                            >
+                              {Number(e.grade).toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
                         </td>
                         <td className="text-end">
-                          {/* Solo se puede cancelar si está ACTIVA y no tiene nota */}
                           {estaActiva && !tieneNota ? (
                             <button
                               className="btn btn-sm btn-outline-danger"

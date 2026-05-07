@@ -4,24 +4,24 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
-  APPROVED: { cls: 'bg-success',           label: 'Aprobada',  icon: '✅' },
-  FAILED:   { cls: 'bg-danger',            label: 'Reprobada', icon: '❌' },
-  PENDING:  { cls: 'bg-secondary',         label: 'Pendiente', icon: '⏳' }, // ← cambia esto
-  ENROLLED: { cls: 'bg-warning text-dark', label: 'Cursando',  icon: '📘' }, // ← y esto
+  APPROVED: { cls: 'bg-success', label: 'Aprobada', icon: '✅' },
+  FAILED: { cls: 'bg-danger', label: 'Reprobada', icon: '❌' },
+  PENDING: { cls: 'bg-secondary', label: 'Pendiente', icon: '⏳' },
+  ENROLLED: { cls: 'bg-warning text-dark', label: 'Cursando', icon: '📘' },
 };
 const getStatus = (s) => statusConfig[s] ?? { cls: 'bg-secondary', label: s, icon: '❓' };
 
 export default function StudentCurriculum() {
-  const { id }        = useParams();
+  const { id } = useParams();
   const { user, isAdmin } = useAuth();
-  const navigate      = useNavigate();
+  const navigate = useNavigate();
 
   const studentId = id ?? user?.id;
 
   const [curriculum, setCurriculum] = useState([]);
-  const [student,    setStudent]    = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState('');
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!studentId) return;
@@ -37,10 +37,9 @@ export default function StudentCurriculum() {
       .finally(() => setLoading(false));
   }, [studentId]);
 
-  const approved     = curriculum.filter((c) => c.status === 'APPROVED').length;
-  const failed       = curriculum.filter((c) => c.status === 'FAILED').length;
-  const enrolled     = curriculum.filter((c) => c.status === 'ENROLLED').length;
-  const pending      = curriculum.filter((c) => c.status === 'PENDING').length;
+  const approved = curriculum.filter((c) => c.status === 'APPROVED').length;
+  const failed = curriculum.filter((c) => c.status === 'FAILED').length;
+  const enrolled = curriculum.filter((c) => c.status === 'ENROLLED').length;
   const totalCredits = curriculum
     .filter((c) => c.status === 'APPROVED')
     .reduce((acc, c) => acc + (c.credits ?? 0), 0);
@@ -48,7 +47,6 @@ export default function StudentCurriculum() {
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center gap-3 mb-4">
-        {/* Admin vuelve a /students, estudiante vuelve a su dashboard */}
         <button
           className="btn btn-sm btn-outline-secondary"
           onClick={() => navigate(isAdmin ? '/students' : '/my-dashboard')}
@@ -75,13 +73,15 @@ export default function StudentCurriculum() {
         <>
           <div className="row g-3 mb-4">
             {[
-              { label: 'Aprobadas',  value: approved,      color: 'success'  },
-              { label: 'Reprobadas', value: failed,        color: 'danger'   },
-              { label: 'Cursando',   value: enrolled,      color: 'warning'  },
-              { label: 'Créditos',   value: totalCredits,  color: 'primary'  },
+              { label: 'Aprobadas', value: approved, color: 'success' },
+              { label: 'Reprobadas', value: failed, color: 'danger' },
+              { label: 'Cursando', value: enrolled, color: 'warning' },
+              { label: 'Créditos', value: totalCredits, color: 'primary' },
             ].map((stat) => (
               <div key={stat.label} className="col-6 col-sm-3">
-                <div className={`card border-0 bg-${stat.color} bg-opacity-10 text-center py-3`}>
+                <div
+                  className={`card border-0 bg-${stat.color} bg-opacity-10 text-center py-3`}
+                >
                   <div className={`fs-3 fw-bold text-${stat.color}`}>{stat.value}</div>
                   <div className="small text-muted">{stat.label}</div>
                 </div>
@@ -113,16 +113,26 @@ export default function StudentCurriculum() {
                     const cfg = getStatus(c.status);
                     return (
                       <tr key={c.subjectId}>
-                        <td><span className="badge bg-primary font-monospace">{c.subjectCode}</span></td>
+                        <td>
+                          <span className="badge bg-primary font-monospace">{c.subjectCode}</span>
+                        </td>
                         <td className="fw-semibold">{c.subjectName}</td>
                         <td className="text-muted">{c.credits ?? '—'}</td>
                         <td>
-                          {c.grade != null
-                            ? <span className={`fw-bold ${c.grade >= 4 ? 'text-success' : 'text-danger'}`}>{Number(c.grade).toFixed(1)}</span>
-                            : <span className="text-muted">—</span>}
+                          {c.grade != null ? (
+                            <span
+                              className={`fw-bold ${c.grade >= 4 ? 'text-success' : 'text-danger'}`}
+                            >
+                              {Number(c.grade).toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
                         </td>
                         <td>
-                          <span className={`badge ${cfg.cls}`}>{cfg.icon} {cfg.label}</span>
+                          <span className={`badge ${cfg.cls}`}>
+                            {cfg.icon} {cfg.label}
+                          </span>
                         </td>
                       </tr>
                     );
