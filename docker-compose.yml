@@ -1,0 +1,50 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "${DB_HOST_PORT}:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 6s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    #image: locomotive1584/academic-backend:latest
+    build: 
+      context: ./backend
+    container_name: backend_tbd
+    ports:
+      - "${BACKEND_HOST_PORT}:${BACKEND_CONTAINER_PORT}"
+    environment:
+      - BACKEND_CONTAINER_PORT=${BACKEND_CONTAINER_PORT}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    #image: locomotive1584/academic-frontend:latest
+    build: 
+      context: ./frontend
+    container_name: frontend_tbd
+    environment:
+      - REACT_APP_API_URL=${API_URL}
+    ports:
+      - "${FRONTEND_HOST_PORT}:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
