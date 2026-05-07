@@ -1,6 +1,5 @@
 package usach.cl.demo.model;
 
-// entidad que representa una asignatura dentro de una carrera
 public class SubjectEntity {
 
     private Long id;
@@ -9,7 +8,6 @@ public class SubjectEntity {
     private int credits;
     private Long careerId;
 
-    // retorna true si la asignatura tiene creditos validos
     public boolean isActive() {
         return this.credits > 0;
     }

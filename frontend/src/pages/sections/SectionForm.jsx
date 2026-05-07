@@ -6,26 +6,31 @@ export default function SectionForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     subjectId: '', professorId: '', semesterId: '',
-    totalSeats: '', availableSeats: '', available: true,
+    totalSeats: '', availableSeats: '',
   });
-  const [subjects, setSubjects]   = useState([]);
-  const [semesters, setSemesters] = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState('');
+  const [subjects,   setSubjects]   = useState([]);
+  const [semesters,  setSemesters]  = useState([]);
+  const [professors, setProfessors] = useState([]);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
 
   useEffect(() => {
-    Promise.all([api.get('/api/subjects'), api.get('/api/semesters')]).then(([sRes, semRes]) => {
+    Promise.all([
+      api.get('/api/subjects'),
+      api.get('/api/semesters'),
+      api.get('/api/professors'),
+    ]).then(([sRes, semRes, profRes]) => {
       setSubjects(sRes.data);
       setSemesters(semRes.data);
+      setProfessors(profRes.data);
     });
   }, []);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
   };
 
-  // Cuando cambia totalSeats, autocompletar availableSeats
   const handleTotalSeats = (e) => {
     const val = e.target.value;
     setForm({ ...form, totalSeats: val, availableSeats: val });
@@ -41,7 +46,6 @@ export default function SectionForm() {
       semesterId:     Number(form.semesterId),
       totalSeats:     Number(form.totalSeats),
       availableSeats: Number(form.availableSeats),
-      available:      form.available,
     };
     try {
       await api.post('/api/sections', payload);
@@ -51,6 +55,13 @@ export default function SectionForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Badge de estado para el dropdown de semestres
+  const statusLabel = (status) => {
+    if (status === 'IN_PROGRESS') return ' ✅ En curso';
+    if (status === 'CLOSED')      return ' 🔒 Cerrado';
+    return ' 📅 Planificado';
   };
 
   return (
@@ -64,6 +75,7 @@ export default function SectionForm() {
         <div className="card-body p-4">
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
+
               <div className="col-12">
                 <label className="form-label fw-semibold">Asignatura</label>
                 <select name="subjectId" className="form-select"
@@ -74,47 +86,55 @@ export default function SectionForm() {
                   ))}
                 </select>
               </div>
+
               <div className="col-12">
                 <label className="form-label fw-semibold">Semestre</label>
                 <select name="semesterId" className="form-select"
                   value={form.semesterId} onChange={handleChange} required>
                   <option value="">— Selecciona semestre —</option>
                   {semesters.map((s) => (
-                    <option key={s.id} value={s.id}>{s.year} — Período {s.period}</option>
+                    <option key={s.id} value={s.id}>
+                      {s.year} — {s.period}{statusLabel(s.status)}
+                    </option>
+                  ))}
+                </select>
+                <div className="form-text">Se recomienda asignar secciones al semestre en curso.</div>
+              </div>
+
+              <div className="col-12">
+                <label className="form-label fw-semibold">Profesor</label>
+                <select name="professorId" className="form-select"
+                  value={form.professorId} onChange={handleChange} required>
+                  <option value="">— Selecciona profesor —</option>
+                  {professors.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.firstName} {p.lastName} — {p.department}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div className="col-12">
-                <label className="form-label fw-semibold">ID del Profesor</label>
-                <input type="number" name="professorId" className="form-control" min="1"
-                  value={form.professorId} onChange={handleChange}
-                  placeholder="ID del profesor asignado" required />
-                <div className="form-text">Ingresa el ID numérico del profesor.</div>
-              </div>
+
               <div className="col-sm-6">
                 <label className="form-label fw-semibold">Cupos Totales</label>
                 <input type="number" name="totalSeats" className="form-control" min="1"
                   value={form.totalSeats} onChange={handleTotalSeats} required />
               </div>
+
               <div className="col-sm-6">
                 <label className="form-label fw-semibold">Cupos Disponibles</label>
                 <input type="number" name="availableSeats" className="form-control" min="0"
                   value={form.availableSeats} onChange={handleChange} required />
+                <div className="form-text">Normalmente igual a cupos totales.</div>
               </div>
-              <div className="col-12">
-                <div className="form-check">
-                  <input className="form-check-input" type="checkbox" name="available"
-                    checked={form.available} onChange={handleChange} id="availCheck" />
-                  <label className="form-check-label" htmlFor="availCheck">Sección disponible</label>
-                </div>
-              </div>
+
             </div>
 
             <div className="d-flex gap-2 mt-4">
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? 'Creando...' : 'Crear Sección'}
               </button>
-              <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/sections')}>
+              <button type="button" className="btn btn-outline-secondary"
+                onClick={() => navigate('/sections')}>
                 Cancelar
               </button>
             </div>

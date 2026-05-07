@@ -16,8 +16,6 @@ export default function StudentCurriculum() {
   const { user, isAdmin } = useAuth();
   const navigate      = useNavigate();
 
-  // Si hay id en la URL (admin ve la malla de otro), lo usa. 
-  // Si no (estudiante ve /my-curriculum), usa su propio id del token.
   const studentId = id ?? user?.id;
 
   const [curriculum, setCurriculum] = useState([]);

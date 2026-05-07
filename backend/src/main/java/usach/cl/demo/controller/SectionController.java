@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// controlador que expone los endpoints REST para secciones
 @RestController
 @RequestMapping("/api/sections")
 public class SectionController {
@@ -19,13 +18,11 @@ public class SectionController {
         this.sectionService = sectionService;
     }
 
-    // GET /api/sections - retorna todas las secciones
     @GetMapping
     public ResponseEntity<List<SectionEntity>> findAll() {
         return ResponseEntity.ok(sectionService.findAll());
     }
 
-    // GET /api/sections/{id} - retorna una seccion por id
     @GetMapping("/{id}")
     public ResponseEntity<SectionEntity> findById(@PathVariable Long id) {
         try {
@@ -35,7 +32,6 @@ public class SectionController {
         }
     }
 
-    // POST /api/sections - crea una nueva seccion
     @PostMapping
     public ResponseEntity<SectionEntity> save(@RequestBody SectionEntity section) {
         try {

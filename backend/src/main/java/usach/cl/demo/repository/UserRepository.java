@@ -16,7 +16,6 @@ public class UserRepository {
         this.jdbcClient = jdbcClient;
     }
 
-    // Buscar por email — usado por el login
     public UserEntity findByEmail(@Nonnull String email) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE email = ?")
                 .params(email)
@@ -24,7 +23,6 @@ public class UserRepository {
                 .single();
     }
 
-    // Buscar por id
     public UserEntity findById(int id) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE id = ?")
                 .params(id)
@@ -32,7 +30,6 @@ public class UserRepository {
                 .single();
     }
 
-    // Buscar todos por rol
     public List<UserEntity> findAllByRole(Role role) {
         return jdbcClient.sql("SELECT * FROM usuario WHERE rol = ?")
                 .params(role.name())
@@ -40,7 +37,6 @@ public class UserRepository {
                 .list();
     }
 
-    // Guardar nuevo usuario
     public UserEntity save(@Nonnull UserEntity user) {
         jdbcClient.sql(
                         "INSERT INTO usuario (rut, email, password_hash, rol) VALUES (?, ?, ?, ?)")
@@ -54,21 +50,18 @@ public class UserRepository {
         return user;
     }
 
-    // Actualizar usuario
     public void updateUser(int id, String email, String rol) {
         jdbcClient.sql("UPDATE usuario SET email = ?, rol = ? WHERE id = ?")
                 .params(email, rol, id)
                 .update();
     }
 
-    // Eliminar por id
     public void deleteById(int id) {
         jdbcClient.sql("DELETE FROM usuario WHERE id = ?")
                 .params(id)
                 .update();
     }
 
-    // Convertir fila SQL a UserEntity
     private UserEntity mapRowToUser(java.sql.ResultSet rs, int rowNum)
             throws java.sql.SQLException {
         return new UserEntity(

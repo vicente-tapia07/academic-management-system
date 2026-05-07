@@ -1,6 +1,5 @@
 package usach.cl.demo.model;
 
-// entidad de enlace entre asignaturas (cual es prerequisito de cual)
 public class PrerequisiteEntity {
 
     private Long subjectId;

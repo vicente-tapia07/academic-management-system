@@ -19,13 +19,11 @@ public class SemesterController {
         this.semesterService = semesterService;
     }
 
-    // GET /api/semesters - retorna todos los semestres
     @GetMapping
     public ResponseEntity<List<SemesterEntity>> findAll() {
         return ResponseEntity.ok(semesterService.findAll());
     }
 
-    // GET /api/semesters/{id} - retorna un semestre por id
     @GetMapping("/{id}")
     public ResponseEntity<SemesterEntity> findById(@PathVariable Long id) {
         try {
@@ -35,7 +33,6 @@ public class SemesterController {
         }
     }
 
-    // POST /api/semesters - crea un nuevo semestre
     @PostMapping
     public ResponseEntity<SemesterEntity> save(@RequestBody SemesterEntity semester) {
         try {
@@ -45,7 +42,6 @@ public class SemesterController {
         }
     }
 
-    // PUT /api/semesters/{id} - actualiza un semestre existente
     @PutMapping("/{id}")
     public ResponseEntity<SemesterEntity> update(@PathVariable Long id,
                                                  @RequestBody SemesterEntity semester) {
@@ -56,7 +52,6 @@ public class SemesterController {
         }
     }
 
-    // POST /api/semesters/{id}/close - llama al SP de cierre de semestre
     @PostMapping("/{id}/close")
     public ResponseEntity<String> closeSemester(@PathVariable Long id) {
         try {

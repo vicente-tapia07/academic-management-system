@@ -8,7 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-// repositorio para acceder a la tabla prerequisite usando JDBC directo
 @Repository
 public class PrerequisiteRepository {
 
@@ -18,7 +17,6 @@ public class PrerequisiteRepository {
         this.dataSource = dataSource;
     }
 
-    // retorna todos los prerequisitos de una asignatura
     public List<PrerequisiteEntity> findBySubjectId(Long subjectId) {
         String sql = "SELECT * FROM prerequisite WHERE subject_id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -40,7 +38,6 @@ public class PrerequisiteRepository {
         }
     }
 
-    // guarda un nuevo prerequisito
     public void save(PrerequisiteEntity prerequisite) {
         String sql = "INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (?, ?)";
         try (Connection conn = dataSource.getConnection();
@@ -55,7 +52,6 @@ public class PrerequisiteRepository {
         }
     }
 
-    // elimina un prerequisito
     public void delete(Long subjectId, Long prerequisiteId) {
         String sql = "DELETE FROM prerequisite WHERE subject_id = ? AND prerequisite_subject_id = ?";
         try (Connection conn = dataSource.getConnection();

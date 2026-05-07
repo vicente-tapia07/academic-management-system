@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// repositorio para acceder a la tabla section usando JDBC directo
 @Repository
 public class SectionRepository {
 
@@ -19,7 +18,6 @@ public class SectionRepository {
         this.dataSource = dataSource;
     }
 
-    // mapea una fila del ResultSet a un objeto SectionEntity
     private SectionEntity mapRow(ResultSet rs) throws SQLException {
         SectionEntity section = new SectionEntity();
         section.setId(rs.getLong("id"));
@@ -31,7 +29,6 @@ public class SectionRepository {
         return section;
     }
 
-    // retorna todas las secciones
     public List<SectionEntity> findAll() {
         String sql = "SELECT * FROM section";
         try (Connection conn = dataSource.getConnection();
@@ -49,7 +46,6 @@ public class SectionRepository {
         }
     }
 
-    // busca una seccion por su id
     public Optional<SectionEntity> findById(Long id) {
         String sql = "SELECT * FROM section WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -67,7 +63,6 @@ public class SectionRepository {
         }
     }
 
-    // guarda una nueva seccion y retorna el id generado
     public SectionEntity save(SectionEntity section) {
         String sql = "INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING id";
@@ -90,7 +85,6 @@ public class SectionRepository {
         }
     }
 
-    // retorna todas las secciones de un profesor específico
     public List<SectionEntity> findByProfessorId(Long professorId) {
         String sql = "SELECT * FROM section WHERE professor_id = ?";
         try (Connection conn = dataSource.getConnection();

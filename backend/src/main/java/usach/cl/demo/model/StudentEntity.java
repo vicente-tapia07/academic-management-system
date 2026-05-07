@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Representa la tabla "student" en la base de datos
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

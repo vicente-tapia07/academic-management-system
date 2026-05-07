@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// repositorio para acceder a la tabla career usando JDBC directo
 @Repository
 public class CareerRepository {
 
@@ -19,7 +18,6 @@ public class CareerRepository {
         this.dataSource = dataSource;
     }
 
-    // mapea una fila del ResultSet a un objeto CareerEntity
     private CareerEntity mapRow(ResultSet rs) throws SQLException {
         CareerEntity career = new CareerEntity();
         career.setId(rs.getLong("id"));
@@ -28,7 +26,6 @@ public class CareerRepository {
         return career;
     }
 
-    // retorna todas las carreras
     public List<CareerEntity> findAll() {
         String sql = "SELECT * FROM career";
         try (Connection conn = dataSource.getConnection();
@@ -46,7 +43,6 @@ public class CareerRepository {
         }
     }
 
-    // busca una carrera por su id
     public Optional<CareerEntity> findById(Long id) {
         String sql = "SELECT * FROM career WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -64,7 +60,6 @@ public class CareerRepository {
         }
     }
 
-    // retorna todas las asignaturas de una carrera especifica
     public List<CareerEntity> findByCode(String code) {
         String sql = "SELECT * FROM career WHERE code = ?";
         try (Connection conn = dataSource.getConnection();
@@ -83,7 +78,6 @@ public class CareerRepository {
         }
     }
 
-    // guarda una nueva carrera y retorna el id generado
     public CareerEntity save(CareerEntity career) {
         String sql = "INSERT INTO career (code, name) VALUES (?, ?) RETURNING id";
         try (Connection conn = dataSource.getConnection();
@@ -102,7 +96,6 @@ public class CareerRepository {
         }
     }
 
-    // actualiza los datos de una carrera existente
     public void update(CareerEntity career) {
         String sql = "UPDATE career SET code = ?, name = ? WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -118,7 +111,6 @@ public class CareerRepository {
         }
     }
 
-    // elimina una carrera por su id
     public void delete(Long id) {
         String sql = "DELETE FROM career WHERE id = ?";
         try (Connection conn = dataSource.getConnection();

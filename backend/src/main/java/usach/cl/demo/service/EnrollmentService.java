@@ -12,42 +12,44 @@ public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
 
-    // Spring inyecta el repositorio automáticamente
     public EnrollmentService(EnrollmentRepository enrollmentRepository) {
         this.enrollmentRepository = enrollmentRepository;
     }
 
-    // Retorna todas las inscripciones
     public List<EnrollmentEntity> findAll() {
         return enrollmentRepository.findAll();
     }
 
-    // Retorna una inscripción por su ID
     public Optional<EnrollmentEntity> findById(Long id) {
         return enrollmentRepository.findById(id);
     }
 
-    // Retorna todas las inscripciones de un estudiante
     public List<EnrollmentEntity> findByStudentId(Long studentId) {
         return enrollmentRepository.findByStudentId(studentId);
     }
 
-    // Crea una nueva inscripción
     public int save(EnrollmentEntity enrollment) {
         return enrollmentRepository.save(enrollment);
     }
 
-    // Actualiza el estado de una inscripción
     public int updateStatus(Long id, String status) {
         return enrollmentRepository.updateStatus(id, status);
     }
 
-    // Elimina una inscripción por su ID
     public int deleteById(Long id) {
         return enrollmentRepository.deleteById(id);
     }
 
-    // Inscribe a un estudiante usando el stored procedure
+    public boolean cancelEnrollment(Long enrollmentId) {
+        Long sectionId = enrollmentRepository.getSectionIdByEnrollmentId(enrollmentId);
+        if (sectionId == null) return false;
+
+        enrollmentRepository.restoreSeat(sectionId);
+
+        int deleted = enrollmentRepository.deleteById(enrollmentId);
+        return deleted > 0;
+    }
+
     public void enrollStudent(Long studentId, Long sectionId) {
         enrollmentRepository.enrollStudent(studentId, sectionId);
     }

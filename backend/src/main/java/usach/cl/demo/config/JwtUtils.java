@@ -14,7 +14,9 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtils {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // En producción: variable de entorno
+    private final Key key = Keys.hmacShaKeyFor(
+        "esta-es-una-clave-secreta-de-al-menos-32-caracteres-ok".getBytes()
+    );
     private final long expirationMs = 86400000; // 24 horas
 
     public String generateToken(Authentication authentication) {

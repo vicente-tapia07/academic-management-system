@@ -6,40 +6,79 @@
   <component name="ChangeListManager">
     <list default="true" id="40181314-13ce-4405-9ed3-f7dd158576e2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/JwtUtils.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/CareerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/CareerController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/EnrollmentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/EnrollmentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/GradeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/GradeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/ProfessorController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SectionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SectionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SemesterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SemesterController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/StudentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/StudentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SubjectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/controller/SubjectController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/StudentDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/StudentDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/SubjectStatusDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/dto/SubjectStatusDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/CareerEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/CareerEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/PrerequisiteEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/PrerequisiteEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SectionEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SectionEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SemesterEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SemesterEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/StudentEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/StudentEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SubjectEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/model/SubjectEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/CareerRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/CareerRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/EnrollmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/EnrollmentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/FailureRateRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/FailureRateRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/GradeRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/GradeRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/PrerequisiteRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/PrerequisiteRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SectionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SectionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SemesterRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SemesterRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/StudentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/StudentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SubjectRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/SubjectRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/CareerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/CareerService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/EnrollmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/EnrollmentService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/ProfessorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/ProfessorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SectionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SectionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SemesterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SemesterService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/StudentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/StudentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SubjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/usach/cl/demo/service/SubjectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/JwtUtils.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/config/JwtUtils.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/EnrollmentController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/ProfessorController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/ProfessorController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/GradeController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/GradeController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/controller/StudentController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/dto/StudentDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/dto/StudentDTO.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/EnrollmentRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/EnrollmentRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/ProfessorRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/ProfessorRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/SectionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/SectionRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/GradeRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/GradeRepository.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/StudentRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/repository/StudentRepository.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/EnrollmentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/EnrollmentService.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/ProfessorService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/ProfessorService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/StudentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/usach/cl/demo/service/StudentService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_mock" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_mock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_sp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_triggers" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/.eslintcache" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/.eslintcache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/0.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/0.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/1.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/1.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/10.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/10.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/2.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/2.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/3.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/3.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/4.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/4.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/5.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/5.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/6.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/6.pack" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/7.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/7.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/8.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/8.pack" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/9.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/9.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack.old" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.cache/default-development/index.pack.old" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/Navbar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Navbar.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/careers/CareerList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/careers/CareerList.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/reports/FailureReport.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/reports/FailureReport.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/professor/GradeForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/professor/GradeForm.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/professor/ProfessorCourses.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/professor/ProfessorCourses.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/professor/StudentGrades.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/professor/StudentGrades.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/sections/SectionForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/sections/SectionForm.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/sections/SectionList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/sections/SectionList.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/semesters/SemesterList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/semesters/SemesterList.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/semesters/SemesterForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/semesters/SemesterForm.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/EnrollForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/EnrollForm.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/StudentCurriculum.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/StudentCurriculum.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/StudentDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/StudentDashboard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/StudentEnrollments.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/StudentEnrollments.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/students/StudentList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/students/StudentList.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/subjects/SubjectList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/subjects/SubjectList.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/router/AppRouter.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/router/AppRouter.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,7 +87,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="125" />
+    <option name="cachedIndexableFilesCount" value="130" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">

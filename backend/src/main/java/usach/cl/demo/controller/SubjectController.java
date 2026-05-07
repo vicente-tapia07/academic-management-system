@@ -19,13 +19,11 @@ public class SubjectController {
         this.subjectService = subjectService;
     }
 
-    // GET /api/subjects - retorna todas las asignaturas
     @GetMapping
     public ResponseEntity<List<SubjectEntity>> findAll() {
         return ResponseEntity.ok(subjectService.findAll());
     }
 
-    // GET /api/subjects/{id} - retorna una asignatura por id
     @GetMapping("/{id}")
     public ResponseEntity<SubjectEntity> findById(@PathVariable Long id) {
         try {
@@ -35,7 +33,6 @@ public class SubjectController {
         }
     }
 
-    // POST /api/subjects - crea una nueva asignatura
     @PostMapping
     public ResponseEntity<SubjectEntity> save(@RequestBody SubjectEntity subject) {
         try {
@@ -45,7 +42,6 @@ public class SubjectController {
         }
     }
 
-    // PUT /api/subjects/{id} - actualiza una asignatura existente
     @PutMapping("/{id}")
     public ResponseEntity<SubjectEntity> update(@PathVariable Long id,
                                                 @RequestBody SubjectEntity subject) {
@@ -56,7 +52,6 @@ public class SubjectController {
         }
     }
 
-    // DELETE /api/subjects/{id} - elimina una asignatura
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         try {

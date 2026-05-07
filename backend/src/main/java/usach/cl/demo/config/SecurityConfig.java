@@ -39,7 +39,7 @@ public class SecurityConfig {
 
                         // PROFESOR + ADMIN: rutas específicas PRIMERO
                         .requestMatchers(HttpMethod.POST, "/api/professors/grade").hasAnyRole("ADMIN", "PROFESSOR")
-                        .requestMatchers(HttpMethod.GET,  "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
+                        .requestMatchers(HttpMethod.GET, "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
 
                         // NOTAS
                         .requestMatchers(HttpMethod.GET,  "/api/grades").hasAnyRole("ADMIN", "PROFESSOR")

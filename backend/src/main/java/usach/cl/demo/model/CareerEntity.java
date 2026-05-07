@@ -1,6 +1,5 @@
 package usach.cl.demo.model;
 
-// entity that represents a university career
 public class CareerEntity {
 
     private Long id;

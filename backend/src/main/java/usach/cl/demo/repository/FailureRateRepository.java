@@ -13,7 +13,6 @@ public interface FailureRateRepository extends CrudRepository<FailureRateDTO, Lo
     @Query("SELECT * FROM mv_failure_rate")
     List<FailureRateDTO> getFailureRateReport();
 
-    // Agregamos @Modifying y ejecutamos el comando REFRESH directo
     @Modifying
     @Query("REFRESH MATERIALIZED VIEW mv_failure_rate")
     void refreshView();

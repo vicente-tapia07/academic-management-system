@@ -3,6 +3,8 @@ package usach.cl.demo.repository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
+import usach.cl.demo.dto.StudentDTO;
 import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
 
@@ -22,10 +24,29 @@ public class StudentRepository {
 
     private static final String DELETE_BY_ID = "DELETE FROM student WHERE id = ?";
 
+    private static final String INSERT_USUARIO =
+        "INSERT INTO usuario (rut, email, password_hash, rol) " +
+        "VALUES (?, ?, crypt(?, gen_salt('bf', 10)), 'STUDENT') RETURNING id";
+
+    private static final String INSERT_STUDENT_WITH_USER =
+        "INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) " +
+        "VALUES (?, ?, ?, ?, 'ACTIVE')";
+
     private final JdbcTemplate jdbcTemplate;
 
     public StudentRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public void saveWithUsuario(StudentDTO dto) {
+        Long usuarioId = jdbcTemplate.queryForObject(
+            INSERT_USUARIO, Long.class,
+            dto.rut(), dto.email(), dto.password()
+        );
+        jdbcTemplate.update(
+            INSERT_STUDENT_WITH_USER,
+            usuarioId, dto.enrollmentNumber(), dto.firstName(), dto.lastName()
+        );
     }
 
     private final RowMapper<StudentEntity> studentMapper = (rs, rowNum) -> {
@@ -83,7 +104,6 @@ public class StudentRepository {
                     "END AS status, " +
                     "g.value AS grade " +
                     "FROM subject sub " +
-                    // Filtra solo asignaturas de la carrera del estudiante
                     "JOIN student st ON st.id = ? " +
                     "JOIN career c ON sub.career_id = c.id " +
                     "LEFT JOIN section sec ON sec.subject_id = sub.id " +
@@ -91,7 +111,6 @@ public class StudentRepository {
                     "LEFT JOIN grade g ON g.enrollment_id = e.id " +
                     "ORDER BY sub.id, g.value DESC NULLS LAST";
 
-    // Mapper para convertir cada fila en un SubjectStatusDTO
     private final RowMapper<SubjectStatusDTO> curriculumMapper = (rs, rowNum) -> {
         SubjectStatusDTO dto = new SubjectStatusDTO();
         dto.setSubjectId(rs.getLong("subject_id"));
@@ -99,13 +118,11 @@ public class StudentRepository {
         dto.setSubjectName(rs.getString("subject_name"));
         dto.setCredits(rs.getInt("credits"));
         dto.setStatus(rs.getString("status"));
-        // grade puede ser null si es PENDING o ENROLLED
         double grade = rs.getDouble("grade");
         dto.setGrade(rs.wasNull() ? null : grade);
         return dto;
     };
 
-    // Retorna la malla curricular de un estudiante
     public List<SubjectStatusDTO> findCurriculum(Long studentId) {
         return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId, studentId);
     }

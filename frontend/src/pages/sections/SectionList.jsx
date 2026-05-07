@@ -32,7 +32,16 @@ export default function SectionList() {
   const subjectName  = (id) => subjects.find((s)  => s.id === id)?.name  ?? `#${id}`;
   const semesterLabel = (id) => {
     const s = semesters.find((s) => s.id === id);
-    return s ? `${s.year}-${s.period}` : `#${id}`;
+    if (!s) return `#${id}`;
+    const badge =
+      s.status === 'IN_PROGRESS' ? 'bg-success' :
+      s.status === 'CLOSED'      ? 'bg-dark'    : 'bg-secondary';
+    return (
+      <span>
+        <span className={`badge ${badge} me-1`}>{s.status}</span>
+        {s.year}-{s.period}
+      </span>
+    );
   };
 
   return (

@@ -15,12 +15,10 @@ export default function ProfessorCourses() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Encontrar el professor_id del usuario logueado
         const profRes = await api.get('/api/professors');
         const me = profRes.data.find((p) => p.usuarioId === user.id);
         if (!me) throw new Error('Profesor no encontrado');
 
-        // Cargar secciones + datos de apoyo en paralelo
         const [secRes, subRes, semRes] = await Promise.all([
           api.get(`/api/professors/${me.id}/sections`),
           api.get('/api/subjects'),
@@ -38,12 +36,20 @@ export default function ProfessorCourses() {
     load();
   }, [user.id]);
 
-  // Helpers para mostrar nombres en vez de IDs
-  const subjectName  = (id) => subjects.find((s) => s.id === id)?.name  ?? `Asignatura #${id}`;
-  const subjectCode  = (id) => subjects.find((s) => s.id === id)?.code  ?? '---';
-  const semesterName = (id) => {
-    const s = semesters.find((s) => s.id === id);
-    return s ? `${s.year} - ${s.period}` : `Semestre #${id}`;
+  const subjectName = (id) => subjects.find((s) => s.id === id)?.name ?? `Asignatura #${id}`;
+  const subjectCode = (id) => subjects.find((s) => s.id === id)?.code ?? '---';
+
+  // Ahora devuelve el objeto completo del semestre, no solo el nombre
+  const getSemester = (id) => semesters.find((s) => s.id === id);
+
+  // Badge visual según el estado del semestre
+  const semesterBadge = (sem) => {
+    if (!sem) return <span className="badge bg-secondary">—</span>;
+    if (sem.status === 'CLOSED')
+      return <span className="badge bg-dark">🔒 {sem.year}-{sem.period} Cerrado</span>;
+    if (sem.status === 'IN_PROGRESS')
+      return <span className="badge bg-success">✅ {sem.year}-{sem.period} En Curso</span>;
+    return <span className="badge bg-secondary">📅 {sem.year}-{sem.period} Planificado</span>;
   };
 
   if (loading) return <p className="text-muted p-4">Cargando cursos...</p>;
@@ -52,8 +58,7 @@ export default function ProfessorCourses() {
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center gap-3 mb-4">
-        <button className="btn btn-outline-secondary"
-          onClick={() => navigate('/professor')}>
+        <button className="btn btn-outline-secondary" onClick={() => navigate('/professor')}>
           ← Volver
         </button>
         <div>
@@ -67,31 +72,45 @@ export default function ProfessorCourses() {
       )}
 
       <div className="row g-3">
-        {sections.map((s) => (
-          <div key={s.id} className="col-md-6">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start">
-                  <span className="badge bg-primary font-monospace fs-6">
-                    {subjectCode(s.subjectId)}
-                  </span>
-                  <span className="badge bg-secondary">
-                    {semesterName(s.semesterId)}
-                  </span>
+        {sections.map((s) => {
+          const sem     = getSemester(s.semesterId);
+          const cerrado = sem?.status === 'CLOSED';
+
+          return (
+            <div key={s.id} className="col-md-6">
+              {/* Si el semestre está cerrado, el borde de la card es gris */}
+              <div className={`card border-0 shadow-sm h-100 ${cerrado ? 'opacity-75' : ''}`}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <span className="badge bg-primary font-monospace fs-6">
+                      {subjectCode(s.subjectId)}
+                    </span>
+                    {semesterBadge(sem)}
+                  </div>
+
+                  <h5 className="fw-bold mt-2 mb-1">{subjectName(s.subjectId)}</h5>
+                  <p className="text-muted small mb-3">
+                    Cupos disponibles: {s.availableSeats} / {s.totalSeats}
+                  </p>
+
+                  {/* Aviso cuando el semestre está cerrado */}
+                  {cerrado && (
+                    <div className="alert alert-secondary py-1 px-2 small mb-2">
+                      🔒 Semestre cerrado — las notas no pueden modificarse
+                    </div>
+                  )}
+
+                  <button
+                    className={`btn w-100 ${cerrado ? 'btn-outline-secondary' : 'btn-primary'}`}
+                    disabled={cerrado}
+                    onClick={() => !cerrado && navigate(`/professor/grades/${s.id}`)}>
+                    📋 {cerrado ? 'Notas bloqueadas' : 'Ver y gestionar notas'}
+                  </button>
                 </div>
-                <h5 className="fw-bold mt-2 mb-1">{subjectName(s.subjectId)}</h5>
-                <p className="text-muted small mb-3">
-                  Cupos disponibles: {s.availableSeats} / {s.totalSeats}
-                </p>
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={() => navigate(`/professor/grades/${s.id}`)}>
-                  📋 Ver y gestionar notas
-                </button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -43,12 +43,18 @@ export default function StudentList() {
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
-          ← Volver
-        </button>
-        <div>
-          <h2 className="fw-bold mb-0">Estudiantes</h2>
-          <p className="text-muted mb-0">Listado de alumnos registrados en el sistema</p>
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn btn-outline-secondary" onClick={() => window.history.back()}>
+            ← Volver
+          </button>
+          <div>
+            <h2 className="fw-bold mb-0">Estudiantes</h2>
+            <p className="text-muted mb-0">Listado de alumnos registrados en el sistema</p>
+          </div>
+        </div>
+        <div className="d-flex gap-2">
+          <Link to="/students/enroll" className="btn btn-outline-primary">+ Inscribir</Link>
+          <Link to="/students/new" className="btn btn-primary">+ Nuevo Estudiante</Link>
         </div>
       </div>
 

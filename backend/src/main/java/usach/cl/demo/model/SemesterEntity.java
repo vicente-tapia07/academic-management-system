@@ -2,7 +2,6 @@ package usach.cl.demo.model;
 
 import java.time.LocalDate;
 
-// entidad que representa un semestre academico
 public class SemesterEntity {
 
     private Long id;
@@ -14,18 +13,15 @@ public class SemesterEntity {
     private LocalDate gradeEndDate;
     private String status; // PLANNED, IN_PROGRESS, CLOSED
 
-    // retorna true si el semestre esta en curso
     public boolean isActive() {
         return "IN_PROGRESS".equals(this.status);
     }
 
-    // retorna true si hoy esta dentro del periodo de ingreso de notas
     public boolean isInGradePeriod() {
         LocalDate today = LocalDate.now();
         return !today.isBefore(gradeStartDate) && !today.isAfter(gradeEndDate);
     }
 
-    // retorna true si el semestre ya fue cerrado
     public boolean isClosed() {
         return "CLOSED".equals(this.status);
     }

@@ -21,14 +21,11 @@ export default function StudentDashboard() {
 
   return (
     <div className="container py-4">
-      {/* Bienvenida */}
       <div
         className="rounded-4 p-4 mb-4 text-white"
         style={{ background: 'linear-gradient(135deg, #003366, #0077cc)' }}
       >
-        <h2 className="fw-bold mb-1">
-          Hola, {student?.firstName} 👋
-        </h2>
+        <h2 className="fw-bold mb-1">Hola, {student?.firstName} 👋</h2>
         <p className="mb-0 opacity-75">
           Matrícula: <code className="text-white">{student?.enrollmentNumber}</code>
           {' · '}
@@ -36,9 +33,8 @@ export default function StudentDashboard() {
         </p>
       </div>
 
-      {/* Accesos rápidos */}
       <div className="row g-3">
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-3">
           <Link to="/my-curriculum" className="text-decoration-none">
             <div className="card border-0 shadow-sm h-100 p-4 text-center">
               <div style={{ fontSize: '2.5rem' }}>📋</div>
@@ -48,7 +44,7 @@ export default function StudentDashboard() {
           </Link>
         </div>
 
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-3">
           <Link to="/my-enrollments" className="text-decoration-none">
             <div className="card border-0 shadow-sm h-100 p-4 text-center">
               <div style={{ fontSize: '2.5rem' }}>📚</div>
@@ -58,12 +54,22 @@ export default function StudentDashboard() {
           </Link>
         </div>
 
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-3">
           <Link to="/my-profile" className="text-decoration-none">
             <div className="card border-0 shadow-sm h-100 p-4 text-center">
               <div style={{ fontSize: '2.5rem' }}>👤</div>
               <h5 className="fw-bold mt-2 mb-1">Mi Perfil</h5>
               <p className="text-muted small mb-0">Ver tu información personal</p>
+            </div>
+          </Link>
+        </div>
+
+        <div className="col-12 col-md-3">
+          <Link to="/my-grades" className="text-decoration-none">
+            <div className="card border-0 shadow-sm h-100 p-4 text-center">
+              <div style={{ fontSize: '2.5rem' }}>🎯</div>
+              <h5 className="fw-bold mt-2 mb-1">Mis Notas</h5>
+              <p className="text-muted small mb-0">Ver tus calificaciones por asignatura</p>
             </div>
           </Link>
         </div>

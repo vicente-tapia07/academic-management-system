@@ -16,19 +16,16 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    // Spring inyecta el servicio automáticamente
     public EnrollmentController(EnrollmentService enrollmentService) {
         this.enrollmentService = enrollmentService;
     }
 
-    // Retorna todas las inscripciones
     @GetMapping
     public ResponseEntity<List<EnrollmentEntity>> getAll() {
         List<EnrollmentEntity> enrollments = enrollmentService.findAll();
         return ResponseEntity.ok(enrollments);
     }
 
-    // Retorna una inscripción por su ID
     @GetMapping("/{id}")
     public ResponseEntity<EnrollmentEntity> getById(@PathVariable Long id) {
         Optional<EnrollmentEntity> enrollment = enrollmentService.findById(id);
@@ -37,23 +34,18 @@ public class EnrollmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Retorna todas las inscripciones de un estudiante
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<EnrollmentEntity>> getByStudentId(@PathVariable Long studentId) {
         List<EnrollmentEntity> enrollments = enrollmentService.findByStudentId(studentId);
         return ResponseEntity.ok(enrollments);
     }
 
-    // Retorna todas las inscripciones de una sección
     @GetMapping("/section/{sectionId}")
     public ResponseEntity<List<EnrollmentEntity>> getBySectionId(@PathVariable Long sectionId) {
         List<EnrollmentEntity> enrollments = enrollmentService.findBySectionId(sectionId);
         return ResponseEntity.ok(enrollments);
     }
 
-
-
-    // Crea una nueva inscripción
     @PostMapping
     public ResponseEntity<String> create(@RequestBody EnrollmentEntity enrollment) {
         enrollment.setEnrollmentDate(LocalDate.now());
@@ -65,7 +57,6 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating enrollment");
     }
 
-    // Inscribe a un estudiante en una sección usando el stored procedure
     @PostMapping("/enroll")
     public ResponseEntity<String> enroll(@RequestBody EnrollmentEntity enrollment) {
         try {
@@ -75,14 +66,17 @@ public class EnrollmentController {
             );
             return ResponseEntity.status(HttpStatus.CREATED).body("Student enrolled successfully");
         } catch (Exception e) {
-            // Extraemos solo la primera línea del mensaje de error
             String fullMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+
+            if (fullMessage.contains("enrollment_student_id_section_id_key")) {
+                return ResponseEntity.badRequest().body("Ya estás inscrito en esta asignatura");
+            }
+
             String cleanMessage = fullMessage.split("\n")[0].replace("ERROR: ", "").trim();
             return ResponseEntity.badRequest().body(cleanMessage);
         }
     }
 
-    // Actualiza el estado de una inscripción
     @PatchMapping("/{id}/status")
     public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestBody String status) {
         String cleanStatus = status.replace("\"", "").trim();
@@ -93,12 +87,11 @@ public class EnrollmentController {
         return ResponseEntity.notFound().build();
     }
 
-    // Elimina una inscripción por su ID
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        int result = enrollmentService.deleteById(id);
-        if (result > 0) {
-            return ResponseEntity.ok("Enrollment deleted successfully");
+        boolean cancelled = enrollmentService.cancelEnrollment(id);
+        if (cancelled) {
+            return ResponseEntity.ok("Inscripción cancelada y cupo restaurado");
         }
         return ResponseEntity.notFound().build();
     }

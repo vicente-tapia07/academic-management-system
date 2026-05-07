@@ -35,11 +35,9 @@ export default function StudentGrades() {
     load();
   }, [sectionId]);
 
-  // Dado un enrollmentId, busca la nota correspondiente
   const gradeFor = (enrollmentId) =>
     grades.find((g) => g.enrollmentId === enrollmentId);
 
-  // Dado un studentId, busca el nombre del estudiante
   const studentName = (studentId) => {
     const s = students.find((s) => s.id === studentId);
     return s ? `${s.firstName} ${s.lastName}` : `Estudiante #${studentId}`;

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Representa el estado de una asignatura en la malla del estudiante
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

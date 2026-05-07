@@ -11,158 +11,96 @@ INSERT INTO career (code, name) VALUES ('INF', 'Ingeniería Informática');
 INSERT INTO career (code, name) VALUES ('ICI', 'Ingeniería Civil Industrial');
 
 -- ── Asignaturas ──────────────────────────────
-INSERT INTO subject (code, name, credits, career_id) VALUES ('CAL1', 'Cálculo 1',       4, 1);
-INSERT INTO subject (code, name, credits, career_id) VALUES ('CAL2', 'Cálculo 2',       4, 1);
-INSERT INTO subject (code, name, credits, career_id) VALUES ('PRG1', 'Programación 1',  4, 1);
-INSERT INTO subject (code, name, credits, career_id) VALUES ('PRG2', 'Programación 2',  4, 1);
-INSERT INTO subject (code, name, credits, career_id) VALUES ('BDD1', 'Base de Datos',   4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('CAL1', 'Cálculo 1',      4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('CAL2', 'Cálculo 2',      4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('PRG1', 'Programación 1', 4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('PRG2', 'Programación 2', 4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('BDD1', 'Base de Datos',  4, 1);
+INSERT INTO subject (code, name, credits, career_id) VALUES ('ALG1', 'Álgebra 1',      3, 1);
 
 -- ── Prerequisitos ────────────────────────────
--- CAL2 requiere CAL1
-INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (2, 1);
--- PRG2 requiere PRG1
-INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (4, 3);
--- BDD1 requiere PRG1
-INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (5, 3);
+INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (2, 1); -- CAL2 requiere CAL1
+INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (4, 3); -- PRG2 requiere PRG1
+INSERT INTO prerequisite (subject_id, prerequisite_subject_id) VALUES (5, 3); -- BDD1 requiere PRG1
 
 -- ── Semestres ────────────────────────────────
+-- Semestre 1: CERRADO (para probar bloqueo de notas)
 INSERT INTO semester (year, period, start_date, end_date, grade_start_date, grade_end_date, status)
 VALUES (2024, '1S', '2024-03-01', '2024-07-31', '2024-06-01', '2024-07-31', 'CLOSED');
 
+-- Semestre 2: EN PROGRESO con periodo de notas ACTIVO HOY
 INSERT INTO semester (year, period, start_date, end_date, grade_start_date, grade_end_date, status)
-VALUES (2025, '1S', '2025-03-01', '2025-07-31', '2025-06-01', '2025-07-31', 'IN_PROGRESS');
+VALUES (2025, '1S', '2025-03-01', '2025-07-31', '2025-01-01', '2026-12-31', 'IN_PROGRESS');
+
+-- Semestre 3: PLANIFICADO (para probar cierre)
+INSERT INTO semester (year, period, start_date, end_date, grade_start_date, grade_end_date, status)
+VALUES (2026, '1S', '2026-03-01', '2026-07-31', '2026-06-01', '2026-07-31', 'PLANNED');
 
 -- ── Usuarios ─────────────────────────────────
--- Estudiantes
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('12345678-9', 'juan@usach.cl',   crypt('1234', gen_salt('bf', 10)), 'STUDENT');
-
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('98765432-1', 'maria@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'STUDENT');
-
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('13579246-8', 'pedro@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'STUDENT');
-
--- Admins
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('11111111-1', 'admin@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'ADMIN');
-
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('22222222-2', 'admin2@usach.cl', crypt('1234', gen_salt('bf', 10)), 'ADMIN');
-
--- Profesores
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('11222333-4', 'carlos.ruiz@usach.cl', crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
-
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('55666777-8', 'ana.lopez@usach.cl',   crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
-
-INSERT INTO usuario (rut, email, password_hash, rol)
-VALUES ('33344455-6', 'diego.mora@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('12345678-9', 'juan@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'STUDENT');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('98765432-1', 'maria@usach.cl',       crypt('1234', gen_salt('bf', 10)), 'STUDENT');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('13579246-8', 'pedro@usach.cl',       crypt('1234', gen_salt('bf', 10)), 'STUDENT');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('24681357-9', 'ana.student@usach.cl', crypt('1234', gen_salt('bf', 10)), 'STUDENT');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('11111111-1', 'admin@usach.cl',       crypt('1234', gen_salt('bf', 10)), 'ADMIN');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('22222222-2', 'admin2@usach.cl',      crypt('1234', gen_salt('bf', 10)), 'ADMIN');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('11222333-4', 'carlos@usach.cl',      crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('55666777-8', 'ana@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
+INSERT INTO usuario (rut, email, password_hash, rol) VALUES ('33344455-6', 'diego@usach.cl',       crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
 
 -- ── Profesores ───────────────────────────────
--- professor_id=1 → Carlos Ruiz  (usuario_id=6)
-INSERT INTO professor (usuario_id, first_name, last_name, department)
-VALUES (6, 'Carlos', 'Ruiz',  'Informática');
-
--- professor_id=2 → Ana López    (usuario_id=7)
-INSERT INTO professor (usuario_id, first_name, last_name, department)
-VALUES (7, 'Ana',    'López', 'Matemáticas');
-
--- professor_id=3 → Diego Mora   (usuario_id=8)
-INSERT INTO professor (usuario_id, first_name, last_name, department)
-VALUES (8, 'Diego',  'Mora',  'Matemáticas');
+INSERT INTO professor (usuario_id, first_name, last_name, department) VALUES (7, 'Carlos', 'Ruiz',  'Informática');
+INSERT INTO professor (usuario_id, first_name, last_name, department) VALUES (8, 'Ana',    'López', 'Matemáticas');
+INSERT INTO professor (usuario_id, first_name, last_name, department) VALUES (9, 'Diego',  'Mora',  'Matemáticas');
 
 -- ── Estudiantes ──────────────────────────────
--- student_id=1 → Juan   (usuario_id=1)
-INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status)
-VALUES (1, '2024001', 'Juan',  'Pérez',    'ACTIVE');
+-- Juan (id=1): aprueba todo en sem1 → puede CAL2, PRG2, BDD1 en sem2
+INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) VALUES (1, '2024001', 'Juan',  'Pérez',    'ACTIVE');
+-- María (id=2): reprueba CAL1 → NO puede CAL2 en sem2
+INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) VALUES (2, '2024002', 'María', 'González', 'ACTIVE');
+-- Pedro (id=3): aprueba todo → puede todo en sem2
+INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) VALUES (3, '2024003', 'Pedro', 'Soto',     'ACTIVE');
+-- Lucas (id=4): sin notas aún → no puede ramos con prerequisito
+INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) VALUES (4, '2024004', 'Lucas', 'Torres',   'ACTIVE');
 
--- student_id=2 → María  (usuario_id=2)
-INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status)
-VALUES (2, '2024002', 'María', 'González', 'ACTIVE');
+-- ── Secciones semestre 1 (2024 CLOSED) ───────
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (1, 2, 1, 30, 27); -- sec=1: CAL1
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (3, 1, 1, 30, 27); -- sec=2: PRG1
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (6, 3, 1, 30, 28); -- sec=3: ALG1
 
--- student_id=3 → Pedro  (usuario_id=3)
-INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status)
-VALUES (3, '2024003', 'Pedro', 'Soto',     'ACTIVE');
+-- ── Secciones semestre 2 (2025 IN_PROGRESS) ──
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (1, 3, 2, 30, 28); -- sec=4: CAL1 (repitentes)
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (2, 2, 2, 30, 2);  -- sec=5: CAL2 (solo 2 cupos para probar SP)
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (4, 1, 2, 30, 28); -- sec=6: PRG2
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (5, 1, 2, 30, 29); -- sec=7: BDD1
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (6, 2, 2, 0,  0);  -- sec=8: ALG1 SIN CUPOS (para probar SP bloqueo)
 
--- ── Secciones ────────────────────────────────
--- SEMESTRE 1 - 2024 (CLOSED)
--- section_id=1: CAL1, Ana López
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (1, 2, 1, 30, 27);
+-- ── Inscripciones semestre 1 ──────────────────
+-- Juan: CAL1 y PRG1
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (1, 1, '2024-03-01', 'COMPLETED');
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (1, 2, '2024-03-01', 'COMPLETED');
+-- María: solo CAL1
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (2, 1, '2024-03-01', 'COMPLETED');
+-- Pedro: CAL1 y PRG1
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 1, '2024-03-01', 'COMPLETED');
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 2, '2024-03-01', 'COMPLETED');
 
--- section_id=2: PRG1, Carlos Ruiz
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (3, 1, 1, 30, 28);
-
--- SEMESTRE 2 - 2025 (IN_PROGRESS)
--- section_id=3: CAL1 (para quienes repiten), Diego Mora
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (1, 3, 2, 30, 29);
-
--- section_id=4: CAL2 (requiere CAL1), Ana López
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (2, 2, 2, 30, 28);
-
--- section_id=5: PRG2 (requiere PRG1), Carlos Ruiz
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (4, 1, 2, 30, 28);
-
--- section_id=6: BDD1 (requiere PRG1), Carlos Ruiz
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats)
-VALUES (5, 1, 2, 30, 29);
-
--- ── Inscripciones semestre 1 (2024 CLOSED) ───
--- Juan: CAL1 ✓ y PRG1 ✓
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (1, 1, '2024-03-01', 'COMPLETED');
-
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (1, 2, '2024-03-01', 'COMPLETED');
-
--- María: solo CAL1 (la reprueba → NO puede inscribir CAL2 en sem2)
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (2, 1, '2024-03-01', 'COMPLETED');
-
--- Pedro: CAL1 ✓ y PRG1 ✓
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (3, 1, '2024-03-01', 'COMPLETED');
-
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (3, 2, '2024-03-01', 'COMPLETED');
-
--- ── Notas semestre 1 ─────────────────────────
+-- ── Notas semestre 1 (trigger desactivado) ────
 ALTER TABLE grade DISABLE TRIGGER trg_check_calendario_notas;
 
--- Juan: CAL1=6.0, PRG1=5.5 → aprueba ambas → puede CAL2 y PRG2
-INSERT INTO grade (enrollment_id, value, entry_date) VALUES (1, 6.0, '2024-07-01');
-INSERT INTO grade (enrollment_id, value, entry_date) VALUES (2, 5.5, '2024-07-01');
-
--- María: CAL1=3.5 → REPRUEBA → solo puede reinscribir CAL1 en sem2
-INSERT INTO grade (enrollment_id, value, entry_date) VALUES (3, 3.5, '2024-07-01');
-
--- Pedro: CAL1=4.5, PRG1=5.0 → aprueba ambas → puede CAL2, PRG2, BDD1
-INSERT INTO grade (enrollment_id, value, entry_date) VALUES (4, 4.5, '2024-07-01');
-INSERT INTO grade (enrollment_id, value, entry_date) VALUES (5, 5.0, '2024-07-01');
+INSERT INTO grade (enrollment_id, value, entry_date) VALUES (1, 6.0, '2024-07-01'); -- Juan CAL1 ✅
+INSERT INTO grade (enrollment_id, value, entry_date) VALUES (2, 5.5, '2024-07-01'); -- Juan PRG1 ✅
+INSERT INTO grade (enrollment_id, value, entry_date) VALUES (3, 3.5, '2024-07-01'); -- María CAL1 ❌ REPRUEBA
+INSERT INTO grade (enrollment_id, value, entry_date) VALUES (4, 4.5, '2024-07-01'); -- Pedro CAL1 ✅
+INSERT INTO grade (enrollment_id, value, entry_date) VALUES (5, 5.0, '2024-07-01'); -- Pedro PRG1 ✅
 
 ALTER TABLE grade ENABLE TRIGGER trg_check_calendario_notas;
 
--- ── Inscripciones semestre 2 (2025 IN_PROGRESS) ──
--- Juan: CAL2 (tiene CAL1 ✓) y PRG2 (tiene PRG1 ✓)
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (1, 4, '2025-03-01', 'ACTIVE');
-
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (1, 5, '2025-03-01', 'ACTIVE');
-
--- María: repite CAL1 (reprobó sem1, no puede CAL2)
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (2, 3, '2025-03-01', 'ACTIVE');
-
--- Pedro: CAL2 (tiene CAL1 ✓) y BDD1 (tiene PRG1 ✓)
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (3, 4, '2025-03-01', 'ACTIVE');
-
-INSERT INTO enrollment (student_id, section_id, enrollment_date, status)
-VALUES (3, 6, '2025-03-01', 'ACTIVE');
+-- ── Inscripciones semestre 2 ──────────────────
+-- Juan: CAL2 y PRG2 (tiene prerequisitos ✅)
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (1, 5, '2025-03-01', 'ACTIVE');
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (1, 6, '2025-03-01', 'ACTIVE');
+-- María: repite CAL1 (reprobó ❌)
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (2, 4, '2025-03-01', 'ACTIVE');
+-- Pedro: CAL2 y BDD1
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 5, '2025-03-01', 'ACTIVE');
+INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 7, '2025-03-01', 'ACTIVE');

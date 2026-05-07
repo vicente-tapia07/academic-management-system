@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// repositorio para acceder a la tabla subject usando JDBC directo
 @Repository
 public class SubjectRepository {
 
@@ -19,7 +18,6 @@ public class SubjectRepository {
         this.dataSource = dataSource;
     }
 
-    // mapea una fila del ResultSet a un objeto SubjectEntity
     private SubjectEntity mapRow(ResultSet rs) throws SQLException {
         SubjectEntity subject = new SubjectEntity();
         subject.setId(rs.getLong("id"));
@@ -30,7 +28,6 @@ public class SubjectRepository {
         return subject;
     }
 
-    // retorna todas las asignaturas
     public List<SubjectEntity> findAll() {
         String sql = "SELECT * FROM subject";
         try (Connection conn = dataSource.getConnection();
@@ -48,7 +45,6 @@ public class SubjectRepository {
         }
     }
 
-    // busca una asignatura por su id
     public Optional<SubjectEntity> findById(Long id) {
         String sql = "SELECT * FROM subject WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -66,7 +62,6 @@ public class SubjectRepository {
         }
     }
 
-    // retorna todas las asignaturas de una carrera especifica
     public List<SubjectEntity> findByCareerId(Long careerId) {
         String sql = "SELECT * FROM subject WHERE career_id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -85,7 +80,6 @@ public class SubjectRepository {
         }
     }
 
-    // guarda una nueva asignatura y retorna el id generado
     public SubjectEntity save(SubjectEntity subject) {
         String sql = "INSERT INTO subject (code, name, credits, career_id) VALUES (?, ?, ?, ?) RETURNING id";
         try (Connection conn = dataSource.getConnection();
@@ -106,7 +100,6 @@ public class SubjectRepository {
         }
     }
 
-    // actualiza los datos de una asignatura existente
     public void update(SubjectEntity subject) {
         String sql = "UPDATE subject SET code = ?, name = ?, credits = ?, career_id = ? WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -124,7 +117,6 @@ public class SubjectRepository {
         }
     }
 
-    // elimina una asignatura por su id
     public void delete(Long id) {
         String sql = "DELETE FROM subject WHERE id = ?";
         try (Connection conn = dataSource.getConnection();

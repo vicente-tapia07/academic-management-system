@@ -10,7 +10,6 @@ export default function Navbar() {
   const handleLogout = () => { logout(); navigate('/'); };
   const active = (path) => location.pathname.startsWith(path) ? 'active fw-semibold' : '';
 
-  // Ruta home según rol
   const homeRoute = isAdmin ? '/dashboard' : isStudent ? '/my-curriculum' : '/professor';
 
   if (!user) return null;
@@ -20,7 +19,6 @@ export default function Navbar() {
       style={{ backgroundColor: '#003366' }}>
       <div className="container-fluid px-4">
 
-        {/* Logo — lleva al home del rol */}
         <Link className="navbar-brand fw-bold d-flex align-items-center gap-2" to={homeRoute}>
           <span style={{ fontSize: '1.3rem' }}>🎓</span>
           USACH <span className="fw-light ms-1">
@@ -36,7 +34,6 @@ export default function Navbar() {
         <div className="collapse navbar-collapse" id="mainNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
 
-            {/* ADMIN */}
             {isAdmin && (
               <>
                 <li className="nav-item">
@@ -63,7 +60,6 @@ export default function Navbar() {
               </>
             )}
 
-            {/* PROFESSOR */}
             {isProfessor && (
               <>
                 <li className="nav-item">
@@ -75,7 +71,6 @@ export default function Navbar() {
               </>
             )}
 
-            {/* STUDENT */}
             {isStudent && (
               <>
                 <li className="nav-item">
@@ -90,12 +85,14 @@ export default function Navbar() {
                 <li className="nav-item">
                   <Link className={`nav-link ${active('/my-profile')}`} to="/my-profile">👤 Mi Perfil</Link>
                 </li>
+                <li className="nav-item">
+                  <Link className={`nav-link ${active('/my-grades')}`} to="/my-grades">🎯 Mis Notas</Link>
+                </li>
               </>
             )}
 
           </ul>
 
-          {/* Usuario + logout */}
           <div className="d-flex align-items-center gap-3">
             <span className="text-white-50 small">
               <span className="badge bg-secondary me-1">

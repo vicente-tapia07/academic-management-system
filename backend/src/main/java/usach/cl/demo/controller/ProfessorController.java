@@ -61,8 +61,6 @@ public class ProfessorController {
 
     @PostMapping("/grade")
     public GradeEntity submitGrade(@RequestBody GradeEntity grade, @RequestParam String professorRut) {
-        // En una app real, el RUT del profesor se saca del Token JWT (Keycloak)
-        // Por ahora, lo pasamos por la URL para probar que la Auditoría funciona.
         return professorService.saveGrade(grade, professorRut);
     }
 

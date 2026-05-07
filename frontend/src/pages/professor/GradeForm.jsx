@@ -6,7 +6,6 @@ export default function GradeForm() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  // Si no llegaron datos por state, volver atrás
   if (!state?.enrollmentId) {
     navigate('/professor');
     return null;

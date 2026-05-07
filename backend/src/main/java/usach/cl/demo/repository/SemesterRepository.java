@@ -19,7 +19,6 @@ public class SemesterRepository {
         this.dataSource = dataSource;
     }
 
-    // mapea una fila del ResultSet a un objeto SemesterEntity
     private SemesterEntity mapRow(ResultSet rs) throws SQLException {
         SemesterEntity semester = new SemesterEntity();
         semester.setId(rs.getLong("id"));
@@ -33,7 +32,6 @@ public class SemesterRepository {
         return semester;
     }
 
-    // retorna todos los semestres
     public List<SemesterEntity> findAll() {
         String sql = "SELECT * FROM semester";
         try (Connection conn = dataSource.getConnection();
@@ -51,7 +49,6 @@ public class SemesterRepository {
         }
     }
 
-    // busca un semestre por su id
     public Optional<SemesterEntity> findById(Long id) {
         String sql = "SELECT * FROM semester WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
@@ -69,7 +66,6 @@ public class SemesterRepository {
         }
     }
 
-    // guarda un nuevo semestre y retorna el id generado
     public SemesterEntity save(SemesterEntity semester) {
         String sql = "INSERT INTO semester (year, period, start_date, end_date, grade_start_date, grade_end_date, status) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
@@ -94,7 +90,6 @@ public class SemesterRepository {
         }
     }
 
-    // actualiza los datos de un semestre existente
     public void update(SemesterEntity semester) {
         String sql = "UPDATE semester SET year = ?, period = ?, start_date = ?, end_date = ?, " +
                 "grade_start_date = ?, grade_end_date = ?, status = ? WHERE id = ?";
@@ -116,7 +111,6 @@ public class SemesterRepository {
         }
     }
 
-    // llama al stored procedure de cierre de semestre
     public void closeSemester(Long semesterId) {
         String sql = "CALL sp_close_semester(?)";
         try (Connection conn = dataSource.getConnection();

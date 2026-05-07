@@ -9,59 +9,74 @@ export default function StudentEnrollments() {
   const [enrollments, setEnrollments] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState('');
+  const [cancelling,  setCancelling]  = useState(null); // ID de la inscripción que se está cancelando
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 1. Inscripciones del estudiante
-        const enrollRes = await api.get(`/api/enrollments/student/${user.id}`);
-        const raw = enrollRes.data;
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const enrollRes = await api.get(`/api/enrollments/student/${user.id}`);
+      const raw = enrollRes.data;
 
-        // 2. Por cada inscripción enriquece con sección → subject → professor
-        const enriched = await Promise.all(
-          raw.map(async (e) => {
+      const enriched = await Promise.all(
+        raw.map(async (e) => {
+          try {
+            const sectionRes = await api.get(`/api/sections/${e.sectionId}`);
+            const section = sectionRes.data;
+
+            let subjectName = '—';
             try {
-                const sectionRes = await api.get(`/api/sections/${e.sectionId}`);
-                const section = sectionRes.data;
+              const subjRes = await api.get(`/api/subjects/${section.subjectId}`);
+              subjectName = subjRes.data.name ?? '—';
+            } catch { /* mantiene —  */ }
 
-                // Busca asignatura
-                let subjectName = '—';
-                try {
-                const subjRes = await api.get(`/api/subjects/${section.subjectId}`);
-                subjectName = subjRes.data.name ?? '—';
-                } catch { /* si falla deja — */ }
+            let professorName = '—';
+            try {
+              const profRes = await api.get(`/api/professors/${section.professorId}`);
+              const p = profRes.data;
+              professorName = `${p.firstName} ${p.lastName}`.trim() || '—';
+            } catch { /* mantiene — */ }
 
-                // Busca profesor
-                let professorName = '—';
-                    try {
-                    const profRes = await api.get(`/api/professor/${section.professorId}`);
-                    const p = profRes.data;
-                    professorName = `${p.firstName} ${p.lastName}`.trim() || '—';
-                } catch { /* si falla deja — */ }
+            return {
+              ...e,
+              subjectName,
+              professorName,
+              availableSeats: section.availableSeats,
+              totalSeats:     section.totalSeats,
+            };
+          } catch {
+            return e;
+          }
+        })
+      );
 
-                return {
-                ...e,
-                subjectName,
-                professorName,
-                availableSeats: section.availableSeats,
-                totalSeats:     section.totalSeats,
-                };
-            } catch {
-                return e;
-            }
-            })
-        );
+      setEnrollments(enriched);
+    } catch {
+      setError('No se pudieron cargar las inscripciones.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setEnrollments(enriched);
-      } catch {
-        setError('No se pudieron cargar las inscripciones.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  useEffect(() => { fetchData(); }, [user.id]);
 
-    fetchData();
-  }, [user.id]);
+  const handleCancel = async (enrollmentId, subjectName) => {
+    const confirmar = window.confirm(
+      `¿Cancelar inscripción en "${subjectName}"?\nSe devolverá el cupo a la sección.`
+    );
+    if (!confirmar) return;
+
+    setCancelling(enrollmentId);
+    try {
+      await api.delete(`/api/enrollments/${enrollmentId}`);
+      await fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al cancelar la inscripción.');
+    } finally {
+      setCancelling(null);
+    }
+  };
+
+  const visibles = enrollments.filter((e) => e.status !== 'CANCELLED');
 
   return (
     <div className="container py-4">
@@ -90,7 +105,7 @@ export default function StudentEnrollments() {
 
       {!loading && !error && (
         <>
-          <p className="text-muted small mb-2">{enrollments.length} inscripción(es)</p>
+          <p className="text-muted small mb-2">{visibles.length} inscripción(es)</p>
           <div className="card shadow-sm border-0">
             <div className="table-responsive">
               <table className="table table-hover mb-0">
@@ -101,39 +116,60 @@ export default function StudentEnrollments() {
                     <th>Profesor</th>
                     <th>Cupos</th>
                     <th>Nota</th>
+                    <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {enrollments.length === 0 && (
+                  {visibles.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">
+                      <td colSpan={6} className="text-center text-muted py-4">
                         No tienes inscripciones activas
                       </td>
                     </tr>
                   )}
-                  {enrollments.map((e) => (
-                    <tr key={e.enrollmentId ?? e.id}>
-                      <td className="fw-semibold">{e.subjectName}</td>
-                      <td>
-                        <span className="badge bg-secondary">
-                          {e.sectionCode ?? e.sectionId}
-                        </span>
-                      </td>
-                      <td className="text-muted small">{e.professorName}</td>
-                      <td className="text-muted small">
-                        {e.availableSeats != null
-                          ? `${e.availableSeats} / ${e.totalSeats}`
-                          : '—'}
-                      </td>
-                      <td>
-                        {e.grade != null
-                          ? <span className={`fw-bold ${e.grade >= 4 ? 'text-success' : 'text-danger'}`}>
-                              {Number(e.grade).toFixed(1)}
-                            </span>
-                          : <span className="text-muted">—</span>}
-                      </td>
-                    </tr>
-                  ))}
+                  {visibles.map((e) => {
+                    const enrollId = e.id;
+                    const tieneNota = e.grade != null;
+                    const estaActiva = e.status === 'ACTIVE';
+
+                    return (
+                      <tr key={enrollId}>
+                        <td className="fw-semibold">{e.subjectName}</td>
+                        <td>
+                          <span className="badge bg-secondary">
+                            {e.sectionCode ?? e.sectionId}
+                          </span>
+                        </td>
+                        <td className="text-muted small">{e.professorName}</td>
+                        <td className="text-muted small">
+                          {e.availableSeats != null
+                            ? `${e.availableSeats} / ${e.totalSeats}`
+                            : '—'}
+                        </td>
+                        <td>
+                          {tieneNota
+                            ? <span className={`fw-bold ${e.grade >= 4 ? 'text-success' : 'text-danger'}`}>
+                                {Number(e.grade).toFixed(1)}
+                              </span>
+                            : <span className="text-muted">—</span>}
+                        </td>
+                        <td className="text-end">
+                          {/* Solo se puede cancelar si está ACTIVA y no tiene nota */}
+                          {estaActiva && !tieneNota ? (
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              disabled={cancelling === enrollId}
+                              onClick={() => handleCancel(enrollId, e.subjectName)}
+                            >
+                              {cancelling === enrollId ? 'Cancelando...' : 'Cancelar'}
+                            </button>
+                          ) : (
+                            <span className="text-muted small">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// controlador que expone los endpoints REST para carreras
 @RestController
 @RequestMapping("/api/careers")
 public class CareerController {
@@ -23,13 +22,11 @@ public class CareerController {
         this.subjectService = subjectService;
     }
 
-    // GET /api/careers - retorna todas las carreras
     @GetMapping
     public ResponseEntity<List<CareerEntity>> findAll() {
         return ResponseEntity.ok(careerService.findAll());
     }
 
-    // GET /api/careers/{id} - retorna una carrera por id
     @GetMapping("/{id}")
     public ResponseEntity<CareerEntity> findById(@PathVariable Long id) {
         try {
@@ -39,7 +36,6 @@ public class CareerController {
         }
     }
 
-    // GET /api/careers/{id}/subjects - retorna las asignaturas de una carrera
     @GetMapping("/{id}/subjects")
     public ResponseEntity<List<SubjectEntity>> findSubjectsByCareer(@PathVariable Long id) {
         try {
@@ -49,7 +45,6 @@ public class CareerController {
         }
     }
 
-    // POST /api/careers - crea una nueva carrera
     @PostMapping
     public ResponseEntity<CareerEntity> save(@RequestBody CareerEntity career) {
         try {
@@ -59,7 +54,6 @@ public class CareerController {
         }
     }
 
-    // PUT /api/careers/{id} - actualiza una carrera existente
     @PutMapping("/{id}")
     public ResponseEntity<CareerEntity> update(@PathVariable Long id,
                                                @RequestBody CareerEntity career) {
@@ -70,7 +64,6 @@ public class CareerController {
         }
     }
 
-    // DELETE /api/careers/{id} - elimina una carrera
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         try {

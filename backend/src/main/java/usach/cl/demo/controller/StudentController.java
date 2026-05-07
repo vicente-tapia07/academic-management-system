@@ -3,6 +3,8 @@ package usach.cl.demo.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import usach.cl.demo.dto.StudentDTO;
 import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.service.StudentService;
@@ -16,28 +18,22 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    // spring inyecta el servicio automaticamente
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
 
-    // CRUD
-
-    // retorna todos los estudiantes
     @GetMapping
     public ResponseEntity<List<StudentEntity>> getAll() {
         List<StudentEntity> studentEntities = studentService.findAll();
         return ResponseEntity.ok(studentEntities);
     }
 
-    // retorna un estudiante por su ID
     @GetMapping("/{id}")
     public ResponseEntity<StudentEntity> getById(@PathVariable Long id) {
         Optional<StudentEntity> student = studentService.findById(id);
         return student.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Retorna la malla curricular de un estudiante
     @GetMapping("/{id}/curriculum")
     public ResponseEntity<List<SubjectStatusDTO>> getCurriculum(@PathVariable Long id) {
         List<SubjectStatusDTO> curriculum = studentService.findCurriculum(id);
@@ -47,17 +43,16 @@ public class StudentController {
         return ResponseEntity.ok(curriculum);
     }
 
-    // crea un nuevo estudiante
     @PostMapping
-    public ResponseEntity<String> create(@RequestBody StudentEntity studentEntity) {
-        int result = studentService.save(studentEntity);
-        if (result > 0) {
-            return ResponseEntity.status(HttpStatus.CREATED).body("Student created successfully");
+    public ResponseEntity<String> create(@RequestBody StudentDTO dto) {
+        try {
+            studentService.saveWithUsuario(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Estudiante creado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating student");
     }
 
-    // actualiza un estudiante existente
     @PutMapping("/{id}")
     public ResponseEntity<String> update(@PathVariable Long id, @RequestBody StudentEntity studentEntity) {
         studentEntity.setId(id);
@@ -68,7 +63,6 @@ public class StudentController {
         return ResponseEntity.notFound().build();
     }
 
-    // elimina un estudiante por su ID
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
         int result = studentService.deleteById(id);

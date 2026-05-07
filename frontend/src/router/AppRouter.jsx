@@ -27,6 +27,9 @@ import ProfessorDashboard from '../pages/professor/ProfessorDashboard';
 import ProfessorCourses   from '../pages/professor/ProfessorCourses';
 import StudentGrades      from '../pages/professor/StudentGrades';
 import GradeForm          from '../pages/professor/GradeForm';
+import StudentForm        from '../pages/students/StudentForm';
+import StudentEnrollAdmin from '../pages/students/StudentEnrollAdmin';
+import MyGrades           from '../pages/students/MyGrades';
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -60,6 +63,8 @@ export default function AppRouter() {
           <Route path="/semesters/close/:id"     element={<SemesterClose />} />
           <Route path="/students"                element={<StudentList />} />
           <Route path="/students/:id/curriculum" element={<StudentCurriculum />} />
+          <Route path="/students/new"            element={<StudentForm />} />
+          <Route path="/students/enroll"         element={<StudentEnrollAdmin />} />
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']} />}>
@@ -68,6 +73,7 @@ export default function AppRouter() {
           <Route path="/my-enrollments" element={<StudentEnrollments />} />
           <Route path="/my-enroll"      element={<EnrollForm />} />
           <Route path="/my-profile"     element={<StudentProfile />} />
+          <Route path="/my-grades"      element={<MyGrades />} />
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_PROFESSOR']} />}>
@@ -77,7 +83,6 @@ export default function AppRouter() {
           <Route path="/professor/grade/new"         element={<GradeForm />} />
         </Route>
 
-        {/* /reports accesible para ADMIN y PROFESSOR */}
         <Route element={<PrivateRoute roles={['ROLE_ADMIN', 'ROLE_PROFESSOR']} />}>
           <Route path="/reports" element={<FailureReport />} />
         </Route>
