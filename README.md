@@ -1,6 +1,6 @@
 # Sistema de Administración Académica Universitaria
 
-Sistema de información multi-capa para la gestión académica universitaria. Permite administrar estudiantes, asignaturas, inscripciones, calificaciones y reportes, con autenticación basada en JWT y control de acceso por roles (ADMIN, PROFESOR, ESTUDIANTE). Desarrollado como parte del Laboratorio 1 de Taller de Base de Datos.
+Sistema de información multi-capa para la gestión académica universitaria. Permite administrar estudiantes, asignaturas, inscripciones, calificaciones y reportes, con autenticación basada en JWT y control de acceso por roles (ADMIN, PROFESSOR, STUDENT). Desarrollado como parte del Laboratorio 1 de Taller de Base de Datos.
 
 ---
 
@@ -10,247 +10,174 @@ Sistema de información multi-capa para la gestión académica universitaria. Pe
 
 - **Frontend**: Aplicación React de una sola página (SPA) que consume la API REST.
 - **Backend**: API REST desarrollada con Spring Boot, sin ORM. La lógica de negocio está delegada parcialmente a la base de datos mediante procedimientos almacenados y triggers.
-- **Base de datos**: PostgreSQL con objetos avanzados (triggers, stored procedures, vistas materializadas, índices).
+- **Base de datos**: PostgreSQL con objetos avanzados (triggers, stored procedures, vista materializada, índices).
 
 ### Tecnologías principales
 
 | Capa          | Tecnologías / librerías                                                            |
-|---------------|------------------------------------------------------------------------------------|
-| Backend       | Java 21, Spring Boot 4.0.6, Spring Security, Spring Data JDBC, JWT (jjwt), Lombok |
-| Documentación | springdoc-openapi (Swagger UI)                                                     |
-| Base de datos | PostgreSQL 15+                                                                     |
-| Frontend      | React 18, React Router DOM, Axios, Bootstrap 5                                     |
-| Contenedores  | Docker, Docker Compose                                                             |
+|---------------|--------------------------------------------------------------------------------------|
+| Backend       | Java 21, Spring Boot 4.0.6, Spring Security, Spring Data JDBC, JWT (jjwt), Lombok    |
+| Documentación | springdoc-openapi (Swagger UI)                                                       |
+| Base de datos | PostgreSQL 15                                                                        |
+| Frontend      | React 18, React Router DOM, Axios, Bootstrap 5                                      |
+| Contenedores  | Docker, Docker Compose                                                              |
 
 ---
 
 ## 2. Manual de instalación y despliegue
 
+El sistema está completamente contenerizado. **No es necesario instalar Java, Node.js ni PostgreSQL en tu máquina.** Docker se encarga de todo, incluyendo la creación de la base de datos y la carga de los datos de prueba.
+
+Las instrucciones son las mismas para Windows, Linux y Mac. Las únicas diferencias puntuales (terminal a usar, y un comando alternativo si `docker-compose` no es reconocido) están marcadas explícitamente donde corresponde.
+
 ### 2.1 Requisitos previos
 
-Instalar las siguientes herramientas antes de continuar:
+- **Docker Desktop** instalado y **corriendo** (el ícono de la ballena debe estar activo en la barra de tareas / bandeja del sistema).
+  - Descarga: https://www.docker.com/products/docker-desktop/
+  - **Windows:** Docker Desktop requiere WSL2 (Windows Subsystem for Linux). El instalador lo configura automáticamente en la mayoría de los casos; si pide reiniciar el equipo durante la instalación, hacerlo.
+- Git.
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) — para correr el backend y el frontend.
-- [pgAdmin 4](https://www.pgadmin.org/download/) — para cargar los scripts de base de datos.
-- Git — para clonar el repositorio.
-
-> **No se requiere** tener Java ni Node.js instalados localmente. Docker los provee.
+> **Windows:** usar **PowerShell** (viene incluido en Windows) o la terminal de Git Bash (se instala junto con Git). No usar el CMD clásico, algunos comandos de este manual no son compatibles con él.
 
 ---
 
 ### 2.2 Paso 1 — Clonar el repositorio
 
-Abrir una terminal (CMD, PowerShell o terminal de Linux) y ejecutar:
+**Linux / Mac (terminal) y Windows (PowerShell o Git Bash):**
 
 ```bash
 git clone https://github.com/vicente-tapia07/academic-management-system.git
 cd academic-management-system
 ```
 
+El archivo `.env` con la configuración de puertos y credenciales ya viene incluido en el repositorio — no es necesario crearlo ni copiarlo manualmente, en ningún sistema operativo.
+
 ---
 
-### 2.3 Paso 2 — Levantar los contenedores Docker
+### 2.3 Paso 2 — Levantar el sistema completo
 
 Dentro de la carpeta del proyecto, ejecutar:
 
 ```bash
-docker-compose build
-docker-compose up
+docker-compose up --build
 ```
 
-> El primer `build` puede tardar varios minutos porque descarga las imágenes base. Solo ocurre la primera vez.
+> **Si el comando no es reconocido** (`docker-compose: command not found` o `no se reconoce como un comando`): tu instalación de Docker usa la sintaxis nueva integrada. Usar en su lugar:
+> ```bash
+> docker compose up --build
+> ```
+> (sin guion, con espacio). Ambas formas son equivalentes — cambia solo según qué versión de Docker esté instalada. Esto aplica igual en Windows, Linux y Mac.
+
+Este único comando:
+
+1. Construye la imagen del backend (Spring Boot).
+2. Construye la imagen del frontend (React).
+3. Levanta PostgreSQL.
+4. **Crea automáticamente la base de datos y carga las tablas, triggers, stored procedures, la vista materializada y los datos de prueba** — no requiere ninguna acción manual en pgAdmin ni en ningún otro cliente de base de datos.
+
+> El primer `build` puede tardar varios minutos porque descarga las imágenes base. Las siguientes veces es mucho más rápido gracias al cache de Docker.
 
 Esperar hasta ver en la consola mensajes como estos:
 
 ```
-db_1       | database system is ready to accept connections
-backend_1  | Started DemoApplication in X seconds
-frontend_1 | Compiled successfully
+postgres_db | database system is ready to accept connections
+backend_tbd | Started DemoApplication in X seconds
+frontend_tbd | Compiled successfully!
 ```
 
-> **Importante:** dejar esta terminal abierta mientras se usa el sistema. Cerrarla detiene todos los contenedores.
-
-En este punto el motor de PostgreSQL está corriendo dentro de Docker en el puerto `5433`, pero la base de datos aún está vacía. Los siguientes pasos la crean y cargan los datos.
+> **Importante:** dejar esta terminal abierta mientras se usa el sistema, o agregar `-d` al final del comando (`docker-compose up --build -d`) para correrlo en segundo plano y recuperar el control de la terminal.
 
 ---
 
-### 2.4 Paso 3 — Registrar el servidor en pgAdmin 4
+### 2.4 Paso 3 — Verificar que el sistema funciona
 
-Como la base de datos corre dentro de un contenedor Docker, pgAdmin (que está instalado en tu computador) debe conectarse a ella a través del puerto que Docker expone hacia el exterior.
+Con los contenedores corriendo, abrir el navegador y verificar:
 
-1. Abrir **pgAdmin 4**.
+| Verificación | URL                                    | Resultado esperado                                        |
+|---------------|-----------------------------------------|-------------------------------------------------------------|
+| Frontend      | http://localhost:3000                   | Pantalla de login del sistema                                |
+| Backend       | http://localhost:9090                   | Respuesta del servidor (puede ser error JSON, es normal)     |
+| Swagger UI    | http://localhost:9090/swagger-ui/index.html | Documentación interactiva de la API                       |
 
-2. En el panel izquierdo, hacer clic derecho sobre **Servers** → **Register** → **Server...**.
+Luego iniciar sesión con cada credencial para confirmar que los datos de prueba cargaron correctamente:
 
-3. En la pestaña **General**:
-   - **Name**: `TBD - Docker` (o cualquier nombre descriptivo).
-
-4. En la pestaña **Connection**:
-   - **Host name/address**: `localhost`
-   - **Port**: `5433` ← importante, no usar el 5432 por defecto.
-   - **Maintenance database**: `postgres`
-   - **Username**: `postgres`
-   - **Password**: `123`
-
-5. Hacer clic en **Save**.
-
-Si la conexión es exitosa, el servidor `TBD - Docker` aparece en el panel izquierdo sin errores ni candados rojos.
+| Rol       | Email           | Contraseña | Qué debe verse               |
+|-----------|-----------------|------------|-------------------------------|
+| ADMIN     | admin@usach.cl  | 1234       | Dashboard de administración   |
+| STUDENT   | juan@usach.cl   | 1234       | Dashboard del estudiante      |
+| PROFESSOR | carlos@usach.cl | 1234       | Vista del profesor            |
 
 ---
 
-### 2.5 Paso 4 — Crear la base de datos
+### 2.5 Configuración de puertos mediante el archivo `.env`
 
-El motor de PostgreSQL está listo, pero el espacio de trabajo del proyecto aún no existe. Hay que crearlo manualmente:
-
-1. En pgAdmin, desplegar el servidor **TBD - Docker** recién registrado.
-
-2. Hacer clic derecho sobre **Databases** → **Create** → **Database...**.
-
-3. En el campo **Database** escribir exactamente:
-   ```
-   TBDLab1
-   ```
-   > Este nombre es obligatorio y sensible a mayúsculas. El backend lo busca con ese nombre exacto. Si se escribe diferente (ej. `tbdlab1` o `TbdLab1`), el backend no podrá conectarse.
-
-4. Hacer clic en **Save**.
-
-La base de datos `TBDLab1` aparece en la lista bajo Databases. En este momento está completamente vacía, sin tablas ni datos.
-
----
-
-### 2.6 Paso 5 — Cargar los scripts SQL (paso crítico)
-
-Aquí se crean todas las tablas, los stored procedures, los triggers, la vista materializada, los índices y los datos de prueba. Los archivos deben ejecutarse en el **orden exacto indicado**.
-
-1. En pgAdmin, hacer clic derecho sobre la base de datos **TBDLab1** → **Query Tool**.
-
-2. Se abre el editor de consultas SQL. En la barra de herramientas superior, hacer clic en el **ícono de carpeta** 📁 (Open File).
-
-3. Navegar hasta la carpeta `database/` dentro del proyecto clonado. La ruta depende de dónde se clonó:
-   - Windows: `C:\Users\TuUsuario\academic-management-system\database\`
-   - Linux/Mac: `~/academic-management-system/database/`
-
-4. Ejecutar los archivos uno por uno en este orden. Para cada uno:
-   - Abrirlo con el ícono de carpeta 📁.
-   - Hacer clic en el **ícono del rayo ▶** (Execute) o presionar **F5**.
-   - Esperar a que aparezca el mensaje `Query returned successfully` en el panel inferior.
-   - **Recién entonces** abrir el siguiente archivo.
-
-| Orden | Archivo         | Qué contiene                                                                                         |
-|-------|-----------------|------------------------------------------------------------------------------------------------------|
-| 1°    | `db_schema.sql` | Creación de todas las tablas y relaciones. También incluye los índices, los dos triggers, los dos stored procedures (`sp_close_semester` y `sp_enroll_student`) y la vista materializada `mv_failure_rate`. |
-| 2°    | `db_mock.sql`   | Datos de prueba: usuarios (admin, estudiantes, profesores), carreras, asignaturas, secciones, inscripciones y notas del semestre cerrado. |
-
-> **¿Por qué este orden?** El `db_mock.sql` inserta filas en tablas que deben existir previamente. Si se ejecuta antes que el schema, fallará con errores de tabla no encontrada.
-
-> **¿Dónde están los triggers y stored procedures?** Todo está consolidado dentro de `db_schema.sql`. No hay archivos separados para triggers ni procedures.
-
----
-
-### 2.7 Paso 6 — Verificar que el sistema funciona
-
-Con los contenedores corriendo y los scripts cargados, abrir el navegador y verificar:
-
-| Verificación  | URL                                       | Resultado esperado                        |
-|---------------|-------------------------------------------|-------------------------------------------|
-| Frontend      | http://localhost:3000                     | Pantalla de login del sistema             |
-| Backend       | http://localhost:9090                     | Respuesta del servidor (puede ser error JSON, es normal) |
-| Swagger UI    | http://localhost:9090/swagger-ui.html     | Documentación interactiva de la API       |
-
-Luego iniciar sesión con cada credencial para confirmar que los datos del mock cargaron correctamente:
-
-| Rol        | Email                | Contraseña | Qué debe verse                  |
-|------------|----------------------|------------|---------------------------------|
-| ADMIN      | admin@usach.cl       | 1234       | Dashboard de administración     |
-| ESTUDIANTE | juan@usach.cl        | 1234       | Dashboard del estudiante        |
-| PROFESOR   | carlos.ruiz@usach.cl | 1234       | Vista del profesor              |
-
----
-
-### 2.8 Configuración de puertos mediante archivo `.env`
-
-Si alguno de los puertos por defecto está ocupado en tu computador, puedes cambiarlos sin tocar el `docker-compose.yml`. El proyecto usa un archivo `.env` para centralizar esta configuración.
-
-En la raíz del proyecto existe un archivo llamado `.env` con este contenido por defecto:
+En la raíz del proyecto existe un archivo `.env` con esta configuración por defecto:
 
 ```env
-# Puerto externo de PostgreSQL (el que usa pgAdmin para conectarse)
-DB_PORT=5433
+BACKEND_HOST_PORT=9090
+BACKEND_CONTAINER_PORT=9090
+FRONTEND_HOST_PORT=3000
+DB_HOST_PORT=5433
 
-# Puerto externo del backend (el que usa el frontend y Swagger)
-BACKEND_PORT=9090
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=123
+POSTGRES_DB=TBDLab1
 
-# Puerto externo del frontend
-FRONTEND_PORT=3000
+REACT_APP_API_URL=http://localhost:9090
 ```
 
-**¿Cómo cambiar un puerto?**
+**¿Cómo cambiar un puerto si está ocupado?**
 
-1. Abrir el archivo `.env` con cualquier editor de texto (Notepad, VS Code, etc.).
-2. Cambiar el número del puerto que esté ocupado. Por ejemplo, si el puerto `5433` está en uso:
-   ```env
-   DB_PORT=5434
-   ```
-3. Guardar el archivo.
-4. Volver a ejecutar:
+1. Editar el valor correspondiente en `.env` con cualquier editor de texto (Notepad, VS Code, nano, etc. — el archivo es el mismo en cualquier sistema operativo).
+2. Si se cambia `BACKEND_HOST_PORT`, actualizar también `REACT_APP_API_URL` con el nuevo puerto.
+3. Guardar y volver a levantar:
    ```bash
    docker-compose down
-   docker-compose up
+   docker-compose up --build
    ```
-5. Actualizar la conexión en pgAdmin con el nuevo puerto (`5434` en el ejemplo).
-
-> **Importante:** si cambias `BACKEND_PORT` o `FRONTEND_PORT`, también debes actualizar la URL base en el frontend (`src/services/api.js`) para que apunte al puerto correcto.
 
 ---
 
-### 2.9 Solución de problemas frecuentes
+### 2.6 Solución de problemas frecuentes
 
-**El puerto 5433 aparece como ocupado al hacer `docker-compose up`**
+**Un puerto aparece como ocupado al hacer `docker-compose up`**
 
-Otro proceso en el computador está usando ese puerto. Cambiar el valor en el archivo `.env`:
+Cambiar el valor correspondiente en `.env` (ver sección 2.5) y volver a levantar los contenedores.
 
-```env
-DB_PORT=5434
-```
+> **Windows:** el puerto `5432`/`5433` puede aparecer ocupado si tienes PostgreSQL instalado nativamente (fuera de Docker) y corriendo como servicio de Windows. Se soluciona igual, cambiando `DB_HOST_PORT` en el `.env` — no es necesario desinstalar nada.
 
-Luego en pgAdmin conectarse al puerto `5434` en vez de `5433`.
+**El backend no puede conectarse a la base de datos**
 
-**pgAdmin no puede conectarse al servidor Docker**
-
-Verificar que el contenedor de base de datos esté corriendo:
+Verificar que el contenedor `postgres_db` esté con estado `Up`:
 
 ```bash
 docker-compose ps
 ```
 
-El contenedor `db` debe aparecer con estado `Up`. Si aparece `Exit`, revisar los logs:
+Si aparece `Exit`, revisar los logs:
 
 ```bash
 docker-compose logs db
 ```
 
-**El backend muestra error de conexión a la base de datos**
+**Docker Desktop no arranca o los comandos `docker` no responden (Windows)**
 
-Verificar que los scripts ya se ejecutaron en pgAdmin y que la base de datos se llama exactamente `TBDLab1`. Luego reiniciar el backend:
+Verificar que Docker Desktop esté efectivamente abierto y con el ícono de la ballena estable en la bandeja del sistema (no parpadeando). Si Docker Desktop pide habilitar WSL2 o reiniciar, hacerlo y volver a intentar.
+
+**Necesito reiniciar todo desde cero (borra todos los datos y vuelve a cargar los scripts)**
 
 ```bash
-docker-compose restart backend
+docker-compose down -v
+docker-compose up --build
 ```
 
-**Para detener todos los contenedores:**
+> El flag `-v` elimina el volumen de datos de PostgreSQL (`pgdata`), gestionado internamente por Docker. En el próximo `up`, PostgreSQL detecta que el volumen está vacío y **vuelve a ejecutar automáticamente** los scripts de `database/` desde cero. No es necesario borrar ninguna carpeta manualmente en ningún sistema operativo — Docker se encarga de todo.
+
+**Para detener todos los contenedores sin borrar datos:**
 
 ```bash
 docker-compose down
 ```
-
-**Para hacer un reset completo (borra todos los datos y vuelve a empezar):**
-
-```bash
-docker-compose down -v
-docker-compose up
-```
-
-Luego repetir el Paso 5 (cargar los scripts en pgAdmin desde cero).
 
 ---
 
@@ -281,51 +208,35 @@ Respuesta exitosa (200 OK):
 }
 ```
 
-### 3.2 Tabla de endpoints
+### 3.2 Tabla de endpoints principales
 
-| Método | Endpoint                        | Roles autorizados           | Descripción                                                                  |
-|--------|---------------------------------|-----------------------------|------------------------------------------------------------------------------|
-| POST   | `/api/auth/login`               | Público                     | Inicia sesión y retorna JWT.                                                 |
-| GET    | `/api/students`                 | ADMIN                       | Lista todos los estudiantes.                                                 |
-| GET    | `/api/students/{id}`            | ADMIN, PROFESOR, ESTUDIANTE | Obtiene datos de un estudiante.                                              |
-| GET    | `/api/students/{id}/curriculum` | ADMIN, ESTUDIANTE           | Malla curricular con estado por asignatura (Aprobada, Reprobada, Cursando). |
-| POST   | `/api/students`                 | ADMIN                       | Crea un nuevo estudiante.                                                    |
-| PUT    | `/api/students/{id}`            | ADMIN                       | Actualiza datos del estudiante.                                              |
-| DELETE | `/api/students/{id}`            | ADMIN                       | Elimina un estudiante.                                                       |
-| POST   | `/api/enrollments/enroll`       | ADMIN                       | Inscribe al estudiante en una sección (stored procedure, valida prerrequisitos via trigger). |
-| GET    | `/api/enrollments/student/{id}` | ADMIN, PROFESOR, ESTUDIANTE | Lista inscripciones del estudiante con nombre de asignatura y profesor.     |
-| GET    | `/api/subjects`                 | Todos autenticados          | Lista todas las asignaturas.                                                 |
-| POST   | `/api/subjects`                 | ADMIN                       | Crea una nueva asignatura.                                                   |
-| PUT    | `/api/subjects/{id}`            | ADMIN                       | Actualiza una asignatura.                                                    |
-| DELETE | `/api/subjects/{id}`            | ADMIN                       | Elimina una asignatura.                                                      |
-| GET    | `/api/professors`               | Todos autenticados          | Lista todos los profesores.                                                  |
-| GET    | `/api/professors/{id}`          | Todos autenticados          | Obtiene un profesor por su ID.                                               |
-| POST   | `/api/professors`               | ADMIN                       | Crea un nuevo profesor.                                                      |
-| PUT    | `/api/professors/{id}`          | ADMIN                       | Actualiza datos de un profesor.                                              |
-| DELETE | `/api/professors/{id}`          | ADMIN                       | Elimina un profesor.                                                         |
-| POST   | `/api/professors/grade`         | ADMIN, PROFESOR             | Ingresa una calificación (el trigger bloquea si está fuera del calendario). |
-| GET    | `/api/professors/reports`       | ADMIN, PROFESOR             | Reporte de tasa de reprobación por asignatura (vista materializada).        |
-| POST   | `/api/semesters/{id}/close`     | ADMIN                       | Cierra el semestre (stored procedure: calcula promedio ponderado, bloquea estudiantes reprobados). |
+| Método | Endpoint                          | Roles autorizados            | Descripción                                                                        |
+|--------|------------------------------------|-------------------------------|--------------------------------------------------------------------------------------|
+| POST   | `/api/auth/login`                  | Público                       | Inicia sesión y retorna JWT.                                                          |
+| GET    | `/api/students`                    | ADMIN                         | Lista todos los estudiantes.                                                          |
+| GET    | `/api/students/{id}`               | ADMIN, PROFESSOR, STUDENT     | Obtiene datos de un estudiante.                                                       |
+| GET    | `/api/students/{id}/curriculum`    | ADMIN, STUDENT                | Malla curricular con estado por asignatura (Aprobada, Reprobada, Cursando).           |
+| POST   | `/api/students`                    | ADMIN                         | Crea un nuevo estudiante.                                                              |
+| PUT    | `/api/students/{id}`               | ADMIN                         | Actualiza datos del estudiante.                                                        |
+| DELETE | `/api/students/{id}`               | ADMIN                         | Elimina un estudiante.                                                                 |
+| GET    | `/api/subjects`                    | Todos autenticados             | Lista todas las asignaturas.                                                            |
+| POST   | `/api/subjects`                    | ADMIN                         | Crea una nueva asignatura.                                                              |
+| PUT    | `/api/subjects/{id}`               | ADMIN                         | Actualiza una asignatura.                                                               |
+| DELETE | `/api/subjects/{id}`               | ADMIN                         | Elimina una asignatura.                                                                 |
+| GET    | `/api/sections`                    | Todos autenticados             | Lista todas las secciones.                                                              |
+| POST   | `/api/sections`                    | ADMIN                         | Crea una nueva sección.                                                                 |
+| GET    | `/api/semesters`                   | Todos autenticados             | Lista todos los semestres.                                                              |
+| POST   | `/api/semesters`                   | ADMIN                         | Crea un nuevo semestre.                                                                 |
+| PUT    | `/api/semesters/{id}`              | ADMIN                         | Actualiza un semestre.                                                                  |
+| POST   | `/api/semesters/{id}/close`        | ADMIN                         | Cierra el semestre (stored procedure: calcula promedio ponderado, bloquea reprobados). |
+| POST   | `/api/enrollments/enroll`          | STUDENT, ADMIN                | Inscribe al estudiante en una sección (stored procedure, valida prerrequisitos vía trigger). |
+| DELETE | `/api/enrollments/{id}`            | STUDENT, ADMIN                | Cancela una inscripción y restaura el cupo de la sección.                              |
+| GET    | `/api/enrollments/student/{id}`    | ADMIN, PROFESSOR, STUDENT     | Lista inscripciones del estudiante.                                                     |
+| GET    | `/api/professors`                  | Todos autenticados             | Lista todos los profesores.                                                             |
+| POST   | `/api/professors/grade`            | PROFESSOR                     | Ingresa una calificación (el trigger bloquea si está fuera del calendario).             |
+| GET    | `/api/professors/reports`          | ADMIN, PROFESSOR              | Reporte de tasa de reprobación por asignatura (vista materializada).                    |
 
 ### 3.3 Ejemplos de solicitudes y respuestas
-
-#### Lista de estudiantes
-```
-GET /api/students
-Authorization: Bearer <token_admin>
-```
-```json
-[
-  {
-    "id": 1,
-    "usuarioId": 1,
-    "enrollmentNumber": "2024001",
-    "firstName": "Juan",
-    "lastName": "Pérez",
-    "academicStatus": "ACTIVE"
-  }
-]
-```
 
 #### Malla curricular de un estudiante
 ```
@@ -353,9 +264,9 @@ Authorization: Bearer <token>
 ]
 ```
 
-#### Subir una nota (PROFESOR)
+#### Subir una nota (PROFESSOR)
 ```
-POST /api/professors/grade?professorRut=11222333-4
+POST /api/professors/grade
 Authorization: Bearer <token_profesor>
 Content-Type: application/json
 ```
@@ -394,64 +305,130 @@ Authorization: Bearer <token_admin>
 ```
 > Ejecuta el stored procedure `sp_close_semester`. Calcula el promedio ponderado por créditos de cada estudiante. Si el promedio es menor a 4.0, cambia el `academic_status` a `BLOCKED` y cierra el semestre.
 
+#### Cancelar una inscripción (STUDENT)
+```
+DELETE /api/enrollments/6
+Authorization: Bearer <token_estudiante>
+```
+> Elimina la inscripción y restaura el cupo en la sección correspondiente (`available_seats + 1`).
+
 ---
 
 ## 4. Objetos de base de datos implementados
 
 ### Triggers
 
-| Nombre                       | Tabla        | Cuándo se activa     | Función                                                                  |
-|------------------------------|--------------|----------------------|--------------------------------------------------------------------------|
-| `trg_check_prerequisites`    | `enrollment` | BEFORE INSERT        | Bloquea la inscripción si el estudiante no aprobó los prerrequisitos.   |
-| `trg_check_calendario_notas` | `grade`      | BEFORE INSERT/UPDATE | Impide ingresar notas fuera del calendario académico del semestre.      |
+| Nombre                       | Tabla        | Cuándo se activa     | Función                                                                |
+|--------------------------------|--------------|-----------------------|---------------------------------------------------------------------------|
+| `trg_check_prerequisites`    | `enrollment` | BEFORE INSERT         | Bloquea la inscripción si el estudiante no aprobó los prerrequisitos.    |
+| `trg_check_calendario_notas` | `grade`      | BEFORE INSERT/UPDATE  | Impide ingresar notas fuera del calendario académico del semestre.       |
 
 ### Stored Procedures
 
-| Nombre              | Descripción                                                                                   |
-|---------------------|-----------------------------------------------------------------------------------------------|
-| `sp_close_semester` | Cierra el semestre: calcula promedio ponderado y bloquea estudiantes con promedio < 4.0.     |
-| `sp_enroll_student` | Inscribe a un estudiante en una sección en una transacción atómica, descontando un cupo.    |
+| Nombre               | Descripción                                                                                  |
+|------------------------|-------------------------------------------------------------------------------------------------|
+| `sp_close_semester`  | Cierra el semestre: calcula promedio ponderado y bloquea estudiantes con promedio < 4.0.       |
+| `sp_enroll_student`  | Inscribe a un estudiante en una sección en una transacción atómica, descontando un cupo.       |
 
 ### Vista materializada
 
-| Nombre            | Descripción                                                                    |
-|-------------------|--------------------------------------------------------------------------------|
-| `mv_failure_rate` | Tasa de reprobación histórica por asignatura. Se refresca al consultar el reporte. |
+| Nombre             | Descripción                                                                       |
+|----------------------|----------------------------------------------------------------------------------|
+| `mv_failure_rate`  | Tasa de reprobación histórica por asignatura.                                     |
 
 ### Índices
 
-| Índice                   | Tabla / Columna              | Propósito                          |
-|--------------------------|------------------------------|------------------------------------|
-| `idx_usuario_rut`        | `usuario(rut)`               | Búsqueda rápida por RUT.           |
-| `idx_student_enrollment` | `student(enrollment_number)` | Búsqueda por número de matrícula.  |
-| `idx_subject_code`       | `subject(code)`              | Búsqueda por código de asignatura. |
+| Índice                     | Tabla / Columna                | Propósito                          |
+|-------------------------------|-----------------------------------|----------------------------------------|
+| `idx_usuario_rut`          | `usuario(rut)`                  | Búsqueda rápida por RUT.               |
+| `idx_student_enrollment`   | `student(enrollment_number)`    | Búsqueda por número de matrícula.      |
+| `idx_subject_code`         | `subject(code)`                 | Búsqueda por código de asignatura.     |
 
 ---
 
 ## 5. Estructura del repositorio
 
 ```
-├── backend/                # Proyecto Spring Boot (API REST)
+├── backend/                 # Proyecto Spring Boot (API REST)
 │   ├── src/main/java/usach/cl/demo/
-│   │   ├── config/         # JWT, Spring Security
-│   │   ├── controller/     # Endpoints REST
-│   │   ├── dto/            # Objetos de transferencia de datos
-│   │   ├── model/          # Entidades
-│   │   ├── repository/     # Acceso a BD con JdbcTemplate / JdbcClient
-│   │   └── service/        # Lógica de negocio
+│   │   ├── config/          # JWT, Spring Security
+│   │   ├── controller/      # Endpoints REST
+│   │   ├── dto/             # Objetos de transferencia de datos
+│   │   ├── model/           # Entidades
+│   │   ├── repository/      # Acceso a BD con JdbcTemplate
+│   │   └── service/         # Lógica de negocio
+│   ├── Dockerfile
 │   └── pom.xml
-├── frontend/               # Aplicación React
+├── frontend/                # Aplicación React
 │   ├── src/
 │   │   ├── components/
 │   │   ├── context/
 │   │   ├── pages/
 │   │   ├── router/
 │   │   └── services/
+│   ├── Dockerfile
 │   └── package.json
-├── database/               # Scripts SQL
-│   ├── db_schema.sql       # Tablas, relaciones, índices, triggers, stored procedures y vista materializada
-│   └── db_mock.sql         # Datos de prueba (usuarios, estudiantes, profesores, notas)
+├── database/                 # Scripts SQL — se cargan automáticamente al levantar Docker
+│   ├── 1_db_schema.sql      # Tablas, relaciones, índices, triggers, stored procedures y vista materializada
+│   └── 2_db_mock.sql        # Datos de prueba (usuarios, estudiantes, profesores, notas)
 ├── docker-compose.yml
+├── .env                      # Configuración de puertos y credenciales (incluido en el repositorio)
 └── README.md
-└── .env
 ```
+
+> **Nota sobre `database/`:** los archivos deben mantener el prefijo numérico (`1_`, `2_`) y la extensión `.sql`. PostgreSQL ejecuta los scripts en `docker-entrypoint-initdb.d/` en orden alfabético, y solo reconoce archivos con extensión `.sh`, `.sql` o `.sql.gz`.
+
+> **Nota sobre los datos de PostgreSQL:** el volumen `pgdata` es gestionado internamente por Docker (volumen con nombre, no una carpeta visible dentro del proyecto). No aparece como carpeta en el repositorio ni hay que administrarlo manualmente — se crea y destruye automáticamente con `docker-compose up` / `docker-compose down -v`.
+
+### 5.1 Contenido de referencia — `docker-compose.yml`
+
+```yaml
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "${DB_HOST_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 6s
+      retries: 5
+      start_period: 10s
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_tbd
+    ports:
+      - "${BACKEND_HOST_PORT}:${BACKEND_CONTAINER_PORT}"
+    environment:
+      - SERVER_PORT=${BACKEND_CONTAINER_PORT}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_tbd
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
+    ports:
+      - "${FRONTEND_HOST_PORT}:3000"
+    depends_on:
+      - backend
+volumes:
+  pgdata:
+```
+
+> **Detalle importante:** en el servicio `db`, el volumen de datos se declara como `pgdata:/var/lib/postgresql/data` (**sin** `./` al inicio). Esto lo convierte en un *volumen con nombre* administrado por Docker, en vez de un *bind mount* a una carpeta local del proyecto. Con un bind mount (`./pgdata:/var/lib/postgresql/data`), `docker-compose down -v` no elimina los datos reales — solo borra un volumen sin uso, y los datos persisten silenciosamente en la carpeta local, causando comportamiento inconsistente entre reinicios.
