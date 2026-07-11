@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
+import MapView from '../../components/MapView';
 
 export default function RoomForm() {
   const { id } = useParams();
@@ -8,8 +9,9 @@ export default function RoomForm() {
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
-    buildingId: '', code: '', name: '', capacity: '', geomGeoJson: '',
+    buildingId: '', code: '', name: '', capacity: '',
   });
+  const [selectedPoint, setSelectedPoint] = useState(null); // {lat, lng}
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
@@ -19,32 +21,41 @@ export default function RoomForm() {
     if (!isEdit) return;
     api.get(`/api/rooms/${id}`).then((r) => {
       const { buildingId, code, name, capacity, geomGeoJson } = r.data;
-      setForm({ buildingId, code, name, capacity, geomGeoJson });
+      setForm({ buildingId, code, name, capacity });
+      // Si estamos editando, precargamos el punto ya guardado en el mapa
+      const geom = JSON.parse(geomGeoJson);
+      setSelectedPoint({ lat: geom.coordinates[1], lng: geom.coordinates[0] });
     });
   }, [id, isEdit]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleMapClick = ({ lat, lng }) => {
+    setSelectedPoint({ lat, lng });
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    try {
-      const parsed = JSON.parse(form.geomGeoJson);
-      if (parsed.type !== 'Point') {
-        setError('La geometría debe ser de tipo Point.');
-        return;
-      }
-    } catch {
-      setError('El GeoJSON ingresado no es un JSON válido. Revisa el formato.');
+    if (!selectedPoint) {
+      setError('Haz clic en el mapa para marcar la ubicación de la sala.');
       return;
     }
+
+    // Construimos el GeoJSON automáticamente — el admin ya no lo escribe a mano
+    const geomGeoJson = JSON.stringify({
+      type: 'Point',
+      coordinates: [selectedPoint.lng, selectedPoint.lat], // GeoJSON: [lng, lat]
+    });
 
     setLoading(true);
     const payload = {
       ...form,
       buildingId: Number(form.buildingId),
       capacity: Number(form.capacity),
+      geomGeoJson,
       ...(isEdit && { id: Number(id) }),
     };
     try {
@@ -104,15 +115,19 @@ export default function RoomForm() {
                 <input type="number" name="capacity" className="form-control" min="1"
                   value={form.capacity} onChange={handleChange} required />
               </div>
+
               <div className="col-12">
-                <label className="form-label fw-semibold">Geometría (GeoJSON — Point)</label>
-                <textarea name="geomGeoJson" className="form-control font-monospace small" rows={2}
-                  value={form.geomGeoJson} onChange={handleChange}
-                  placeholder='{"type":"Point","coordinates":[-70.6845,-33.4487]}'
-                  required />
-                <div className="form-text text-muted">
-                  Debe ser un GeoJSON de tipo Point, con la coordenada exacta de la sala.
-                </div>
+                <label className="form-label fw-semibold">Ubicación en el mapa</label>
+                <p className="text-muted small mb-2">Haz clic en el mapa para marcar la ubicación exacta de la sala.</p>
+                <MapView
+                  onMapClick={handleMapClick}
+                  pendingMarker={selectedPoint ? [selectedPoint.lat, selectedPoint.lng] : null}
+                />
+                {selectedPoint && (
+                  <div className="alert alert-info py-2 mt-2 mb-0 small">
+                    📍 Coordenada seleccionada: {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+                  </div>
+                )}
               </div>
             </div>
 

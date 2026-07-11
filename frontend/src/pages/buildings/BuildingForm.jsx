@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
+import MapView from '../../components/MapView';
 
 export default function BuildingForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [form, setForm]       = useState({ code: '', name: '', geomGeoJson: '' });
+  const [form, setForm]   = useState({ code: '', name: '' });
+  const [points, setPoints] = useState([]); // [{lat, lng}, ...]
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
@@ -15,30 +17,45 @@ export default function BuildingForm() {
     if (!isEdit) return;
     api.get(`/api/buildings/${id}`).then((r) => {
       const { code, name, geomGeoJson } = r.data;
-      setForm({ code, name, geomGeoJson });
+      setForm({ code, name });
+
+      // Precargamos los puntos ya guardados para poder seguir editando el polígono
+      const geom = JSON.parse(geomGeoJson);
+      const ring = geom.coordinates[0]; // [[lng,lat], [lng,lat], ..., [lng,lat] (repetido)]
+      // El último punto de un polígono GeoJSON repite el primero para "cerrar" la figura.
+      // Lo quitamos, porque nosotros lo volvemos a agregar automáticamente al guardar.
+      const withoutClosingPoint = ring.slice(0, -1);
+      setPoints(withoutClosingPoint.map(([lng, lat]) => ({ lat, lng })));
     });
   }, [id, isEdit]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleMapClick = ({ lat, lng }) => {
+    setPoints((prev) => [...prev, { lat, lng }]);
+    setError('');
+  };
+
+  const handleUndo = () => setPoints((prev) => prev.slice(0, -1));
+  const handleClear = () => setPoints([]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validar que el GeoJSON sea texto válido antes de mandarlo
-    try {
-      const parsed = JSON.parse(form.geomGeoJson);
-      if (parsed.type !== 'Polygon') {
-        setError('La geometría debe ser de tipo Polygon.');
-        return;
-      }
-    } catch {
-      setError('El GeoJSON ingresado no es un JSON válido. Revisa el formato.');
+    if (points.length < 3) {
+      setError('Marca al menos 3 puntos en el mapa para formar el contorno del edificio.');
       return;
     }
 
+    // Construimos el anillo GeoJSON: [lng, lat] por punto, y cerramos repitiendo el primero al final
+    const ring = points.map((p) => [p.lng, p.lat]);
+    ring.push(ring[0]);
+
+    const geomGeoJson = JSON.stringify({ type: 'Polygon', coordinates: [ring] });
+
     setLoading(true);
-    const payload = { ...form, ...(isEdit && { id: Number(id) }) };
+    const payload = { ...form, geomGeoJson, ...(isEdit && { id: Number(id) }) };
     try {
       if (isEdit) {
         await api.put(`/api/buildings/${id}`, payload);
@@ -81,14 +98,29 @@ export default function BuildingForm() {
                 <input type="text" name="name" className="form-control"
                   value={form.name} onChange={handleChange} placeholder="Facultad de Ingeniería" required />
               </div>
+
               <div className="col-12">
-                <label className="form-label fw-semibold">Geometría (GeoJSON — Polygon)</label>
-                <textarea name="geomGeoJson" className="form-control font-monospace small" rows={4}
-                  value={form.geomGeoJson} onChange={handleChange}
-                  placeholder='{"type":"Polygon","coordinates":[[[-70.68,-33.44],[-70.68,-33.44],...]]}'
-                  required />
-                <div className="form-text text-muted">
-                  Debe ser un GeoJSON de tipo Polygon, con las coordenadas del contorno del edificio.
+                <label className="form-label fw-semibold">Contorno del edificio</label>
+                <p className="text-muted small mb-2">
+                  Haz clic en el mapa para marcar cada esquina del edificio, en orden (mínimo 3 puntos).
+                </p>
+                <MapView onMapClick={handleMapClick} drawingPoints={points} />
+
+                <div className="d-flex justify-content-between align-items-center mt-2">
+                  <span className="text-muted small">
+                    {points.length} punto{points.length !== 1 ? 's' : ''} marcado{points.length !== 1 ? 's' : ''}
+                    {points.length < 3 && ' (mínimo 3)'}
+                  </span>
+                  <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-sm btn-outline-secondary"
+                      onClick={handleUndo} disabled={points.length === 0}>
+                      ↩ Deshacer último punto
+                    </button>
+                    <button type="button" className="btn btn-sm btn-outline-danger"
+                      onClick={handleClear} disabled={points.length === 0}>
+                      🗑 Limpiar figura
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
