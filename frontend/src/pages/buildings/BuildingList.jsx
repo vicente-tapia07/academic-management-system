@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import MapView from '../../components/MapView';
 
 export default function BuildingList() {
   const [buildings, setBuildings] = useState([]);
@@ -47,6 +48,13 @@ export default function BuildingList() {
         </div>
         <Link to="/buildings/new" className="btn btn-primary">+ Nuevo Edificio</Link>
       </div>
+
+      {!loading && !error && buildings.length > 0 && (
+        <div className="mt-4">
+          <h5 className="fw-semibold mb-2">Vista de mapa</h5>
+          <MapView buildings={buildings} />
+        </div>
+      )}
 
       {loading && <p className="text-muted">Cargando...</p>}
       {error   && <div className="alert alert-danger">{error}</div>}
