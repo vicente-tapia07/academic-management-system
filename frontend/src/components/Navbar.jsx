@@ -52,6 +52,9 @@ export default function Navbar() {
                   <Link className={`nav-link ${active('/buildings')}`} to="/buildings">🏢 Edificios</Link>
                 </li>
                 <li className="nav-item">
+                  <Link className={`nav-link ${active('/rooms')}`} to="/rooms">🚪 Salas</Link>
+                </li>
+                <li className="nav-item">
                   <Link className={`nav-link ${active('/semesters')}`} to="/semesters">📅 Semestres</Link>
                 </li>
                 <li className="nav-item">
