@@ -60,6 +60,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT,    "/api/students/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
 
+                        // ADMIN: gestión de edificios y salas
+                        .requestMatchers(HttpMethod.POST,   "/api/buildings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/buildings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/buildings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,   "/api/rooms/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/rooms/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasRole("ADMIN")
+
+                        // TODOS AUTENTICADOS: ver edificios y salas (necesario para el mapa)
+                        .requestMatchers(HttpMethod.GET, "/api/buildings/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").authenticated()
+
                         // STUDENT + PROFESSOR + ADMIN: leer estudiantes e inscripciones
                         .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
                         .requestMatchers(HttpMethod.GET, "/api/enrollments/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")

@@ -4,7 +4,8 @@
 
 -- Extensión para BCrypt
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
+-- Activar PostGIS
+CREATE EXTENSION IF NOT EXISTS postgis;
 -- =============================================
 -- TABLAS
 -- =============================================
@@ -13,6 +14,23 @@ CREATE TABLE IF NOT EXISTS career (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS building (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    geom GEOMETRY(POLYGON, 4326) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS room (
+    id BIGSERIAL PRIMARY KEY,
+    building_id BIGINT NOT NULL REFERENCES building(id) ON DELETE CASCADE,
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    capacity INTEGER NOT NULL,
+    geom GEOMETRY(POINT, 4326) NOT NULL,
+    UNIQUE(building_id, code)
 );
 
 CREATE TABLE IF NOT EXISTS semester (
@@ -60,6 +78,11 @@ CREATE TABLE IF NOT EXISTS section (
     available_seats INTEGER NOT NULL
 );
 
+ALTER TABLE section ADD COLUMN room_id BIGINT NOT NULL REFERENCES room(id);
+ALTER TABLE section ADD COLUMN day_of_week SMALLINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6);
+ALTER TABLE section ADD COLUMN start_time TIME NOT NULL;
+ALTER TABLE section ADD COLUMN end_time TIME NOT NULL;
+
 CREATE TABLE IF NOT EXISTS prerequisite (
     subject_id BIGINT NOT NULL REFERENCES subject(id),
     prerequisite_subject_id BIGINT NOT NULL REFERENCES subject(id),
@@ -100,6 +123,8 @@ CREATE TABLE IF NOT EXISTS grade (
 CREATE INDEX IF NOT EXISTS idx_usuario_rut ON usuario(rut);
 CREATE INDEX IF NOT EXISTS idx_student_enrollment ON student(enrollment_number);
 CREATE INDEX IF NOT EXISTS idx_subject_code ON subject(code);
+CREATE INDEX IF NOT EXISTS idx_building_geom ON building USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_room_geom ON room USING GIST(geom);
 
 -- =============================================
 -- TRIGGER 1: PRERREQUISITOS
