@@ -32,10 +32,12 @@ Las instrucciones son las mismas para Windows, Linux y Mac. Las únicas diferenc
 
 ### 2.1 Requisitos previos
 
+- **Git** instalado en el sistema.
 - **Docker Desktop** instalado y **corriendo** (el ícono de la ballena debe estar activo en la barra de tareas / bandeja del sistema).
   - Descarga: https://www.docker.com/products/docker-desktop/
-  - **Windows:** Docker Desktop requiere WSL2 (Windows Subsystem for Linux). El instalador lo configura automáticamente en la mayoría de los casos; si pide reiniciar el equipo durante la instalación, hacerlo.
-- Git.
+  - **Windows:** Docker Desktop requiere WSL2 (Windows Subsystem for Linux). El instalador lo configura automáticamente en la mayoría de los casos; si pide reiniciar el equipo durante la instalación, hacerlo. Si al abrir Docker te arroja un aviso de que WSL no está instalado, abre una terminal de PowerShell como Administrador, ejecuta el siguiente comando y **reinicia tu computadora** obligatoriamente:
+   ```powershell
+   wsl --install
 
 > **Windows:** usar **PowerShell** (viene incluido en Windows) o la terminal de Git Bash (se instala junto con Git). No usar el CMD clásico, algunos comandos de este manual no son compatibles con él.
 
@@ -110,8 +112,9 @@ Luego iniciar sesión con cada credencial para confirmar que los datos de prueba
 ---
 
 ### 2.5 Configuración de puertos mediante el archivo `.env`
+En la raíz del proyecto existe un archivo `.env` encargado de orquestar las credenciales y puertos de los contenedores. 
 
-En la raíz del proyecto existe un archivo `.env` con esta configuración por defecto:
+> 🟥 **Atención — Coincidencia de puertos interna:** Para asegurar el correcto funcionamiento del Backend en entornos cerrados, la variable `BACKEND_CONTAINER_PORT` debe apuntar **obligatoriamente al puerto 9090**. Esto es debido a que el servidor embebido Tomcat en Spring Boot y el `EXPOSE` de su respectivo Dockerfile están parametrizados nativamente bajo el puerto `9090`. Modificar este valor interno a `8080` u otro romperá el puente de comunicación del tráfico.
 
 ```env
 BACKEND_HOST_PORT=9090
@@ -170,6 +173,14 @@ Verificar que Docker Desktop esté efectivamente abierto y con el ícono de la b
 docker-compose down -v
 docker-compose up --build
 ```
+
+**Error: "unable to get image... failed to connect to the docker API / El sistema no puede encontrar el archivo especificado"**
+* **Por qué ocurre:** Intentaste ejecutar `docker compose` mientras la aplicación de Docker Desktop estaba cerrada o su motor interno seguía cargándose en segundo plano.
+* **Solución:** Abre Docker Desktop desde el menú de inicio de Windows y espera pacientemente de 1 a 2 minutos hasta que el indicador visual en la esquina inferior izquierda pase a estar en **verde ("Engine running")**. Posteriormente, cierra tu ventana de terminal actual, abre una nueva e intenta ejecutar el comando otra vez.
+
+**Alerta: "the attribute `version` is obsolete, it will be ignored"**
+* **Por qué ocurre:** Las versiones más modernas de Docker Compose consideran redundante especificar la etiqueta `version: '3.9'` al inicio del archivo `.yml`.
+* **Solución:** Es un Warning meramente informativo que no afecta en absoluto la compilación ni ejecución del proyecto. Puede ignorarse con total seguridad.
 
 > El flag `-v` elimina el volumen de datos de PostgreSQL (`pgdata`), gestionado internamente por Docker. En el próximo `up`, PostgreSQL detecta que el volumen está vacío y **vuelve a ejecutar automáticamente** los scripts de `database/` desde cero. No es necesario borrar ninguna carpeta manualmente en ningún sistema operativo — Docker se encarga de todo.
 
