@@ -71,6 +71,13 @@ public class SecurityConfig {
                         // TODOS AUTENTICADOS: ver edificios y salas (necesario para el mapa)
                         .requestMatchers(HttpMethod.GET, "/api/buildings/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rooms/**").authenticated()
+                        // ADMIN: gestión de puntos de accesibilidad (rampas)
+                        .requestMatchers(HttpMethod.POST,   "/api/accessibility-pois/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/accessibility-pois/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/accessibility-pois/**").hasRole("ADMIN")
+
+                        // TODOS AUTENTICADOS: ver puntos de accesibilidad (necesario para el badge de salas)
+                        .requestMatchers(HttpMethod.GET, "/api/accessibility-pois/**").authenticated()
 
                         // STUDENT + PROFESSOR + ADMIN: leer estudiantes e inscripciones
                         .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
