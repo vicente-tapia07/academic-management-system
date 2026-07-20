@@ -30,6 +30,10 @@ import GradeForm          from '../pages/professor/GradeForm';
 import StudentForm        from '../pages/students/StudentForm';
 import StudentEnrollAdmin from '../pages/students/StudentEnrollAdmin';
 import MyGrades           from '../pages/students/MyGrades';
+import BuildingList from '../pages/buildings/BuildingList';
+import BuildingForm from '../pages/buildings/BuildingForm';
+import RoomList     from '../pages/rooms/RoomList';
+import RoomForm     from '../pages/rooms/RoomForm';
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -65,6 +69,12 @@ export default function AppRouter() {
           <Route path="/students/:id/curriculum" element={<StudentCurriculum />} />
           <Route path="/students/new"            element={<StudentForm />} />
           <Route path="/students/enroll"         element={<StudentEnrollAdmin />} />
+          <Route path="/buildings"          element={<BuildingList />} />
+          <Route path="/buildings/new"      element={<BuildingForm />} />
+          <Route path="/buildings/edit/:id" element={<BuildingForm />} />
+          <Route path="/rooms"              element={<RoomList />} />
+          <Route path="/rooms/new"          element={<RoomForm />} />
+          <Route path="/rooms/edit/:id"     element={<RoomForm />} />
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']} />}>
