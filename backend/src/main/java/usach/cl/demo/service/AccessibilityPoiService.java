@@ -1,6 +1,7 @@
 package usach.cl.demo.service;
 
 import org.springframework.stereotype.Service;
+import usach.cl.demo.dto.AccessibleRoomDTO;
 import usach.cl.demo.model.AccessibilityPoiEntity;
 import usach.cl.demo.repository.AccessibilityPoiRepository;
 
@@ -38,5 +39,9 @@ public class AccessibilityPoiService {
 
     public int deleteById(Long id) {
         return accessibilityPoiRepository.deleteById(id);
+    }
+
+    public List<AccessibleRoomDTO> findAccessibleRooms(Long buildingId) {
+        return accessibilityPoiRepository.findAccessibleRooms(buildingId);
     }
 }

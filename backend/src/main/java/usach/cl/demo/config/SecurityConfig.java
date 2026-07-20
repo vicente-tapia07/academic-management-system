@@ -78,6 +78,9 @@ public class SecurityConfig {
 
                         // TODOS AUTENTICADOS: ver puntos de accesibilidad (necesario para el badge de salas)
                         .requestMatchers(HttpMethod.GET, "/api/accessibility-pois/**").authenticated()
+                        // STUDENT + ADMIN + PROFESSOR: consultar sala más cercana con clase activa
+                        .requestMatchers(HttpMethod.POST, "/api/location/**").hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
+
 
                         // STUDENT + PROFESSOR + ADMIN: leer estudiantes e inscripciones
                         .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
