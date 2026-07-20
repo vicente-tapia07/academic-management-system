@@ -69,12 +69,12 @@ export default function AppRouter() {
           <Route path="/students/:id/curriculum" element={<StudentCurriculum />} />
           <Route path="/students/new"            element={<StudentForm />} />
           <Route path="/students/enroll"         element={<StudentEnrollAdmin />} />
-          <Route path="/buildings"               element={<BuildingList />} />
-          <Route path="/buildings/new"           element={<BuildingForm />} />
-          <Route path="/buildings/edit/:id"      element={<BuildingForm />} />
-          <Route path="/rooms"                   element={<RoomList />} />
-          <Route path="/rooms/new"               element={<RoomForm />} />
-          <Route path="/rooms/edit/:id"          element={<RoomForm />} />
+          <Route path="/buildings"          element={<BuildingList />} />
+          <Route path="/buildings/new"      element={<BuildingForm />} />
+          <Route path="/buildings/edit/:id" element={<BuildingForm />} />
+          <Route path="/rooms"              element={<RoomList />} />
+          <Route path="/rooms/new"          element={<RoomForm />} />
+          <Route path="/rooms/edit/:id"     element={<RoomForm />} />
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']} />}>
