@@ -28,7 +28,7 @@ public class AccessibilityPoiRepository {
             "    ORDER BY r.geom <-> p.geom " +
             "    LIMIT 1 " +
             ") nearest ON true " +
-            "WHERE (? IS NULL OR r.building_id = ?) " +
+            "WHERE (CAST(? AS BIGINT) IS NULL OR r.building_id = CAST(? AS BIGINT)) " +
             "ORDER BY r.code";
 
     private static final double ACCESSIBLE_RADIUS_METERS = 50.0;
