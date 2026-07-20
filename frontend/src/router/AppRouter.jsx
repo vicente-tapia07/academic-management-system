@@ -34,6 +34,7 @@ import BuildingList from '../pages/buildings/BuildingList';
 import BuildingForm from '../pages/buildings/BuildingForm';
 import RoomList     from '../pages/rooms/RoomList';
 import RoomForm     from '../pages/rooms/RoomForm';
+import MyLocation from '../pages/students/MyLocation';
 
 
 function Layout({ children }) {
@@ -79,6 +80,7 @@ export default function AppRouter() {
         </Route>
 
         <Route element={<PrivateRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']} />}>
+          <Route path="/my-location" element={<MyLocation />} />
           <Route path="/my-dashboard"   element={<StudentDashboard />} />
           <Route path="/my-curriculum"  element={<StudentCurriculum />} />
           <Route path="/my-enrollments" element={<StudentEnrollments />} />

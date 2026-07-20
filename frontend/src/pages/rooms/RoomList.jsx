@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import AccessibilityBadge from '../../components/AccessibilityBadge';
 
 export default function RoomList() {
   const [searchParams] = useSearchParams();
@@ -8,6 +9,7 @@ export default function RoomList() {
 
   const [rooms, setRooms]         = useState([]);
   const [buildings, setBuildings] = useState([]);
+  const [accessibleMap, setAccessibleMap] = useState({});
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
 
@@ -17,12 +19,19 @@ export default function RoomList() {
       const url = buildingIdFilter
         ? `/api/rooms?buildingId=${buildingIdFilter}`
         : '/api/rooms';
-      const [roomRes, buildRes] = await Promise.all([
+      const accessibleUrl = buildingIdFilter
+        ? `/api/rooms/accessible?buildingId=${buildingIdFilter}`
+        : '/api/rooms/accessible';
+      const [roomRes, buildRes, accessibleRes] = await Promise.all([
         api.get(url),
         api.get('/api/buildings'),
+        api.get(accessibleUrl),
       ]);
       setRooms(roomRes.data);
       setBuildings(buildRes.data);
+      const map = {};
+      accessibleRes.data.forEach((r) => { map[r.roomId] = r.accessible; });
+      setAccessibleMap(map);
     } catch {
       setError('Error al cargar las salas.');
     } finally {
@@ -76,12 +85,13 @@ export default function RoomList() {
                   <th>Nombre</th>
                   <th>Edificio</th>
                   <th>Capacidad</th>
+                  <th>Accesibilidad</th>
                   <th className="text-end">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {rooms.length === 0 && (
-                  <tr><td colSpan={5} className="text-center text-muted py-4">No hay salas registradas</td></tr>
+                  <tr><td colSpan={6} className="text-center text-muted py-4">No hay salas registradas</td></tr>
                 )}
                 {rooms.map((r) => (
                   <tr key={r.id}>
@@ -89,6 +99,7 @@ export default function RoomList() {
                     <td className="fw-semibold">{r.name}</td>
                     <td className="text-muted small">{buildingName(r.buildingId)}</td>
                     <td>{r.capacity}</td>
+                    <td><AccessibilityBadge accessible={accessibleMap[r.id]} /></td>
                     <td className="text-end">
                       <Link to={`/rooms/edit/${r.id}`} className="btn btn-sm btn-outline-primary me-2">
                         Editar
