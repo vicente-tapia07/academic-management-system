@@ -3,6 +3,8 @@ package usach.cl.demo.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import usach.cl.demo.dto.NearbySectionResponse;
 import usach.cl.demo.model.EnrollmentEntity;
 import usach.cl.demo.service.EnrollmentService;
 
@@ -94,5 +96,13 @@ public class EnrollmentController {
             return ResponseEntity.ok("Inscripción cancelada y cupo restaurado");
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/nearby-sections")
+    public List<NearbySectionResponse> getNearbySections(
+            @RequestParam Long subjectId,
+            @RequestParam Double lat,
+            @RequestParam Double lng) {
+        return enrollmentService.findNearbySections(subjectId, lat, lng);
     }
 }

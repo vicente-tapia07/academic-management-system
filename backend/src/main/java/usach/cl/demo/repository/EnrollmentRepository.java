@@ -3,6 +3,8 @@ package usach.cl.demo.repository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
+import usach.cl.demo.dto.NearbySectionResponse;
 import usach.cl.demo.model.EnrollmentEntity;
 
 import java.util.List;
@@ -107,5 +109,41 @@ public class EnrollmentRepository {
 
     public int restoreSeat(Long sectionId) {
         return jdbcTemplate.update(RESTORE_SEAT, sectionId);
+    }
+
+    
+
+        public List<NearbySectionResponse> findNearbySections(Long subjectId, Double lat, Double lng) {
+
+            String FIND_NEARBY_SECTIONS =
+            """
+            SELECT s.id AS section_id,
+                s.code AS section_code,
+                r.id AS room_id,
+                r.name AS room_name,
+                b.name AS building_name,
+                ST_Distance(r.geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) AS distance_m
+            FROM section s
+            JOIN room r ON s.room_id = r.id
+            JOIN building b ON r.building_id = b.id
+            WHERE s.subject_id = ?
+            AND s.semester_id = (SELECT id FROM semester WHERE active = true)
+            AND ST_DWithin(r.geom, ST_SetSRID(ST_MakePoint(?, ?), 4326), 300)
+            ORDER BY distance_m ASC
+            """;
+
+
+        return jdbcTemplate.query(
+            FIND_NEARBY_SECTIONS,
+            new Object[]{lng, lat, subjectId, lng, lat},
+            (rs, rowNum) -> new NearbySectionResponse(
+                rs.getLong("section_id"),
+                rs.getString("section_code"),
+                rs.getLong("room_id"),
+                rs.getString("room_name"),
+                rs.getString("building_name"),
+                rs.getDouble("distance_m")
+            )
+        );
     }
 }
