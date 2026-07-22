@@ -1,24 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import api from '../../services/api';
+import React, { useEffect, useState } from "react";
+import api from "../../services/api";
+import DensityHeatmap from "./DensityHeatmap";
+import DistrictFailureMap from "./DistrictFailureMap";
+
+/**
+ * FailureReport — página principal de reportes.
+ *
+ * Organiza los tres reportes en pestañas:
+ *   1. Reprobación por asignatura
+ *   2. Densidad estudiantil por edificio
+ *   3. Reprobación por distrito
+ */
 
 const ALERT_THRESHOLD = 40;
 
-export default function FailureReport() {
+function FailureBySubject() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const load = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const res = await api.get('/api/professors/reports');
-      const sorted = [...res.data].sort((a, b) => b.failurePercentage - a.failurePercentage);
+      const res = await api.get("/api/professors/reports");
+      const sorted = [...res.data].sort(
+        (a, b) => b.failurePercentage - a.failurePercentage,
+      );
       setReports(sorted);
-      setLastRefresh(new Date().toLocaleTimeString('es-CL'));
+      setLastRefresh(new Date().toLocaleTimeString("es-CL"));
     } catch {
-      setError('Error al cargar el reporte de reprobación.');
+      setError("Error al cargar el reporte de reprobación.");
     } finally {
       setLoading(false);
     }
@@ -31,27 +44,32 @@ export default function FailureReport() {
   const alerts = reports.filter((r) => r.failurePercentage > ALERT_THRESHOLD);
 
   const getBarColor = (pct) => {
-    if (pct > 60) return 'bg-danger';
-    if (pct > 40) return 'bg-warning';
-    if (pct > 20) return 'bg-info';
-    return 'bg-success';
+    if (pct > 60) return "bg-danger";
+    if (pct > 40) return "bg-warning";
+    if (pct > 20) return "bg-info";
+    return "bg-success";
   };
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-start mb-4">
-        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
-          ← Volver
-        </button>
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h2 className="fw-bold mb-0">Reporte de Reprobación</h2>
-          <p className="text-muted mb-0">
-            Tasa histórica por asignatura · Vista materializada
-            {lastRefresh && <span className="ms-2 small">— Actualizado: {lastRefresh}</span>}
+          <h5 className="fw-semibold mb-0">
+            📊 Reprobación Histórica por Asignatura
+          </h5>
+          <p className="text-muted small mb-0">
+            Vista materializada
+            {lastRefresh && (
+              <span className="ms-2">— Actualizado: {lastRefresh}</span>
+            )}
           </p>
         </div>
-        <button className="btn btn-outline-secondary btn-sm" onClick={load} disabled={loading}>
-          {loading ? '...' : '↻ Actualizar'}
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          onClick={load}
+          disabled={loading}
+        >
+          {loading ? "..." : "↻ Actualizar"}
         </button>
       </div>
 
@@ -61,11 +79,12 @@ export default function FailureReport() {
       {!loading && !error && (
         <>
           {alerts.length > 0 && (
-            <div className="alert alert-danger d-flex align-items-start gap-2 mb-4">
+            <div className="alert alert-danger d-flex align-items-start gap-2 mb-3">
               <span className="fs-5">⚠️</span>
               <div>
                 <strong>
-                  {alerts.length} asignatura(s) con más del {ALERT_THRESHOLD}% de reprobación:
+                  {alerts.length} asignatura(s) con más del {ALERT_THRESHOLD}%
+                  de reprobación:
                 </strong>
                 <ul className="mb-0 mt-1">
                   {alerts.map((r) => (
@@ -79,13 +98,11 @@ export default function FailureReport() {
               </div>
             </div>
           )}
-
           {alerts.length === 0 && (
-            <div className="alert alert-success mb-4">
+            <div className="alert alert-success mb-3">
               ✅ Ninguna asignatura supera el {ALERT_THRESHOLD}% de reprobación.
             </div>
           )}
-
           <div className="card shadow-sm border-0">
             <div className="card-header bg-white fw-semibold py-3">
               Todas las asignaturas ({reports.length})
@@ -99,7 +116,9 @@ export default function FailureReport() {
                     <th style={{ width: 90 }}>Total</th>
                     <th style={{ width: 110 }}>Reprobados</th>
                     <th style={{ minWidth: 200 }}>Tasa de Reprobación</th>
-                    <th style={{ width: 80 }} className="text-end">%</th>
+                    <th style={{ width: 80 }} className="text-end">
+                      %
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,31 +133,40 @@ export default function FailureReport() {
                     const pct = r.failurePercentage ?? 0;
                     const isAlert = pct > ALERT_THRESHOLD;
                     return (
-                      <tr key={r.subjectId} className={isAlert ? 'table-danger' : ''}>
+                      <tr
+                        key={r.subjectId}
+                        className={isAlert ? "table-danger" : ""}
+                      >
                         <td>
-                          <span className="badge bg-primary font-monospace">{r.subjectCode}</span>
+                          <span className="badge bg-primary font-monospace">
+                            {r.subjectCode}
+                          </span>
                         </td>
                         <td className="fw-semibold">{r.subjectName}</td>
                         <td className="text-muted">{r.totalGrades}</td>
                         <td>
                           <span
-                            className={r.failedGrades > 0 ? 'text-danger fw-bold' : 'text-muted'}
+                            className={
+                              r.failedGrades > 0
+                                ? "text-danger fw-bold"
+                                : "text-muted"
+                            }
                           >
                             {r.failedGrades}
                           </span>
                         </td>
                         <td>
-                          <div className="d-flex align-items-center gap-2">
-                            <div className="progress flex-grow-1" style={{ height: 8 }}>
-                              <div
-                                className={`progress-bar ${getBarColor(pct)}`}
-                                style={{ width: `${Math.min(pct, 100)}%` }}
-                              />
-                            </div>
+                          <div className="progress" style={{ height: 8 }}>
+                            <div
+                              className={`progress-bar ${getBarColor(pct)}`}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
                           </div>
                         </td>
                         <td className="text-end">
-                          <span className={`fw-bold ${isAlert ? 'text-danger' : 'text-muted'}`}>
+                          <span
+                            className={`fw-bold ${isAlert ? "text-danger" : "text-muted"}`}
+                          >
                             {pct.toFixed(1)}%
                           </span>
                           {isAlert && <span className="ms-1">⚠️</span>}
@@ -162,11 +190,63 @@ export default function FailureReport() {
               <span>
                 <span className="badge bg-danger me-1"> </span>&gt;60%
               </span>
-              <span className="ms-auto">⚠️ Alerta cuando supera el {ALERT_THRESHOLD}%</span>
+              <span className="ms-auto">
+                ⚠️ Alerta cuando supera el {ALERT_THRESHOLD}%
+              </span>
             </div>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// Pestaña activa por defecto
+const TABS = [
+  { key: "subjects", label: "📊 Por Asignatura" },
+  { key: "density", label: "🗺️ Densidad Estudiantil" },
+  { key: "districts", label: "🏘️ Por Distrito" },
+];
+
+export default function FailureReport() {
+  const [activeTab, setActiveTab] = useState("subjects");
+
+  return (
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => window.history.back()}
+        >
+          ← Volver
+        </button>
+        <div className="text-center">
+          <h2 className="fw-bold mb-0">Reportes Académicos</h2>
+          <p className="text-muted mb-0">
+            Análisis de rendimiento y distribución geoespacial
+          </p>
+        </div>
+        <div style={{ width: 80 }} />
+      </div>
+
+      {/* Pestañas de navegación */}
+      <ul className="nav nav-tabs mb-4">
+        {TABS.map((tab) => (
+          <li className="nav-item" key={tab.key}>
+            <button
+              className={`nav-link ${activeTab === tab.key ? "active fw-semibold" : ""}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Contenido de la pestaña activa */}
+      {activeTab === "subjects" && <FailureBySubject />}
+      {activeTab === "density" && <DensityHeatmap />}
+      {activeTab === "districts" && <DistrictFailureMap />}
     </div>
   );
 }
