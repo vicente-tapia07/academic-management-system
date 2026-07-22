@@ -10,3 +10,4 @@ backend/target/
 # Dependencias Node
 frontend/node_modules/
 frontend/build/
+.cache/
