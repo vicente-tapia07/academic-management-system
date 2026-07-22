@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import PrivateRoute from "../components/PrivateRoute";
 
-<<<<<<< HEAD
 import LoginPage         from '../pages/LoginPage';
 import AdminDashboard    from '../pages/AdminDashboard';
 import CareerList        from '../pages/careers/CareerList';
@@ -37,38 +36,6 @@ import BuildingForm from '../pages/buildings/BuildingForm';
 import RoomList     from '../pages/rooms/RoomList';
 import RoomForm     from '../pages/rooms/RoomForm';
 import MyLocation from '../pages/students/MyLocation';
-=======
-import LoginPage from "../pages/LoginPage";
-import AdminDashboard from "../pages/AdminDashboard";
-import CareerList from "../pages/careers/CareerList";
-import CareerForm from "../pages/careers/CareerForm";
-import SubjectList from "../pages/subjects/SubjectList";
-import SubjectForm from "../pages/subjects/SubjectForm";
-import SectionList from "../pages/sections/SectionList";
-import SectionForm from "../pages/sections/SectionForm";
-import SemesterList from "../pages/semesters/SemesterList";
-import SemesterForm from "../pages/semesters/SemesterForm";
-import SemesterClose from "../pages/semesters/SemesterClose";
-import StudentList from "../pages/students/StudentList";
-import StudentCurriculum from "../pages/students/StudentCurriculum";
-import FailureReport from "../pages/reports/FailureReport";
-import StudentDashboard from "../pages/students/StudentDashboard";
-import StudentProfile from "../pages/students/StudentProfile";
-import StudentEnrollments from "../pages/students/StudentEnrollments";
-import EnrollForm from "../pages/students/EnrollForm";
-import ProfessorDashboard from "../pages/professor/ProfessorDashboard";
-import ProfessorCourses from "../pages/professor/ProfessorCourses";
-import StudentGrades from "../pages/professor/StudentGrades";
-import GradeForm from "../pages/professor/GradeForm";
-import StudentForm from "../pages/students/StudentForm";
-import StudentEnrollAdmin from "../pages/students/StudentEnrollAdmin";
-import MyGrades from "../pages/students/MyGrades";
-import BuildingList from "../pages/buildings/BuildingList";
-import BuildingForm from "../pages/buildings/BuildingForm";
-import RoomList from "../pages/rooms/RoomList";
-import RoomForm from "../pages/rooms/RoomForm";
-import MyLocation from "../pages/students/MyLocation";
->>>>>>> af00ca1f7c779a7e11129ef51f10a813984bb348
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -122,15 +89,9 @@ export default function AppRouter() {
           <Route path="/my-dashboard" element={<StudentDashboard />} />
           <Route path="/my-curriculum" element={<StudentCurriculum />} />
           <Route path="/my-enrollments" element={<StudentEnrollments />} />
-<<<<<<< HEAD
           <Route path="/my-enroll"      element={<DistanceReport />} />
           <Route path="/my-profile"     element={<StudentProfile />} />
           <Route path="/my-grades"      element={<MyGrades />} />
-=======
-          <Route path="/my-enroll" element={<EnrollForm />} />
-          <Route path="/my-profile" element={<StudentProfile />} />
-          <Route path="/my-grades" element={<MyGrades />} />
->>>>>>> af00ca1f7c779a7e11129ef51f10a813984bb348
         </Route>
 
         <Route element={<PrivateRoute roles={["ROLE_PROFESSOR"]} />}>
