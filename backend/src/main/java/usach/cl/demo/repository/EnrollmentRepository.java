@@ -116,29 +116,28 @@ public class EnrollmentRepository {
     public List<NearbySectionResponse> findNearbySections(Long subjectId, Double lat, Double lng) {
         String sql = """
             SELECT s.id AS section_id,
-                   s.id AS section_code,
-                   r.id AS room_id,
-                   r.name AS room_name,
-                   b.name AS building_name,
-                   ST_Distance(r.geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) AS distance_m
+                s.id AS section_code,
+                r.id AS room_id,
+                r.name AS room_name,
+                b.name AS building_name,
+                ST_Distance(r.geom::geography, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) AS distance_m
             FROM section s
             JOIN room r ON s.room_id = r.id
             JOIN building b ON r.building_id = b.id
             WHERE s.subject_id = ?
-              AND s.semester_id = (
-                  SELECT semester_id
-                  FROM section
-                  WHERE subject_id = ?
+            AND s.semester_id = (
+                SELECT semester_id
+                FROM section
+                WHERE subject_id = ?
                     AND semester_id IN (SELECT id FROM semester WHERE status = 'IN_PROGRESS')
-                  ORDER BY semester_id DESC
-                  LIMIT 1
-              )
-              AND ST_DWithin(r.geom, ST_SetSRID(ST_MakePoint(?, ?), 4326), 300)
+                ORDER BY semester_id DESC
+                LIMIT 1
+            )
             ORDER BY distance_m ASC
             """;
 
         return jdbcTemplate.query(sql,
-            new Object[]{lng, lat, subjectId, subjectId, lng, lat},
+            new Object[]{lng, lat, subjectId, subjectId},
             (rs, rowNum) -> new NearbySectionResponse(
                 rs.getLong("section_id"),
                 rs.getString("section_code"),
@@ -146,6 +145,6 @@ public class EnrollmentRepository {
                 rs.getString("room_name"),
                 rs.getString("building_name"),
                 rs.getDouble("distance_m")
-            ));
+        ));
     }
 }

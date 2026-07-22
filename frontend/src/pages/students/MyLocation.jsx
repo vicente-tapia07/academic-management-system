@@ -80,6 +80,8 @@ export default function MyLocation() {
         </div>
       )}
 
+
+      
       {position && (
         <MapView
           center={[position.lat, position.lng]}

@@ -22,6 +22,7 @@ import FailureReport     from '../pages/reports/FailureReport';
 import StudentDashboard   from '../pages/students/StudentDashboard';
 import StudentProfile     from '../pages/students/StudentProfile';
 import StudentEnrollments from '../pages/students/StudentEnrollments';
+import DistanceReport    from '../pages/students/DistanceReport';
 import EnrollForm         from '../pages/students/EnrollForm';
 import ProfessorDashboard from '../pages/professor/ProfessorDashboard';
 import ProfessorCourses   from '../pages/professor/ProfessorCourses';
@@ -34,11 +35,7 @@ import BuildingList from '../pages/buildings/BuildingList';
 import BuildingForm from '../pages/buildings/BuildingForm';
 import RoomList     from '../pages/rooms/RoomList';
 import RoomForm     from '../pages/rooms/RoomForm';
-<<<<<<< HEAD
 import MyLocation from '../pages/students/MyLocation';
-
-=======
->>>>>>> origin/lab2
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -87,7 +84,7 @@ export default function AppRouter() {
           <Route path="/my-dashboard"   element={<StudentDashboard />} />
           <Route path="/my-curriculum"  element={<StudentCurriculum />} />
           <Route path="/my-enrollments" element={<StudentEnrollments />} />
-          <Route path="/my-enroll"      element={<EnrollForm />} />
+          <Route path="/my-enroll"      element={<DistanceReport />} />
           <Route path="/my-profile"     element={<StudentProfile />} />
           <Route path="/my-grades"      element={<MyGrades />} />
         </Route>
