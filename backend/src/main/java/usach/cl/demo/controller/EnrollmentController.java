@@ -99,10 +99,11 @@ public class EnrollmentController {
     }
 
     @GetMapping("/nearby-sections")
-    public List<NearbySectionResponse> getNearbySections(
+    public ResponseEntity<List<NearbySectionResponse>> getNearbySections(
             @RequestParam Long subjectId,
             @RequestParam Double lat,
             @RequestParam Double lng) {
-        return enrollmentService.findNearbySections(subjectId, lat, lng);
+        List<NearbySectionResponse> sections = enrollmentService.findNearbySections(subjectId, lat, lng);
+        return ResponseEntity.ok(sections);
     }
 }
