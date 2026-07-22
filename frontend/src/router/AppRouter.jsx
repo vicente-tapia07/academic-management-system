@@ -34,11 +34,7 @@ import BuildingList from '../pages/buildings/BuildingList';
 import BuildingForm from '../pages/buildings/BuildingForm';
 import RoomList     from '../pages/rooms/RoomList';
 import RoomForm     from '../pages/rooms/RoomForm';
-<<<<<<< HEAD
 import MyLocation from '../pages/students/MyLocation';
-
-=======
->>>>>>> origin/lab2
 
 function Layout({ children }) {
   const { user } = useAuth();
