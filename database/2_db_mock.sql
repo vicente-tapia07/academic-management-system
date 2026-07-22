@@ -118,3 +118,19 @@ INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES 
 -- Pedro: CAL2 y BDD1
 INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 5, '2025-03-01', 'ACTIVE');
 INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 7, '2025-03-01', 'ACTIVE');
+
+-- ── Integrante 4: Datos de Prueba Geoespaciales ─────────────────
+
+-- Distritos de Vivienda (Polígonos aproximados en Santiago)
+INSERT INTO housing_district (name, geom) VALUES 
+('Estación Central Norte', ST_GeomFromText('POLYGON((-70.6900 -33.4400, -70.6750 -33.4400, -70.6750 -33.4550, -70.6900 -33.4550, -70.6900 -33.4400))', 4326)),
+('Santiago Centro Poniente', ST_GeomFromText('POLYGON((-70.6750 -33.4400, -70.6550 -33.4400, -70.6550 -33.4550, -70.6750 -33.4550, -70.6750 -33.4400))', 4326));
+
+-- Asignar ubicaciones de residencia a los estudiantes existentes
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6820 -33.4450)', 4326) WHERE id = 1; -- Juan vive en Estación Central Norte
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6810 -33.4480)', 4326) WHERE id = 2; -- María vive en Estación Central Norte
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6650 -33.4420)', 4326) WHERE id = 3; -- Pedro vive en Santiago Centro Poniente
+
+-- Refrescar las Vistas Materializadas para cargar los datos recién creados
+REFRESH MATERIALIZED VIEW mv_student_density_by_building;
+REFRESH MATERIALIZED VIEW mv_failure_rate_by_district;
