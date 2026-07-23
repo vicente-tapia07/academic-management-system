@@ -26,6 +26,20 @@ public class SectionRepository {
         section.setSemesterId(rs.getLong("semester_id"));
         section.setTotalSeats(rs.getInt("total_seats"));
         section.setAvailableSeats(rs.getInt("available_seats"));
+
+        // Campos del Lab 2
+        long roomId = rs.getLong("room_id");
+        if (!rs.wasNull()) section.setRoomId(roomId);
+
+        int dow = rs.getInt("day_of_week");
+        if (!rs.wasNull()) section.setDayOfWeek(dow);
+
+        Time startTime = rs.getTime("start_time");
+        if (startTime != null) section.setStartTime(startTime.toLocalTime());
+
+        Time endTime = rs.getTime("end_time");
+        if (endTime != null) section.setEndTime(endTime.toLocalTime());
+
         return section;
     }
 
@@ -36,9 +50,7 @@ public class SectionRepository {
              ResultSet rs = ps.executeQuery()) {
 
             List<SectionEntity> list = new ArrayList<>();
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            while (rs.next()) list.add(mapRow(rs));
             return list;
 
         } catch (SQLException e) {
@@ -53,9 +65,7 @@ public class SectionRepository {
 
             ps.setLong(1, id);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapRow(rs));
-            }
+            if (rs.next()) return Optional.of(mapRow(rs));
             return Optional.empty();
 
         } catch (SQLException e) {
@@ -64,8 +74,33 @@ public class SectionRepository {
     }
 
     public SectionEntity save(SectionEntity section) {
-        String sql = "INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING id";
+        // Verificar conflicto: misma sala, mismo día, horario que se superpone
+        String checkSql = """
+            SELECT COUNT(*) FROM section
+            WHERE room_id = ?
+            AND day_of_week = ?
+            AND NOT (end_time <= ? OR start_time >= ?)
+            """;
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement check = conn.prepareStatement(checkSql)) {
+
+            check.setLong(1, section.getRoomId());
+            check.setInt(2, section.getDayOfWeek());
+            check.setTime(3, Time.valueOf(section.getStartTime()));
+            check.setTime(4, Time.valueOf(section.getEndTime()));
+            ResultSet cr = check.executeQuery();
+            if (cr.next() && cr.getInt(1) > 0) {
+                throw new RuntimeException(
+                    "Conflicto de horario: la sala ya está ocupada en ese día y bloque."
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error verificando conflicto de sala", e);
+        }
+
+        String sql = "INSERT INTO section (subject_id, professor_id, semester_id, " +
+                     "total_seats, available_seats, room_id, day_of_week, start_time, end_time) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -74,10 +109,14 @@ public class SectionRepository {
             ps.setLong(3, section.getSemesterId());
             ps.setInt(4, section.getTotalSeats());
             ps.setInt(5, section.getAvailableSeats());
+            ps.setLong(6, section.getRoomId());
+            ps.setInt(7, section.getDayOfWeek());
+            ps.setTime(8, section.getStartTime() != null
+                ? Time.valueOf(section.getStartTime()) : null);
+            ps.setTime(9, section.getEndTime() != null
+                ? Time.valueOf(section.getEndTime()) : null);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                section.setId(rs.getLong("id"));
-            }
+            if (rs.next()) section.setId(rs.getLong("id"));
             return section;
 
         } catch (SQLException e) {
@@ -93,13 +132,130 @@ public class SectionRepository {
             ps.setLong(1, professorId);
             ResultSet rs = ps.executeQuery();
             List<SectionEntity> list = new ArrayList<>();
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            while (rs.next()) list.add(mapRow(rs));
             return list;
 
         } catch (SQLException e) {
             throw new RuntimeException("Error fetching sections by professor", e);
+        }
+    }
+
+    public SectionEntity update(SectionEntity section) {
+        // Verificar conflicto excluyendo la propia sección
+        String checkSql = """
+            SELECT COUNT(*) FROM section
+            WHERE room_id = ?
+            AND day_of_week = ?
+            AND id != ?
+            AND NOT (end_time <= ? OR start_time >= ?)
+            """;
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement check = conn.prepareStatement(checkSql)) {
+
+            check.setLong(1, section.getRoomId());
+            check.setInt(2, section.getDayOfWeek());
+            check.setLong(3, section.getId());
+            check.setTime(4, Time.valueOf(section.getStartTime()));
+            check.setTime(5, Time.valueOf(section.getEndTime()));
+            ResultSet cr = check.executeQuery();
+            if (cr.next() && cr.getInt(1) > 0) {
+                throw new RuntimeException(
+                    "Conflicto de horario: la sala ya está ocupada en ese día y bloque."
+                );
+            }
+        } catch (SQLException e) {
+            if (e.getMessage() == null || !e.getMessage().contains("Conflicto")) {
+                throw new RuntimeException("Error verificando conflicto de sala", e);
+            }
+            throw new RuntimeException(e.getMessage());
+        }
+
+        String sql = """
+            UPDATE section SET
+                subject_id = ?, professor_id = ?, semester_id = ?,
+                total_seats = ?, available_seats = ?,
+                room_id = ?, day_of_week = ?, start_time = ?, end_time = ?
+            WHERE id = ?
+            """;
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, section.getSubjectId());
+            ps.setLong(2, section.getProfessorId());
+            ps.setLong(3, section.getSemesterId());
+            ps.setInt(4, section.getTotalSeats());
+            ps.setInt(5, section.getAvailableSeats());
+            ps.setLong(6, section.getRoomId());
+            ps.setInt(7, section.getDayOfWeek());
+            ps.setTime(8, Time.valueOf(section.getStartTime()));
+            ps.setTime(9, Time.valueOf(section.getEndTime()));
+            ps.setLong(10, section.getId());
+            ps.executeUpdate();
+            return section;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating section", e);
+        }
+    }
+
+    public int deleteById(Long id) {
+        String sql = "DELETE FROM section WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            return ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting section", e);
+        }
+    }
+
+    // Secciones de un estudiante (via enrollment) con semestre activo
+    public List<SectionEntity> findByStudentId(Long studentId) {
+        String sql = """
+            SELECT s.*
+            FROM section s
+            JOIN enrollment e ON e.section_id = s.id
+            WHERE e.student_id = ?
+            AND e.status = 'ACTIVE'
+            ORDER BY s.day_of_week, s.start_time
+            """;
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, studentId);
+            ResultSet rs = ps.executeQuery();
+            List<SectionEntity> list = new ArrayList<>();
+            while (rs.next()) list.add(mapRow(rs));
+            return list;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching sections by student", e);
+        }
+    }
+
+    // Secciones del profesor filtrando por semestre activo (IN_PROGRESS)
+    public List<SectionEntity> findByProfessorIdAndActiveSemester(Long professorId) {
+        String sql = """
+            SELECT s.*
+            FROM section s
+            JOIN semester sem ON sem.id = s.semester_id
+            WHERE s.professor_id = ?
+            AND sem.status = 'IN_PROGRESS'
+            ORDER BY s.day_of_week, s.start_time
+            """;
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, professorId);
+            ResultSet rs = ps.executeQuery();
+            List<SectionEntity> list = new ArrayList<>();
+            while (rs.next()) list.add(mapRow(rs));
+            return list;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching active sections by professor", e);
         }
     }
 }

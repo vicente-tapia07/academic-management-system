@@ -62,17 +62,31 @@ INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, acade
 -- Lucas (id=4): sin notas aún → no puede ramos con prerequisito
 INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) VALUES (4, '2024004', 'Lucas', 'Torres',   'ACTIVE');
 
+-- ── Edificios ────────────────────────────────
+INSERT INTO building (code, name, geom) VALUES ('FING', 'Facultad de Ingeniería',ST_GeomFromText('POLYGON((-70.6847 -33.4486, -70.6843 -33.4486, -70.6843 -33.4489, -70.6847 -33.4489, -70.6847 -33.4486))', 4326));
+INSERT INTO building (code, name, geom) VALUES ('FCI', 'Facultad de Ciencias',ST_GeomFromText('POLYGON((-70.6834 -33.4493, -70.6830 -33.4493, -70.6830 -33.4496, -70.6834 -33.4496, -70.6834 -33.4493))', 4326));
+
+-- ── Salas ────────────────────────────────────
+-- building_id=1 → Facultad de Ingeniería
+INSERT INTO room (building_id, code, name, capacity, geom) VALUES (1, 'A-101', 'Sala 101', 35,ST_GeomFromText('POINT(-70.6845 -33.4487)', 4326));
+INSERT INTO room (building_id, code, name, capacity, geom) VALUES (1, 'A-102', 'Sala 102', 30,ST_GeomFromText('POINT(-70.6844 -33.4488)', 4326));
+
+-- building_id=2 → Facultad de Ciencias
+INSERT INTO room (building_id, code, name, capacity, geom) VALUES (2, 'B-201', 'Sala 201', 40,ST_GeomFromText('POINT(-70.6832 -33.4494)', 4326));
+INSERT INTO room (building_id, code, name, capacity, geom) VALUES (2, 'B-202', 'Sala 202', 25,ST_GeomFromText('POINT(-70.6831 -33.4495)', 4326));
+
 -- ── Secciones semestre 1 (2024 CLOSED) ───────
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (1, 2, 1, 30, 27); -- sec=1: CAL1
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (3, 1, 1, 30, 27); -- sec=2: PRG1
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (6, 3, 1, 30, 28); -- sec=3: ALG1
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (1, 2, 1, 30, 27, 1, 1, '08:00', '09:30'); -- sec=1: CAL1, Sala 101, Lunes
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (3, 1, 1, 30, 27, 2, 1, '10:00', '11:30'); -- sec=2: PRG1, Sala 102, Lunes
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (6, 3, 1, 30, 28, 3, 2, '08:00', '09:30'); -- sec=3: ALG1, Sala 201, Martes
 
 -- ── Secciones semestre 2 (2025 IN_PROGRESS) ──
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (1, 3, 2, 30, 28); -- sec=4: CAL1 (repitentes)
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (2, 2, 2, 30, 2);  -- sec=5: CAL2 (solo 2 cupos para probar SP)
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (4, 1, 2, 30, 28); -- sec=6: PRG2
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (5, 1, 2, 30, 29); -- sec=7: BDD1
-INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats) VALUES (6, 2, 2, 0,  0);  -- sec=8: ALG1 SIN CUPOS (para probar SP bloqueo)
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (1, 3, 2, 30, 28, 1, 3, '08:00', '09:30'); -- sec=4: CAL1 repitentes, Sala 101, Miércoles
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (2, 2, 2, 30, 2, 2, 3, '10:00', '11:30'); -- sec=5: CAL2, Sala 102, Miércoles
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (4, 1, 2, 30, 28, 3, 4, '10:00', '11:30'); -- sec=6: PRG2, Sala 201, Jueves
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (5, 1, 2, 30, 29, 4, 4, '14:00', '15:30'); -- sec=7: BDD1, Sala 202, Jueves
+INSERT INTO section (subject_id, professor_id, semester_id, total_seats, available_seats, room_id, day_of_week, start_time, end_time) VALUES (6, 2, 2, 0, 0, 4, 5, '08:00', '09:30'); -- sec=8: ALG1 sin cupos, Sala 202, Viernes
+
 
 -- ── Inscripciones semestre 1 ──────────────────
 -- Juan: CAL1 y PRG1
@@ -104,3 +118,19 @@ INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES 
 -- Pedro: CAL2 y BDD1
 INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 5, '2025-03-01', 'ACTIVE');
 INSERT INTO enrollment (student_id, section_id, enrollment_date, status) VALUES (3, 7, '2025-03-01', 'ACTIVE');
+
+-- ── Integrante 4: Datos de Prueba Geoespaciales ─────────────────
+
+-- Distritos de Vivienda (Polígonos aproximados en Santiago)
+INSERT INTO housing_district (name, geom) VALUES 
+('Estación Central Norte', ST_GeomFromText('POLYGON((-70.6900 -33.4400, -70.6750 -33.4400, -70.6750 -33.4550, -70.6900 -33.4550, -70.6900 -33.4400))', 4326)),
+('Santiago Centro Poniente', ST_GeomFromText('POLYGON((-70.6750 -33.4400, -70.6550 -33.4400, -70.6550 -33.4550, -70.6750 -33.4550, -70.6750 -33.4400))', 4326));
+
+-- Asignar ubicaciones de residencia a los estudiantes existentes
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6820 -33.4450)', 4326) WHERE id = 1; -- Juan vive en Estación Central Norte
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6810 -33.4480)', 4326) WHERE id = 2; -- María vive en Estación Central Norte
+UPDATE student SET home_location = ST_GeomFromText('POINT(-70.6650 -33.4420)', 4326) WHERE id = 3; -- Pedro vive en Santiago Centro Poniente
+
+-- Refrescar las Vistas Materializadas para cargar los datos recién creados
+REFRESH MATERIALIZED VIEW mv_student_density_by_building;
+REFRESH MATERIALIZED VIEW mv_failure_rate_by_district;

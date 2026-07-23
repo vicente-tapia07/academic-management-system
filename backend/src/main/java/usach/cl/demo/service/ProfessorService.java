@@ -1,6 +1,8 @@
 package usach.cl.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import usach.cl.demo.dto.FailureRateDTO;
 import usach.cl.demo.model.*;
@@ -10,25 +12,17 @@ import java.util.List;
 @Service
 public class ProfessorService {
 
-    @Autowired
-    private GradeRepository gradeRepository;
+    @Autowired private GradeRepository      gradeRepository;
+    @Autowired private FailureRateRepository failureRateRepository;
+    @Autowired private AuditRepository       auditRepository;
+    @Autowired private ProfessorRepository   professorRepository;
+    @Autowired private SectionRepository     sectionRepository;
+    @Autowired private JdbcTemplate          jdbcTemplate;
+    @Autowired private PasswordEncoder       passwordEncoder;
 
-    @Autowired
-    private FailureRateRepository failureRateRepository;
-
-    @Autowired
-    private AuditRepository auditRepository;
-
-    @Autowired
-    private ProfessorRepository professorRepository;
-
-    @Autowired
-    private SectionRepository sectionRepository;
-    
     public List<ProfessorEntity> getAll() {
         return professorRepository.findAll();
     }
-
 
     public ProfessorEntity getById(Long id) {
         return professorRepository.findById(id);
@@ -39,21 +33,63 @@ public class ProfessorService {
     }
 
     public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {
+        String hash = passwordEncoder.encode(dto.password());
+
+        // Usar RUT del DTO, o timestamp como fallback si no se envió
+        String rut = (dto.rut() != null && !dto.rut().isBlank())
+            ? dto.rut()
+            : "PROF-" + System.currentTimeMillis();
+
+        // Schema real: id, rut, email, password_hash, rol
+        Long usuarioId = jdbcTemplate.queryForObject(
+            "INSERT INTO usuario (rut, email, password_hash, rol) " +
+            "VALUES (?, ?, ?, 'PROFESSOR') RETURNING id",
+            Long.class,
+            rut,
+            dto.email(),
+            hash
+        );
+
+        String[] parts    = dto.name().trim().split("\\s+", 2);
+        String firstName  = parts[0];
+        String lastName   = parts.length > 1 ? parts[1] : "";
+
         ProfessorEntity professor = new ProfessorEntity();
-        professor.setUsuarioId(null);
-        String[] names = dto.name().split(" ", 2);
-        professor.setFirstName(names.length > 0 ? names[0] : "");
-        professor.setLastName(names.length > 1 ? names[1] : "");
+        professor.setUsuarioId(usuarioId);
+        professor.setFirstName(firstName);
+        professor.setLastName(lastName);
         professor.setDepartment(dto.department());
+
         return professorRepository.save(professor);
     }
 
     public ProfessorEntity update(Long id, usach.cl.demo.dto.ProfessorDTO dto) {
-        ProfessorEntity existing = professorRepository.findByUserId(id);
-        String[] names = dto.name().split(" ", 2);
-        String firstName = names.length > 0 ? names[0] : "";
-        String lastName = names.length > 1 ? names[1] : "";
+        ProfessorEntity existing = professorRepository.findById(id);
+        if (existing == null) throw new RuntimeException("Profesor no encontrado: " + id);
+
+        String[] parts   = dto.name().trim().split("\\s+", 2);
+        String firstName = parts[0];
+        String lastName  = parts.length > 1 ? parts[1] : "";
+
+        // Actualizar credenciales si se enviaron
+        if (dto.email() != null && !dto.email().isBlank()) {
+            if (dto.password() != null && !dto.password().isBlank()) {
+                String hash = passwordEncoder.encode(dto.password());
+                jdbcTemplate.update(
+                    "UPDATE usuario SET email = ?, password_hash = ? WHERE id = ?",
+                    dto.email(), hash, existing.getUsuarioId()
+                );
+            } else {
+                jdbcTemplate.update(
+                    "UPDATE usuario SET email = ? WHERE id = ?",
+                    dto.email(), existing.getUsuarioId()
+                );
+            }
+        }
+
+        // updateProfessor(id, department, firstName, lastName)
         professorRepository.updateProfessor(id, dto.department(), firstName, lastName);
+
         existing.setFirstName(firstName);
         existing.setLastName(lastName);
         existing.setDepartment(dto.department());
@@ -61,7 +97,13 @@ public class ProfessorService {
     }
 
     public void delete(Long id) {
-        professorRepository.deleteByUserId(id);
+        ProfessorEntity existing = professorRepository.findById(id);
+        if (existing == null) return;
+        Long usuarioId = existing.getUsuarioId();
+        jdbcTemplate.update("DELETE FROM professor WHERE id = ?", id);
+        if (usuarioId != null) {
+            jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", usuarioId);
+        }
     }
 
     public List<FailureRateDTO> getFailureReport() {
@@ -70,24 +112,16 @@ public class ProfessorService {
     }
 
     public GradeEntity saveGrade(GradeEntity grade, String professorRut) {
-
         if (grade.getEntryDate() == null) {
             grade.setEntryDate(java.time.LocalDate.now());
         }
-
         GradeEntity savedGrade = gradeRepository.save(grade);
-
-        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() + ", \"value\": " + grade.getValue() + "}";
-
+        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() +
+                             ", \"value\": " + grade.getValue() + "}";
         auditRepository.logAudit(
-                "grade",
-                "INSERT",
-                professorRut,
-                java.time.LocalDateTime.now(),
-                null, // oldData (es null porque es un INSERT, no había datos antes)
-                newDataJson
+            "grade", "INSERT", professorRut,
+            java.time.LocalDateTime.now(), null, newDataJson
         );
-
         return savedGrade;
     }
 }

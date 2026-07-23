@@ -26,14 +26,19 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("handleSubmit ejecutado");
+    console.log("Email:", form.email, "Pass:", form.password);
     if (!form.email || !form.password) {
       setError('Por favor completa todos los campos.');
       return;
     }
     setLoading(true);
     try {
+      console.log("3. Antes de llamar a login()");
       const res      = await login(form.email, form.password);
+      console.log("4. Respuesta de login:", res);
       const userData = loginUser(res.data.token);
+      console.log("5. userData:", userData);
 
       // Redirige según rol
       const roles = userData?.roles ?? [];
@@ -42,6 +47,7 @@ export default function LoginPage() {
       else navigate('/my-dashboard');
     } catch (err) {
       const status = err.response?.status;
+      console.log("6. Error capturado:", err);
       if (status === 401 || status === 403) {
         setError('Credenciales incorrectas. Verifica tu email y contraseña.');
       } else {
@@ -117,10 +123,11 @@ export default function LoginPage() {
                   </div>
 
                   <button
-                    type="submit"
+                    type="button"
                     className="btn w-100 fw-semibold text-white"
                     style={{ backgroundColor: '#003366' }}
                     disabled={loading}
+                    onClick={handleSubmit}
                   >
                     {loading ? (
                       <>

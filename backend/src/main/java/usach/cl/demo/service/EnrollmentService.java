@@ -1,6 +1,8 @@
 package usach.cl.demo.service;
 
 import org.springframework.stereotype.Service;
+
+import usach.cl.demo.dto.NearbySectionResponse;
 import usach.cl.demo.model.EnrollmentEntity;
 import usach.cl.demo.repository.EnrollmentRepository;
 
@@ -56,5 +58,9 @@ public class EnrollmentService {
 
     public List<EnrollmentEntity> findBySectionId(Long sectionId) {
         return enrollmentRepository.findBySectionId(sectionId);
+    }
+
+    public List<NearbySectionResponse> findNearbySections(Long subjectId, Double lat, Double lng) {
+        return enrollmentRepository.findNearbySections(subjectId, lat, lng);
     }
 }

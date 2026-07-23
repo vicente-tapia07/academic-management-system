@@ -4,7 +4,8 @@
 
 -- Extensión para BCrypt
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
+-- Activar PostGIS
+CREATE EXTENSION IF NOT EXISTS postgis;
 -- =============================================
 -- TABLAS
 -- =============================================
@@ -13,6 +14,23 @@ CREATE TABLE IF NOT EXISTS career (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS building (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    geom GEOMETRY(POLYGON, 4326) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS room (
+    id BIGSERIAL PRIMARY KEY,
+    building_id BIGINT NOT NULL REFERENCES building(id) ON DELETE CASCADE,
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    capacity INTEGER NOT NULL,
+    geom GEOMETRY(POINT, 4326) NOT NULL,
+    UNIQUE(building_id, code)
 );
 
 CREATE TABLE IF NOT EXISTS semester (
@@ -60,6 +78,11 @@ CREATE TABLE IF NOT EXISTS section (
     available_seats INTEGER NOT NULL
 );
 
+ALTER TABLE section ADD COLUMN room_id BIGINT NOT NULL REFERENCES room(id);
+ALTER TABLE section ADD COLUMN day_of_week SMALLINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6);
+ALTER TABLE section ADD COLUMN start_time TIME NOT NULL;
+ALTER TABLE section ADD COLUMN end_time TIME NOT NULL;
+
 CREATE TABLE IF NOT EXISTS prerequisite (
     subject_id BIGINT NOT NULL REFERENCES subject(id),
     prerequisite_subject_id BIGINT NOT NULL REFERENCES subject(id),
@@ -100,6 +123,8 @@ CREATE TABLE IF NOT EXISTS grade (
 CREATE INDEX IF NOT EXISTS idx_usuario_rut ON usuario(rut);
 CREATE INDEX IF NOT EXISTS idx_student_enrollment ON student(enrollment_number);
 CREATE INDEX IF NOT EXISTS idx_subject_code ON subject(code);
+CREATE INDEX IF NOT EXISTS idx_building_geom ON building USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_room_geom ON room USING GIST(geom);
 
 -- =============================================
 -- TRIGGER 1: PRERREQUISITOS
@@ -279,3 +304,62 @@ LEFT JOIN section sec ON sub.id = sec.subject_id
 LEFT JOIN enrollment e ON sec.id = e.section_id
 LEFT JOIN grade g ON e.id = g.enrollment_id
 GROUP BY sub.id, sub.code, sub.name;
+
+-- =============================================
+-- INTEGRANTE 4: VISTAS MATERIALIZADAS Y ZONIFICACIÓN
+-- =============================================
+
+-- 1. Tabla de Distritos de Vivienda (Polígonos)
+CREATE TABLE IF NOT EXISTS housing_district (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    geom GEOMETRY(POLYGON, 4326) NOT NULL
+);
+
+-- 2. Modificación a la tabla de estudiantes (Ubicación de residencia)
+ALTER TABLE student ADD COLUMN IF NOT EXISTS home_location GEOMETRY(POINT, 4326);
+
+-- 3. Índices Espaciales GIST (Obligatorios por enunciado)
+CREATE INDEX IF NOT EXISTS idx_district_geom ON housing_district USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_student_home_geom ON student USING GIST(home_location);
+
+-- =============================================
+-- VISTA MATERIALIZADA 1: DENSIDAD ESTUDIANTIL POR EDIFICIO
+-- =============================================
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_student_density_by_building AS
+SELECT 
+    b.id AS building_id,
+    b.code AS building_code,
+    b.name AS building_name,
+    ST_AsGeoJSON(b.geom) AS geom_json,
+    COUNT(DISTINCT e.student_id) AS student_count
+FROM building b
+JOIN room r ON r.building_id = b.id
+JOIN section sec ON sec.room_id = r.id
+JOIN enrollment e ON e.section_id = sec.id AND e.status = 'ACTIVE'
+GROUP BY b.id, b.code, b.name, b.geom;
+
+-- =============================================
+-- VISTA MATERIALIZADA 2: REPROBACIÓN POR DISTRITO DE VIVIENDA
+-- =============================================
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_failure_rate_by_district AS
+SELECT 
+    hd.id AS district_id,
+    hd.name AS district_name,
+    ST_AsGeoJSON(hd.geom) AS geom_json,
+    sub.id AS subject_id,
+    sub.code AS subject_code,
+    sub.name AS subject_name,
+    COUNT(g.id) AS total_grades,
+    SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END) AS failed_grades,
+    CASE 
+        WHEN COUNT(g.id) = 0 THEN 0.0
+        ELSE ROUND(SUM(CASE WHEN g.value < 4.0 THEN 1 ELSE 0 END)::NUMERIC / COUNT(g.id) * 100, 2)
+    END AS failure_percentage
+FROM housing_district hd
+JOIN student st ON ST_Contains(hd.geom, st.home_location)
+JOIN enrollment e ON e.student_id = st.id
+JOIN section sec ON sec.id = e.section_id
+JOIN subject sub ON sub.id = sec.subject_id
+JOIN grade g ON g.enrollment_id = e.id
+GROUP BY hd.id, hd.name, hd.geom, sub.id, sub.code, sub.name;
