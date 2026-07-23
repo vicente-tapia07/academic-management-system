@@ -28,67 +28,101 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sess -> sess
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // PÚBLICAS
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
 
-                        // PROFESOR + ADMIN: rutas específicas PRIMERO
-                        .requestMatchers(HttpMethod.POST, "/api/professors/grade").hasAnyRole("ADMIN", "PROFESSOR")
-                        .requestMatchers(HttpMethod.GET, "/api/professors/reports").hasAnyRole("ADMIN", "PROFESSOR")
+                // ── PÚBLICAS ──────────────────────────────────────────────
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // NOTAS
-                        .requestMatchers(HttpMethod.GET,  "/api/grades").hasAnyRole("ADMIN", "PROFESSOR")
-                        .requestMatchers(HttpMethod.POST, "/api/grades").hasAnyRole("ADMIN", "PROFESSOR")
-                        .requestMatchers(HttpMethod.PUT,  "/api/grades/**").hasAnyRole("ADMIN", "PROFESSOR")
+                // ── RUTAS ESPECÍFICAS PRIMERO (antes que los wildcards) ───
 
-                        // ADMIN: crear, editar, eliminar profesores
-                        .requestMatchers(HttpMethod.POST,   "/api/professors").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/professors/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/professors/**").hasRole("ADMIN")
+                // Profesor puede registrar notas y ver reportes
+                .requestMatchers(HttpMethod.POST, "/api/professors/grade")
+                    .hasRole("PROFESSOR")
+                .requestMatchers(HttpMethod.GET, "/api/professors/reports")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
 
-                        // TODOS AUTENTICADOS: ver profesores (ruta raíz Y subrutas)
-                        .requestMatchers(HttpMethod.GET, "/api/professors", "/api/professors/**").authenticated()
+                // ── PROFESORES: CRUD solo ADMIN ───────────────────────────
+                .requestMatchers(HttpMethod.POST,   "/api/professors")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/professors/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/professors/**")
+                    .hasRole("ADMIN")
 
-                        // ADMIN: gestión de estudiantes
-                        .requestMatchers("/api/admins/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST,   "/api/students/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/students/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
+                // ── NOTAS ─────────────────────────────────────────────────
+                .requestMatchers(HttpMethod.GET,  "/api/grades")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
+                .requestMatchers(HttpMethod.POST, "/api/grades")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
+                .requestMatchers(HttpMethod.PUT,  "/api/grades/**")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
 
-                        // ADMIN: gestión de edificios y salas
-                        .requestMatchers(HttpMethod.POST,   "/api/buildings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/buildings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/buildings/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST,   "/api/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasRole("ADMIN")
+                // ── INSCRIPCIONES ─────────────────────────────────────────
+                // PATCH solo ADMIN (cambiar estado de inscripción)
+                .requestMatchers(HttpMethod.PATCH, "/api/enrollments/**")
+                    .hasRole("ADMIN")
+                // POST enroll: admin y estudiante
+                .requestMatchers(HttpMethod.POST, "/api/enrollments/**")
+                    .hasAnyRole("ADMIN", "STUDENT")
+                // DELETE: admin y estudiante
+                .requestMatchers(HttpMethod.DELETE, "/api/enrollments/**")
+                    .hasAnyRole("ADMIN", "STUDENT")
 
-                        // TODOS AUTENTICADOS: ver edificios y salas (necesario para el mapa)
-                        .requestMatchers(HttpMethod.GET, "/api/buildings/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").authenticated()
-                        // ADMIN: gestión de puntos de accesibilidad (rampas)
-                        .requestMatchers(HttpMethod.POST,   "/api/accessibility-pois/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/accessibility-pois/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/accessibility-pois/**").hasRole("ADMIN")
+                // ── ESTUDIANTES ───────────────────────────────────────────
+                .requestMatchers(HttpMethod.POST,   "/api/students/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/students/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH,  "/api/students/**")
+                    .hasAnyRole("ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/students/**")
+                    .hasRole("ADMIN")
 
-                        // TODOS AUTENTICADOS: ver puntos de accesibilidad (necesario para el badge de salas)
-                        .requestMatchers(HttpMethod.GET, "/api/accessibility-pois/**").authenticated()
-                        // STUDENT + ADMIN + PROFESSOR: consultar sala más cercana con clase activa
-                        .requestMatchers(HttpMethod.POST, "/api/location/**").hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
+                // ── EDIFICIOS Y SALAS ─────────────────────────────────────
+                .requestMatchers(HttpMethod.POST,   "/api/buildings/**", "/api/rooms/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/buildings/**", "/api/rooms/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/buildings/**", "/api/rooms/**")
+                    .hasRole("ADMIN")
 
+                // ── ACCESIBILIDAD ─────────────────────────────────────────
+                .requestMatchers(HttpMethod.POST,   "/api/accessibility-pois/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/accessibility-pois/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/accessibility-pois/**")
+                    .hasRole("ADMIN")
 
-                        // STUDENT + PROFESSOR + ADMIN: leer estudiantes e inscripciones
-                        .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/api/enrollments/**").hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
+                // ── ADMIN general ─────────────────────────────────────────
+                .requestMatchers("/api/admins/**").hasRole("ADMIN")
 
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // ── SECCIONES ─────────────────────────────────────────────
+                .requestMatchers(HttpMethod.POST,   "/api/sections/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/sections/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/sections/**")
+                    .hasRole("ADMIN")
+
+                // ── UBICACIÓN (Integrante 2) ──────────────────────────────
+                .requestMatchers(HttpMethod.POST, "/api/location/**")
+                    .authenticated()
+
+                // ── REPORTES GEOESPACIALES ────────────────────────────────
+                .requestMatchers(HttpMethod.GET,  "/api/reports/**")
+                    .authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/reports/**")
+                    .authenticated()
+
+                // ── TODO LO DEMÁS: solo autenticado ──────────────────────
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -96,7 +130,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

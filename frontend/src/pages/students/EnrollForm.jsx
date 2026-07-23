@@ -3,17 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
 export default function EnrollForm() {
-  const { user }              = useAuth();
-  const navigate              = useNavigate();
-  const [sections,  setSections]  = useState([]);
-  const [selected,  setSelected]  = useState('');
-  const [loading,   setLoading]   = useState(true);
-  const [saving,    setSaving]    = useState(false);
-  const [error,     setError]     = useState('');
-  const [success,   setSuccess]   = useState('');
-  const [studentId, setStudentId] = useState(null);
+  const { user }    = useAuth();
+  const navigate    = useNavigate();
+
+  const [sections,      setSections]      = useState([]);
+  const [selected,      setSelected]      = useState('');
+  const [loading,       setLoading]       = useState(true);
+  const [saving,        setSaving]        = useState(false);
+  const [error,         setError]         = useState('');
+  const [success,       setSuccess]       = useState('');
+  const [studentId,     setStudentId]     = useState(null);
   const [semesterLabel, setSemesterLabel] = useState('');
+  const [skippedCount,  setSkippedCount]  = useState(0); // cuántas se ocultaron
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,42 +28,95 @@ export default function EnrollForm() {
         if (!me) throw new Error('Estudiante no encontrado');
         setStudentId(me.id);
 
-        // 2. Buscar el semestre activo (IN_PROGRESS)
+        // 2. Semestre activo
         const semRes = await api.get('/api/semesters');
         const activeSem = semRes.data.find(s => s.status === 'IN_PROGRESS');
-
         if (!activeSem) {
-          setError('No hay un semestre activo en este momento. No es posible inscribirse.');
+          setError('No hay un semestre activo. No es posible inscribirse.');
           setLoading(false);
           return;
         }
-
         setSemesterLabel(`${activeSem.year} — ${activeSem.period}`);
 
-        // 3. Traer todas las secciones y filtrar por semestre activo + cupos
-        const secRes = await api.get('/api/sections');
-        const delSemestre = secRes.data.filter(
+        // 3. Obtener en paralelo: secciones, malla y inscripciones actuales
+        const [secRes, curriculumRes, enrollRes] = await Promise.all([
+          api.get('/api/sections'),
+          api.get(`/api/students/${me.id}/curriculum`),
+          api.get(`/api/enrollments/student/${me.id}`),
+        ]);
+
+        // IDs de asignaturas ya aprobadas
+        const approvedSubjectIds = new Set(
+          curriculumRes.data
+            .filter(c => c.status === 'APPROVED')
+            .map(c => c.subjectId)
+        );
+
+        // IDs de asignaturas que ya tiene inscritas (ACTIVE o COMPLETED)
+        // Para esto necesitamos cruzar enrollment → section → subject
+        // Usamos las secciones ya cargadas para obtener el subjectId
+        const allSections = secRes.data;
+        const activeEnrollSectionIds = new Set(
+          enrollRes.data
+            .filter(e => e.status === 'ACTIVE' || e.status === 'COMPLETED')
+            .map(e => e.sectionId)
+        );
+
+        const enrolledSubjectIds = new Set(
+          allSections
+            .filter(s => activeEnrollSectionIds.has(s.id))
+            .map(s => s.subjectId)
+        );
+
+        // 4. Filtrar: semestre activo + cupos disponibles
+        const delSemestre = allSections.filter(
           s => s.semesterId === activeSem.id && s.availableSeats > 0
         );
 
-        // 4. Enriquecer con nombre de asignatura
+        // 5. Separar las que se pueden inscribir de las que no
+        let skipped = 0;
+        const disponibles = [];
+
+        for (const s of delSemestre) {
+          // Omitir si ya aprobó la asignatura
+          if (approvedSubjectIds.has(s.subjectId)) {
+            skipped++;
+            continue;
+          }
+          // Omitir si ya está inscrito en esa asignatura este semestre
+          if (enrolledSubjectIds.has(s.subjectId)) {
+            skipped++;
+            continue;
+          }
+          disponibles.push(s);
+        }
+
+        setSkippedCount(skipped);
+
+        // 6. Enriquecer con nombre de asignatura, sala y horario
         const enriched = await Promise.all(
-          delSemestre.map(async (s) => {
+          disponibles.map(async (s) => {
+            let subjectName = '—';
+            let subjectCode = '—';
+            let roomName    = s.roomId ? `Sala #${s.roomId}` : '—';
+
             try {
               const subjRes = await api.get(`/api/subjects/${s.subjectId}`);
-              return {
-                ...s,
-                subjectName: subjRes.data.name ?? '—',
-                subjectCode: subjRes.data.code ?? '—',
-              };
-            } catch {
-              return { ...s, subjectName: '—', subjectCode: '—' };
-            }
+              subjectName = subjRes.data.name ?? '—';
+              subjectCode = subjRes.data.code ?? '—';
+            } catch { /* mantiene default */ }
+
+            try {
+              const roomRes = await api.get(`/api/rooms/${s.roomId}`);
+              roomName = roomRes.data.name ?? roomName;
+            } catch { /* mantiene default */ }
+
+            return { ...s, subjectName, subjectCode, roomName };
           })
         );
 
         setSections(enriched);
-      } catch (err) {
+      } catch {
         setError('No se pudieron cargar las secciones.');
       } finally {
         setLoading(false);
@@ -75,7 +132,7 @@ export default function EnrollForm() {
     setError('');
     try {
       await api.post('/api/enrollments/enroll', {
-        studentId: studentId,
+        studentId,
         sectionId: Number(selected),
       });
       setSuccess('¡Inscripción exitosa!');
@@ -98,8 +155,17 @@ export default function EnrollForm() {
 
   const selectedSection = sections.find(s => s.id === Number(selected));
 
+  // Horario formateado para la sección seleccionada
+  const scheduleLabel = (s) => {
+    if (!s || s.dayOfWeek == null) return null;
+    const day = DAY_NAMES[s.dayOfWeek] ?? '—';
+    const start = s.startTime ? s.startTime.slice(0, 5) : '';
+    const end   = s.endTime   ? s.endTime.slice(0, 5)   : '';
+    return `${day} ${start}–${end}`;
+  };
+
   return (
-    <div className="container py-4" style={{ maxWidth: 540 }}>
+    <div className="container py-4" style={{ maxWidth: 560 }}>
       <div className="d-flex align-items-center gap-3 mb-4">
         <button className="btn btn-sm btn-outline-secondary"
           onClick={() => navigate('/my-enrollments')}>← Volver</button>
@@ -121,15 +187,24 @@ export default function EnrollForm() {
           {loading ? (
             <div className="text-center py-4">
               <div className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2">Cargando secciones...</p>
+              <p className="text-muted mt-2">Cargando secciones disponibles...</p>
             </div>
           ) : !error && (
             <form onSubmit={handleSubmit}>
+
+              {/* Aviso de ramos filtrados */}
+              {skippedCount > 0 && (
+                <div className="alert alert-info py-2 small mb-3">
+                  ℹ️ Se ocultaron <strong>{skippedCount}</strong> sección(es) de asignaturas
+                  que ya aprobaste o en las que ya estás inscrito.
+                </div>
+              )}
+
               <div className="mb-3">
                 <label className="form-label fw-medium">Sección disponible</label>
                 {sections.length === 0 ? (
                   <div className="alert alert-warning py-2 mb-0">
-                    No hay secciones disponibles en el semestre activo.
+                    No hay secciones disponibles para inscribir en el semestre activo.
                   </div>
                 ) : (
                   <>
@@ -141,21 +216,33 @@ export default function EnrollForm() {
                       <option value="">— Selecciona una sección —</option>
                       {sections.map((s) => (
                         <option key={s.id} value={s.id}>
-                          [{s.subjectCode}] {s.subjectName} — Sección #{s.id} ({s.availableSeats} cupos)
+                          [{s.subjectCode}] {s.subjectName} · Sección #{s.id} · {s.availableSeats} cupos
                         </option>
                       ))}
                     </select>
                     <div className="form-text text-muted">
-                      Solo secciones del semestre activo con cupos disponibles.
+                      Solo secciones con cupos y asignaturas que puedes cursar.
                     </div>
                   </>
                 )}
               </div>
 
+              {/* Preview de la sección seleccionada */}
               {selectedSection && (
-                <div className="alert alert-info py-2 mb-3 small">
-                  <strong>{selectedSection.subjectName}</strong>
-                  {' · '}Cupos disponibles: <strong>{selectedSection.availableSeats}</strong> / {selectedSection.totalSeats}
+                <div className="alert alert-info py-3 mb-3 small">
+                  <div className="fw-semibold mb-1">{selectedSection.subjectName}</div>
+                  <div className="d-flex flex-wrap gap-3">
+                    <span>👥 <strong>{selectedSection.availableSeats}</strong> / {selectedSection.totalSeats} cupos</span>
+                    {scheduleLabel(selectedSection) && (
+                      <span>🗓️ {scheduleLabel(selectedSection)}</span>
+                    )}
+                    {selectedSection.roomName && (
+                      <span>🚪 {selectedSection.roomName}</span>
+                    )}
+                  </div>
+                  <div className="text-muted mt-1">
+                    ⚠️ Recuerda que si no cumples los prerrequisitos, la inscripción será rechazada.
+                  </div>
                 </div>
               )}
 
