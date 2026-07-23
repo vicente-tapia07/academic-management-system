@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public class ProfessorRepository {
+
     private final JdbcClient jdbcClient;
 
     public ProfessorRepository(JdbcClient jdbcClient) {
@@ -15,68 +16,73 @@ public class ProfessorRepository {
     }
 
     public ProfessorEntity save(ProfessorEntity professor) {
-        jdbcClient.sql("INSERT INTO professor (usuario_id, department, first_name, last_name) VALUES (?, ?, ?, ?)")
-                .params(professor.getUsuarioId(), professor.getDepartment(), professor.getFirstName(), professor.getLastName())
-                .update();
+        jdbcClient.sql(
+            "INSERT INTO professor (usuario_id, department, first_name, last_name) " +
+            "VALUES (?, ?, ?, ?)")
+            .params(professor.getUsuarioId(), professor.getDepartment(),
+                    professor.getFirstName(), professor.getLastName())
+            .update();
         return professor;
     }
 
     public ProfessorEntity findById(Long id) {
         return jdbcClient.sql("""
-        SELECT id, usuario_id, first_name, last_name, department
-        FROM professor
-        WHERE id = ?
-        """)
-                .params(id)
-                .query((rs, rowNum) -> new ProfessorEntity(
-                        rs.getLong("id"),
-                        rs.getLong("usuario_id"),
-                        rs.getString("first_name"),
-                        rs.getString("last_name"),
-                        rs.getString("department")
-                ))
-                .single();
+            SELECT id, usuario_id, first_name, last_name, department
+            FROM professor WHERE id = ?
+            """)
+            .params(id)
+            .query((rs, rowNum) -> new ProfessorEntity(
+                rs.getLong("id"),
+                rs.getLong("usuario_id"),
+                rs.getString("first_name"),
+                rs.getString("last_name"),
+                rs.getString("department")
+            ))
+            .single();
     }
 
     public ProfessorEntity findByUserId(Long usuarioId) {
-    return jdbcClient.sql("""
-        SELECT p.id, p.usuario_id, p.first_name, p.last_name, p.department
-        FROM professor p
-        WHERE p.usuario_id = ?
-        """)
-        .params(usuarioId)
-        .query((rs, rowNum) -> new ProfessorEntity(
-            rs.getLong("id"),
-            rs.getLong("usuario_id"),
-            rs.getString("first_name"),
-            rs.getString("last_name"),
-            rs.getString("department")
-        ))
-        .single();
+        return jdbcClient.sql("""
+            SELECT id, usuario_id, first_name, last_name, department
+            FROM professor WHERE usuario_id = ?
+            """)
+            .params(usuarioId)
+            .query((rs, rowNum) -> new ProfessorEntity(
+                rs.getLong("id"),
+                rs.getLong("usuario_id"),
+                rs.getString("first_name"),
+                rs.getString("last_name"),
+                rs.getString("department")
+            ))
+            .single();
     }
 
     public List<ProfessorEntity> findAll() {
-    return jdbcClient.sql("""
-        SELECT p.id, p.usuario_id, p.first_name, p.last_name, p.department
-        FROM professor p
-        """)
-        .query((rs, rowNum) -> new ProfessorEntity(
-            rs.getLong("id"),
-            rs.getLong("usuario_id"),
-            rs.getString("first_name"),
-            rs.getString("last_name"),
-            rs.getString("department")
-        ))
-        .list();
+        return jdbcClient.sql("""
+            SELECT id, usuario_id, first_name, last_name, department
+            FROM professor ORDER BY last_name, first_name
+            """)
+            .query((rs, rowNum) -> new ProfessorEntity(
+                rs.getLong("id"),
+                rs.getLong("usuario_id"),
+                rs.getString("first_name"),
+                rs.getString("last_name"),
+                rs.getString("department")
+            ))
+            .list();
     }
 
-    public void updateProfessor(Long usuarioId, String department, String firstName, String lastName) {
-        jdbcClient.sql("UPDATE professor SET department = ?, first_name = ?, last_name = ? WHERE usuario_id = ?")
-                .params(department, firstName, lastName, usuarioId)
-                .update();
+    // Corregido: usa WHERE id = ? (id del profesor, no usuario_id)
+    public void updateProfessor(Long professorId, String department,
+                                String firstName, String lastName) {
+        jdbcClient.sql(
+            "UPDATE professor SET department = ?, first_name = ?, last_name = ? WHERE id = ?")
+            .params(department, firstName, lastName, professorId)
+            .update();
     }
 
     public void deleteByUserId(Long usuarioId) {
-        jdbcClient.sql("DELETE FROM professor WHERE usuario_id = ?").params(usuarioId).update();
+        jdbcClient.sql("DELETE FROM professor WHERE usuario_id = ?")
+            .params(usuarioId).update();
     }
 }

@@ -41,6 +41,7 @@ import MyLocation from "../pages/students/MyLocation";
 import ProfessorList from "../pages/professor/ProfessorList";
 import ProfessorForm from "../pages/professor/ProfessorForm";
 import StudentEnrollmentsAdmin from "../pages/students/StudentEnrollmentsAdmin";
+import ProfessorCoursesAdmin from "../pages/professor/ProfessorCoursesAdmin";
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -95,6 +96,7 @@ export default function AppRouter() {
           <Route path="/professors" element={<ProfessorList />} />
           <Route path="/professors/new" element={<ProfessorForm />} />
           <Route path="/professors/edit/:id" element={<ProfessorForm />} />
+          <Route path="/professors/:id/courses" element={<ProfessorCoursesAdmin />} />
         </Route>
 
         {/* ── ESTUDIANTE ── */}

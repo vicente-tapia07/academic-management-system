@@ -5,64 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="21b998cc-9d9d-4282-8350-5a5cb666889e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/DemoApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/DemoApplication.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/config/JwtAuthenticationFilter.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/config/JwtAuthenticationFilter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/config/SecurityConfig.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/AdminController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/AdminController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/AuthController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/AuthController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/CareerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/CareerController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/EnrollmentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/EnrollmentController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/GradeController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/GradeController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/ProfessorController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/ProfessorController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SectionController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SectionController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SemesterController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SemesterController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/StudentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/StudentController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SubjectController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/SubjectController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/controller/UserController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/CurriculumDTO$SubjectStatus.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/CurriculumDTO$SubjectStatus.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/CurriculumDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/CurriculumDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/FailureRateDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/FailureRateDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/ProfessorDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/ProfessorDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/StudentDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/StudentDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/SubjectStatusDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/SubjectStatusDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/UserDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/dto/UserDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/AuditEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/AuditEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/CareerEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/CareerEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/EnrollmentEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/EnrollmentEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/GradeEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/GradeEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/PrerequisiteEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/PrerequisiteEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/ProfessorEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/ProfessorEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/Role.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/Role.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SectionEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SectionEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SemesterEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SemesterEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/StudentEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/StudentEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SubjectEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/SubjectEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/UserEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/model/UserEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/AuditRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/AuditRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/CareerRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/CareerRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/EnrollmentRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/EnrollmentRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/FailureRateRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/FailureRateRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/GradeRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/GradeRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/PrerequisiteRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/PrerequisiteRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/ProfessorRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/ProfessorRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SectionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SectionRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SemesterRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SemesterRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/StudentRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/StudentRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SubjectRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/SubjectRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/UserRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/repository/UserRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/AdminService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/AdminService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/CareerService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/CareerService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/EnrollmentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/EnrollmentService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/ProfessorService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/ProfessorService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SectionService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SectionService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SemesterService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SemesterService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/StudentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/StudentService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SubjectService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/SubjectService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/usach/cl/demo/service/UserService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/usach/cl/demo/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/usach/cl/demo/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/usach/cl/demo/service/ProfessorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/usach/cl/demo/service/ProfessorService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/pages/students/StudentEnrollmentsAdmin.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/pages/students/StudentEnrollmentsAdmin.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +50,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.DemoApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "feature/i1-fundacion-espacial",
+    "git-widget-placeholder": "feature/i4-reportes-geoespaciales",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/papa-vicho/Escritorio/academic-management-system/backend"
   }

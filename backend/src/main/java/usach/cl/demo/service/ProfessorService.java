@@ -12,15 +12,13 @@ import java.util.List;
 @Service
 public class ProfessorService {
 
-    @Autowired private GradeRepository gradeRepository;
+    @Autowired private GradeRepository      gradeRepository;
     @Autowired private FailureRateRepository failureRateRepository;
-    @Autowired private AuditRepository auditRepository;
-    @Autowired private ProfessorRepository professorRepository;
-    @Autowired private SectionRepository sectionRepository;
-    
-    // Inyecciones para gestionar credenciales
-    @Autowired private JdbcTemplate jdbcTemplate;
-    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private AuditRepository       auditRepository;
+    @Autowired private ProfessorRepository   professorRepository;
+    @Autowired private SectionRepository     sectionRepository;
+    @Autowired private JdbcTemplate          jdbcTemplate;
+    @Autowired private PasswordEncoder       passwordEncoder;
 
     public List<ProfessorEntity> getAll() {
         return professorRepository.findAll();
@@ -35,59 +33,76 @@ public class ProfessorService {
     }
 
     public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {
-        // 1. Crear credenciales en la tabla usuario y obtener el ID generado
         String hash = passwordEncoder.encode(dto.password());
-        String sqlUser = "INSERT INTO usuario (nombre_completo, email, password_hash, rol, activo, creado_en) " +
-                         "VALUES (?, ?, ?, 'ROLE_PROFESSOR', true, NOW()) RETURNING id";
-        Long usuarioId = jdbcTemplate.queryForObject(sqlUser, Long.class, dto.name(), dto.email(), hash);
 
-        // 2. Crear el registro del profesor ligado al usuario
+        // Usar RUT del DTO, o timestamp como fallback si no se envió
+        String rut = (dto.rut() != null && !dto.rut().isBlank())
+            ? dto.rut()
+            : "PROF-" + System.currentTimeMillis();
+
+        // Schema real: id, rut, email, password_hash, rol
+        Long usuarioId = jdbcTemplate.queryForObject(
+            "INSERT INTO usuario (rut, email, password_hash, rol) " +
+            "VALUES (?, ?, ?, 'PROFESSOR') RETURNING id",
+            Long.class,
+            rut,
+            dto.email(),
+            hash
+        );
+
+        String[] parts    = dto.name().trim().split("\\s+", 2);
+        String firstName  = parts[0];
+        String lastName   = parts.length > 1 ? parts[1] : "";
+
         ProfessorEntity professor = new ProfessorEntity();
         professor.setUsuarioId(usuarioId);
-        String[] names = dto.name().split(" ", 2);
-        professor.setFirstName(names.length > 0 ? names[0] : "");
-        professor.setLastName(names.length > 1 ? names[1] : "");
+        professor.setFirstName(firstName);
+        professor.setLastName(lastName);
         professor.setDepartment(dto.department());
-        
+
         return professorRepository.save(professor);
     }
 
     public ProfessorEntity update(Long id, usach.cl.demo.dto.ProfessorDTO dto) {
-        ProfessorEntity existing = professorRepository.findById(id); 
-        
-        // 1. Actualizar credenciales si el Admin envía un nuevo correo o contraseña
-        if (dto.email() != null && !dto.email().isEmpty()) {
-            if (dto.password() != null && !dto.password().isEmpty()) {
+        ProfessorEntity existing = professorRepository.findById(id);
+        if (existing == null) throw new RuntimeException("Profesor no encontrado: " + id);
+
+        String[] parts   = dto.name().trim().split("\\s+", 2);
+        String firstName = parts[0];
+        String lastName  = parts.length > 1 ? parts[1] : "";
+
+        // Actualizar credenciales si se enviaron
+        if (dto.email() != null && !dto.email().isBlank()) {
+            if (dto.password() != null && !dto.password().isBlank()) {
                 String hash = passwordEncoder.encode(dto.password());
-                jdbcTemplate.update("UPDATE usuario SET email = ?, password_hash = ?, nombre_completo = ? WHERE id = ?", 
-                                    dto.email(), hash, dto.name(), existing.getUsuarioId());
+                jdbcTemplate.update(
+                    "UPDATE usuario SET email = ?, password_hash = ? WHERE id = ?",
+                    dto.email(), hash, existing.getUsuarioId()
+                );
             } else {
-                jdbcTemplate.update("UPDATE usuario SET email = ?, nombre_completo = ? WHERE id = ?", 
-                                    dto.email(), dto.name(), existing.getUsuarioId());
+                jdbcTemplate.update(
+                    "UPDATE usuario SET email = ? WHERE id = ?",
+                    dto.email(), existing.getUsuarioId()
+                );
             }
         }
 
-        // 2. Actualizar los datos públicos del profesor
-        String[] names = dto.name().split(" ", 2);
-        String firstName = names.length > 0 ? names[0] : "";
-        String lastName = names.length > 1 ? names[1] : "";
-        
+        // updateProfessor(id, department, firstName, lastName)
+        professorRepository.updateProfessor(id, dto.department(), firstName, lastName);
+
         existing.setFirstName(firstName);
         existing.setLastName(lastName);
         existing.setDepartment(dto.department());
-        
-        professorRepository.updateProfessor(id, dto.department(), firstName, lastName);
         return existing;
     }
 
     public void delete(Long id) {
         ProfessorEntity existing = professorRepository.findById(id);
-        if (existing != null) {
-            // Usamos el método deleteByUserId que sí existe en tu repositorio original
-            professorRepository.deleteByUserId(existing.getUsuarioId());
-            
-            // Y luego borramos el usuario vinculado
-            jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", existing.getUsuarioId());
+        if (existing == null) return;
+        Long usuarioId = existing.getUsuarioId();
+        jdbcTemplate.update("DELETE FROM professor WHERE id = ?", id);
+        if (usuarioId != null) {
+            jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", usuarioId);
         }
     }
 
@@ -101,8 +116,12 @@ public class ProfessorService {
             grade.setEntryDate(java.time.LocalDate.now());
         }
         GradeEntity savedGrade = gradeRepository.save(grade);
-        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() + ", \"value\": " + grade.getValue() + "}";
-        auditRepository.logAudit("grade", "INSERT", professorRut, java.time.LocalDateTime.now(), null, newDataJson);
+        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() +
+                             ", \"value\": " + grade.getValue() + "}";
+        auditRepository.logAudit(
+            "grade", "INSERT", professorRut,
+            java.time.LocalDateTime.now(), null, newDataJson
+        );
         return savedGrade;
     }
 }

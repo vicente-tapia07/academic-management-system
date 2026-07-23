@@ -38,8 +38,6 @@ public class StudentRepository {
         "INSERT INTO student (usuario_id, enrollment_number, first_name, last_name, academic_status) " +
         "VALUES (?, ?, ?, ?, 'ACTIVE')";
 
-    // Actualiza home_location usando la función PostGIS ST_SetSRID + ST_MakePoint
-    // ST_MakePoint(lng, lat) — GeoJSON usa [longitude, latitude]
     private static final String UPDATE_LOCATION =
         "UPDATE student SET home_location = ST_SetSRID(ST_MakePoint(?, ?), 4326) WHERE id = ?";
 
@@ -95,19 +93,11 @@ public class StudentRepository {
         return jdbcTemplate.update(DELETE_BY_ID, id);
     }
 
-    /**
-     * Actualiza home_location del estudiante.
-     * Usa ST_MakePoint(longitude, latitude) porque PostGIS usa [X=lng, Y=lat].
-     */
     public void updateLocation(Long studentId, Double latitude, Double longitude) {
         int rows = jdbcTemplate.update(UPDATE_LOCATION, longitude, latitude, studentId);
         if (rows == 0) throw new RuntimeException("Student not found: " + studentId);
     }
 
-    /**
-     * Devuelve las coordenadas de home_location del estudiante como [lat, lng].
-     * Retorna null si no tiene ubicación guardada.
-     */
     public double[] getLocation(Long studentId) {
         String sql = "SELECT ST_Y(home_location::geometry) AS lat, " +
                      "ST_X(home_location::geometry) AS lng " +
@@ -118,23 +108,41 @@ public class StudentRepository {
         return result.isEmpty() ? null : result.get(0);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // CURRICULUM: muestra todas las asignaturas de la carrera con su estado.
+    //
+    // La clave del fix: el JOIN de sección ya filtra por estudiante,
+    // así que el DISTINCT ON siempre ve la fila con inscripción cuando existe.
+    // ORDER BY prioriza filas CON enrollment (e.id NOT NULL) para que el
+    // DISTINCT ON las elija sobre filas sin inscripción de otras secciones.
+    // ─────────────────────────────────────────────────────────────────────────
     private static final String FIND_CURRICULUM =
         "SELECT DISTINCT ON (sub.id) " +
-        "sub.id AS subject_id, sub.code AS subject_code, sub.name AS subject_name, sub.credits, " +
-        "CASE " +
-        "  WHEN e.id IS NULL AND g.value IS NULL THEN 'PENDING' " +
-        "  WHEN e.id IS NOT NULL AND g.value IS NULL THEN 'ENROLLED' " +
-        "  WHEN g.value >= 4.0 THEN 'APPROVED' " +
-        "  ELSE 'FAILED' " +
-        "END AS status, " +
-        "g.value AS grade " +
+        "  sub.id          AS subject_id, " +
+        "  sub.code        AS subject_code, " +
+        "  sub.name        AS subject_name, " +
+        "  sub.credits, " +
+        "  CASE " +
+        "    WHEN e.id IS NULL     THEN 'PENDING' " +
+        "    WHEN g.value IS NULL  THEN 'ENROLLED' " +
+        "    WHEN g.value >= 4.0   THEN 'APPROVED' " +
+        "    ELSE                       'FAILED' " +
+        "  END AS status, " +
+        "  g.value AS grade " +
         "FROM subject sub " +
-        "JOIN student st ON st.id = ? " +
-        "JOIN career c ON sub.career_id = c.id " +
-        "LEFT JOIN section sec ON sec.subject_id = sub.id " +
-        "LEFT JOIN enrollment e ON e.section_id = sec.id AND e.student_id = ? " +
+        "LEFT JOIN career c ON sub.career_id = c.id " +
+        // Solo secciones donde ESTE estudiante tiene inscripción activa o completada
+        "LEFT JOIN section sec " +
+        "  ON sec.subject_id = sub.id " +
+        "LEFT JOIN enrollment e " +
+        "  ON e.section_id = sec.id " +
+        "  AND e.student_id = ? " +
+        "  AND e.status IN ('ACTIVE', 'COMPLETED') " +
         "LEFT JOIN grade g ON g.enrollment_id = e.id " +
-        "ORDER BY sub.id, g.value DESC NULLS LAST";
+        "ORDER BY sub.id, " +
+        // Filas con enrollment primero → DISTINCT ON elige esas
+        "  CASE WHEN e.id IS NOT NULL THEN 0 ELSE 1 END, " +
+        "  g.value DESC NULLS LAST";
 
     private final RowMapper<SubjectStatusDTO> curriculumMapper = (rs, rowNum) -> {
         SubjectStatusDTO dto = new SubjectStatusDTO();
@@ -149,6 +157,6 @@ public class StudentRepository {
     };
 
     public List<SubjectStatusDTO> findCurriculum(Long studentId) {
-        return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId, studentId);
+        return jdbcTemplate.query(FIND_CURRICULUM, curriculumMapper, studentId);
     }
 }
