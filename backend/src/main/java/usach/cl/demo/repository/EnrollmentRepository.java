@@ -14,13 +14,14 @@ import java.util.Optional;
 public class EnrollmentRepository {
 
     private static final String FIND_ALL =
-            "SELECT * FROM enrollment";
+            "SELECT * FROM enrollment ORDER BY enrollment_date DESC, id DESC";
 
     private static final String FIND_BY_ID =
             "SELECT * FROM enrollment WHERE id = ?";
 
     private static final String FIND_BY_STUDENT_ID =
-            "SELECT * FROM enrollment WHERE student_id = ?";
+            "SELECT * FROM enrollment WHERE student_id = ? " +
+            "ORDER BY enrollment_date DESC, id DESC";
 
     private static final String INSERT =
             "INSERT INTO enrollment (student_id, section_id, enrollment_date, status) " +
@@ -29,20 +30,25 @@ public class EnrollmentRepository {
     private static final String UPDATE_STATUS =
             "UPDATE enrollment SET status = ? WHERE id = ?";
 
-    private static final String DELETE_BY_ID =
-            "DELETE FROM enrollment WHERE id = ?";
-
     private static final String CALL_ENROLL_STUDENT =
             "CALL sp_enroll_student(?, ?)";
 
     private static final String FIND_BY_SECTION_ID =
             "SELECT * FROM enrollment WHERE section_id = ?";
 
-    private static final String GET_SECTION_ID_BY_ENROLLMENT =
-        "SELECT section_id FROM enrollment WHERE id = ?";
-
-    private static final String RESTORE_SEAT =
-        "UPDATE section SET available_seats = available_seats + 1 WHERE id = ?";
+    private static final String CANCEL_AND_RESTORE_SEAT = """
+        WITH cancelled AS (
+            UPDATE enrollment
+            SET status = 'CANCELLED'
+            WHERE id = ? AND status = 'ACTIVE'
+            RETURNING section_id
+        )
+        UPDATE section sec
+        SET available_seats = LEAST(sec.total_seats, sec.available_seats + 1)
+        FROM cancelled
+        WHERE sec.id = cancelled.section_id
+        RETURNING sec.id
+        """;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -90,28 +96,24 @@ public class EnrollmentRepository {
         return jdbcTemplate.update(UPDATE_STATUS, status, id);
     }
 
-    public int deleteById(Long id) {
-        return jdbcTemplate.update(DELETE_BY_ID, id);
+    public boolean hasGrade(Long enrollmentId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM grade WHERE enrollment_id = ?", Integer.class, enrollmentId);
+        return count != null && count > 0;
     }
 
     public void enrollStudent(Long studentId, Long sectionId) {
         jdbcTemplate.update(CALL_ENROLL_STUDENT, studentId, sectionId);
     }
 
-    public Long getSectionIdByEnrollmentId(Long enrollmentId) {
-        List<Long> result = jdbcTemplate.query(
-            GET_SECTION_ID_BY_ENROLLMENT,
-            (rs, rn) -> rs.getLong("section_id"),
-            enrollmentId
+    public boolean cancelAndRestoreSeat(Long enrollmentId) {
+        List<Long> updatedSections = jdbcTemplate.query(
+                CANCEL_AND_RESTORE_SEAT,
+                (rs, rowNum) -> rs.getLong("id"),
+                enrollmentId
         );
-        return result.isEmpty() ? null : result.get(0);
+        return !updatedSections.isEmpty();
     }
-
-    public int restoreSeat(Long sectionId) {
-        return jdbcTemplate.update(RESTORE_SEAT, sectionId);
-    }
-
-    
 
     public List<NearbySectionResponse> findNearbySections(Long subjectId, Double lat, Double lng) {
         String sql = """
@@ -125,6 +127,7 @@ public class EnrollmentRepository {
             JOIN room r ON s.room_id = r.id
             JOIN building b ON r.building_id = b.id
             WHERE s.subject_id = ?
+            AND s.available_seats > 0
             AND s.semester_id = (
                 SELECT semester_id
                 FROM section

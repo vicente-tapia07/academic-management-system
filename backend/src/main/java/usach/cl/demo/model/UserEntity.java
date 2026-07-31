@@ -2,6 +2,7 @@ package usach.cl.demo.model;
 
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +28,10 @@ public class UserEntity implements UserDetails {
 
     @Override
     public String getUsername() { return email; }
+
+    @Override
+    @JsonIgnore
+    public String getPassword() { return password; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

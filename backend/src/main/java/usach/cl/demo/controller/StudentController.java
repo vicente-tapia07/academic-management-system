@@ -3,11 +3,13 @@ package usach.cl.demo.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import usach.cl.demo.dto.StudentDTO;
 import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
 import usach.cl.demo.service.StudentService;
+import usach.cl.demo.service.AuthorizationService;
 
 import java.util.List;
 import java.util.Map;
@@ -18,9 +20,11 @@ import java.util.Optional;
 public class StudentController {
 
     private final StudentService studentService;
+    private final AuthorizationService authorizationService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService, AuthorizationService authorizationService) {
         this.studentService = studentService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
@@ -35,7 +39,9 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/curriculum")
-    public ResponseEntity<List<SubjectStatusDTO>> getCurriculum(@PathVariable Long id) {
+    public ResponseEntity<List<SubjectStatusDTO>> getCurriculum(@PathVariable Long id,
+                                                                 Authentication authentication) {
+        authorizationService.requireStudentAccess(authentication, id);
         List<SubjectStatusDTO> curriculum = studentService.findCurriculum(id);
         if (curriculum.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(curriculum);
@@ -74,7 +80,9 @@ public class StudentController {
      * Si no tiene ubicación guardada, devuelve 404.
      */
     @GetMapping("/{id}/location")
-    public ResponseEntity<Map<String, Double>> getLocation(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Double>> getLocation(@PathVariable Long id,
+                                                            Authentication authentication) {
+        authorizationService.requireStudentAccess(authentication, id);
         double[] coords = studentService.getLocation(id);
         if (coords == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(Map.of("latitude", coords[0], "longitude", coords[1]));
@@ -93,7 +101,9 @@ public class StudentController {
     @PatchMapping("/{id}/location")
     public ResponseEntity<String> updateLocation(
             @PathVariable Long id,
-            @RequestBody Map<String, Double> body) {
+            @RequestBody Map<String, Double> body,
+            Authentication authentication) {
+        authorizationService.requireStudentAccess(authentication, id);
         Double lat = body.get("latitude");
         Double lng = body.get("longitude");
 

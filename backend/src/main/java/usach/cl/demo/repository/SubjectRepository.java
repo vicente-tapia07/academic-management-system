@@ -25,6 +25,7 @@ public class SubjectRepository {
         subject.setName(rs.getString("name"));
         subject.setCredits(rs.getInt("credits"));
         subject.setCareerId(rs.getLong("career_id"));
+        subject.setActive(rs.getBoolean("active"));
         return subject;
     }
 
@@ -81,37 +82,33 @@ public class SubjectRepository {
     }
 
     public SubjectEntity save(SubjectEntity subject) {
-        String sql = "INSERT INTO subject (code, name, credits, career_id) VALUES (?, ?, ?, ?) RETURNING id";
+        String sql = "INSERT INTO subject (code, name, credits, career_id, active) VALUES (?, ?, ?, ?, ?) RETURNING id";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, subject.getCode());
             ps.setString(2, subject.getName());
             ps.setInt(3, subject.getCredits());
             ps.setLong(4, subject.getCareerId());
+            ps.setBoolean(5, subject.isActive());
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                subject.setId(rs.getLong("id"));
-            }
+            if (rs.next()) subject.setId(rs.getLong("id"));
             return subject;
-
         } catch (SQLException e) {
             throw new RuntimeException("Error saving subject", e);
         }
     }
 
     public void update(SubjectEntity subject) {
-        String sql = "UPDATE subject SET code = ?, name = ?, credits = ?, career_id = ? WHERE id = ?";
+        String sql = "UPDATE subject SET code = ?, name = ?, credits = ?, career_id = ?, active = ? WHERE id = ?";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, subject.getCode());
             ps.setString(2, subject.getName());
             ps.setInt(3, subject.getCredits());
             ps.setLong(4, subject.getCareerId());
-            ps.setLong(5, subject.getId());
+            ps.setBoolean(5, subject.isActive());
+            ps.setLong(6, subject.getId());
             ps.executeUpdate();
-
         } catch (SQLException e) {
             throw new RuntimeException("Error updating subject", e);
         }

@@ -109,40 +109,50 @@ public class StudentRepository {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CURRICULUM: muestra todas las asignaturas de la carrera con su estado.
-    //
-    // La clave del fix: el JOIN de sección ya filtra por estudiante,
-    // así que el DISTINCT ON siempre ve la fila con inscripción cuando existe.
-    // ORDER BY prioriza filas CON enrollment (e.id NOT NULL) para que el
-    // DISTINCT ON las elija sobre filas sin inscripción de otras secciones.
+    // CURRICULUM: conserva cada intento histórico del estudiante y agrega una
+    // fila PENDING únicamente para asignaturas que nunca ha inscrito.
+    // Así una repetición puede mostrar, por ejemplo, FAILED en 2025-1S y
+    // ENROLLED en 2026-1S sin que DISTINCT ON oculte uno de los dos intentos.
     // ─────────────────────────────────────────────────────────────────────────
     private static final String FIND_CURRICULUM =
-        "SELECT DISTINCT ON (sub.id) " +
-        "  sub.id          AS subject_id, " +
-        "  sub.code        AS subject_code, " +
-        "  sub.name        AS subject_name, " +
-        "  sub.credits, " +
-        "  CASE " +
-        "    WHEN e.id IS NULL     THEN 'PENDING' " +
-        "    WHEN g.value IS NULL  THEN 'ENROLLED' " +
-        "    WHEN g.value >= 4.0   THEN 'APPROVED' " +
-        "    ELSE                       'FAILED' " +
-        "  END AS status, " +
-        "  g.value AS grade " +
-        "FROM subject sub " +
-        "LEFT JOIN career c ON sub.career_id = c.id " +
-        // Solo secciones donde ESTE estudiante tiene inscripción activa o completada
-        "LEFT JOIN section sec " +
-        "  ON sec.subject_id = sub.id " +
-        "LEFT JOIN enrollment e " +
-        "  ON e.section_id = sec.id " +
-        "  AND e.student_id = ? " +
-        "  AND e.status IN ('ACTIVE', 'COMPLETED') " +
-        "LEFT JOIN grade g ON g.enrollment_id = e.id " +
-        "ORDER BY sub.id, " +
-        // Filas con enrollment primero → DISTINCT ON elige esas
-        "  CASE WHEN e.id IS NOT NULL THEN 0 ELSE 1 END, " +
-        "  g.value DESC NULLS LAST";
+            "WITH attempts AS ( " +
+            "  SELECT sub.id AS subject_id, sub.code AS subject_code, " +
+            "    sub.name AS subject_name, sub.credits, " +
+            "    CASE " +
+            "      WHEN e.status = 'ACTIVE' THEN 'ENROLLED' " +
+            "      WHEN g.value >= 4.0 THEN 'APPROVED' " +
+            "      WHEN g.value IS NOT NULL THEN 'FAILED' " +
+            "      ELSE 'PENDING' " +
+            "    END AS status, " +
+            "    g.value AS grade, sem.id AS semester_id, " +
+            "    sem.year AS semester_year, sem.period AS semester_period " +
+            "  FROM enrollment e " +
+            "  JOIN section sec ON sec.id = e.section_id " +
+            "  JOIN subject sub ON sub.id = sec.subject_id " +
+            "  JOIN semester sem ON sem.id = sec.semester_id " +
+            "  LEFT JOIN LATERAL ( " +
+            "    SELECT grade.value FROM grade " +
+            "    WHERE grade.enrollment_id = e.id " +
+            "    ORDER BY grade.entry_date DESC, grade.id DESC LIMIT 1 " +
+            "  ) g ON true " +
+            "  WHERE e.student_id = ? " +
+            "    AND e.status IN ('ACTIVE', 'COMPLETED') " +
+            "), combined AS ( " +
+            "  SELECT * FROM attempts " +
+            "  UNION ALL " +
+            "  SELECT sub.id, sub.code, sub.name, sub.credits, 'PENDING', " +
+            "    NULL::NUMERIC, NULL::BIGINT, NULL::INTEGER, NULL::VARCHAR " +
+            "  FROM subject sub " +
+            "  WHERE NOT EXISTS ( " +
+            "    SELECT 1 FROM attempts a WHERE a.subject_id = sub.id " +
+            "  ) " +
+            ") " +
+            "SELECT subject_id, subject_code, subject_name, credits, status, " +
+            "  grade, semester_id, semester_year, semester_period " +
+            "FROM combined " +
+            "ORDER BY semester_year DESC NULLS LAST, " +
+            "  CASE semester_period WHEN '2S' THEN 2 WHEN '1S' THEN 1 ELSE 0 END DESC, " +
+            "  subject_code";
 
     private final RowMapper<SubjectStatusDTO> curriculumMapper = (rs, rowNum) -> {
         SubjectStatusDTO dto = new SubjectStatusDTO();
@@ -153,6 +163,11 @@ public class StudentRepository {
         dto.setStatus(rs.getString("status"));
         double grade = rs.getDouble("grade");
         dto.setGrade(rs.wasNull() ? null : grade);
+        long semId = rs.getLong("semester_id");
+        dto.setSemesterId(rs.wasNull() ? null : semId);
+        int semYear = rs.getInt("semester_year");
+        dto.setSemesterYear(rs.wasNull() ? null : semYear);
+        dto.setSemesterPeriod(rs.getString("semester_period"));
         return dto;
     };
 

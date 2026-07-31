@@ -22,9 +22,11 @@ export default function StudentCurriculum() {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     if (!studentId) return;
+    setSelectedSemester('');
     Promise.all([
       api.get(`/api/students/${studentId}/curriculum`),
       api.get(`/api/students/${studentId}`),
@@ -43,6 +45,29 @@ export default function StudentCurriculum() {
   const totalCredits = curriculum
     .filter((c) => c.status === 'APPROVED')
     .reduce((acc, c) => acc + (c.credits ?? 0), 0);
+
+  const semesterGroups = Object.entries(
+    curriculum.reduce((acc, c) => {
+      const key = c.semesterId
+        ? `${c.semesterYear} — ${c.semesterPeriod}`
+        : 'Sin semestre asignado';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(c);
+      return acc;
+    }, {})
+  ).sort(([a], [b]) => {
+    if (a === 'Sin semestre asignado') return 1;
+    if (b === 'Sin semestre asignado') return -1;
+    return b.localeCompare(a);
+  });
+
+  const currentSemesterGroup =
+    semesterGroups.find(([, items]) => items.some((c) => c.status === 'ENROLLED')) ??
+    semesterGroups[0];
+  const selectedSemesterGroup =
+    semesterGroups.find(([label]) => label === selectedSemester) ?? currentSemesterGroup;
+  const activeSemesterLabel = selectedSemesterGroup?.[0] ?? '';
+  const activeSemesterItems = selectedSemesterGroup?.[1] ?? [];
 
   return (
     <div className="container py-4">
@@ -89,58 +114,98 @@ export default function StudentCurriculum() {
             ))}
           </div>
 
-          <div className="card shadow-sm border-0">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>Código</th>
-                    <th>Asignatura</th>
-                    <th>Créditos</th>
-                    <th>Nota</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {curriculum.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">
-                        No hay asignaturas en la malla
-                      </td>
-                    </tr>
-                  )}
-                  {curriculum.map((c) => {
-                    const cfg = getStatus(c.status);
-                    return (
-                      <tr key={c.subjectId}>
-                        <td>
-                          <span className="badge bg-primary font-monospace">{c.subjectCode}</span>
-                        </td>
-                        <td className="fw-semibold">{c.subjectName}</td>
-                        <td className="text-muted">{c.credits ?? '—'}</td>
-                        <td>
-                          {c.grade != null ? (
-                            <span
-                              className={`fw-bold ${c.grade >= 4 ? 'text-success' : 'text-danger'}`}
-                            >
-                              {Number(c.grade).toFixed(1)}
-                            </span>
-                          ) : (
-                            <span className="text-muted">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className={`badge ${cfg.cls}`}>
-                            {cfg.icon} {cfg.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          {semesterGroups.length === 0 ? (
+            <div className="card shadow-sm border-0">
+              <div className="card-body text-center text-muted py-4">
+                No hay asignaturas en la malla
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="card shadow-sm border-0 mb-3">
+                <div className="card-body d-md-flex align-items-center gap-4 py-3">
+                  <div className="mb-3 mb-md-0">
+                    <div className="fw-semibold">Consultar semestre</div>
+                    <div className="small text-muted">
+                      Revisa tus asignaturas actuales o consulta semestres anteriores.
+                    </div>
+                  </div>
+                  <div className="ms-md-auto" style={{ minWidth: '280px' }}>
+                    <label className="visually-hidden" htmlFor="semester-select">
+                      Seleccionar semestre
+                    </label>
+                    <select
+                      id="semester-select"
+                      className="form-select"
+                      value={activeSemesterLabel}
+                      onChange={(event) => setSelectedSemester(event.target.value)}
+                    >
+                      {semesterGroups.map(([semesterLabel, items]) => (
+                        <option key={semesterLabel} value={semesterLabel}>
+                          {semesterLabel === currentSemesterGroup?.[0] ? 'Actual — ' : ''}
+                          {semesterLabel} ({items.length}{' '}
+                          {items.length === 1 ? 'asignatura' : 'asignaturas'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h6 className="fw-semibold text-muted mb-2">{activeSemesterLabel}</h6>
+                <div className="card shadow-sm border-0">
+                  <div className="table-responsive">
+                    <table className="table table-hover mb-0">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Código</th>
+                          <th>Asignatura</th>
+                          <th>Créditos</th>
+                          <th>Nota</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeSemesterItems.map((c) => {
+                          const cfg = getStatus(c.status);
+                          return (
+                            <tr key={c.subjectId}>
+                              <td>
+                                <span className="badge bg-primary font-monospace">
+                                  {c.subjectCode}
+                                </span>
+                              </td>
+                              <td className="fw-semibold">{c.subjectName}</td>
+                              <td className="text-muted">{c.credits ?? '—'}</td>
+                              <td>
+                                {c.grade != null ? (
+                                  <span
+                                    className={`fw-bold ${
+                                      c.grade >= 4 ? 'text-success' : 'text-danger'
+                                    }`}
+                                  >
+                                    {Number(c.grade).toFixed(1)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted">—</span>
+                                )}
+                              </td>
+                              <td>
+                                <span className={`badge ${cfg.cls}`}>
+                                  {cfg.icon} {cfg.label}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

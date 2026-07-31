@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import AccessibilityBadge from '../../components/AccessibilityBadge';
@@ -13,7 +13,7 @@ export default function RoomList() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const url = buildingIdFilter
@@ -37,9 +37,9 @@ export default function RoomList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildingIdFilter]);
 
-  useEffect(() => { load(); }, [buildingIdFilter]);
+  useEffect(() => { load(); }, [load]);
 
   const buildingName = (id) => buildings.find((b) => b.id === id)?.name ?? `#${id}`;
 

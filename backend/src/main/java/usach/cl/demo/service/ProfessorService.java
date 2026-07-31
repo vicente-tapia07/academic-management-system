@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import usach.cl.demo.dto.FailureRateDTO;
 import usach.cl.demo.model.*;
 import usach.cl.demo.repository.*;
@@ -14,7 +15,6 @@ public class ProfessorService {
 
     @Autowired private GradeRepository      gradeRepository;
     @Autowired private FailureRateRepository failureRateRepository;
-    @Autowired private AuditRepository       auditRepository;
     @Autowired private ProfessorRepository   professorRepository;
     @Autowired private SectionRepository     sectionRepository;
     @Autowired private JdbcTemplate          jdbcTemplate;
@@ -32,7 +32,9 @@ public class ProfessorService {
         return sectionRepository.findByProfessorId(professorId);
     }
 
+    @Transactional
     public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {
+        validateProfessor(dto, true);
         String hash = passwordEncoder.encode(dto.password());
 
         // Usar RUT del DTO, o timestamp como fallback si no se envió
@@ -63,7 +65,9 @@ public class ProfessorService {
         return professorRepository.save(professor);
     }
 
+    @Transactional
     public ProfessorEntity update(Long id, usach.cl.demo.dto.ProfessorDTO dto) {
+        validateProfessor(dto, false);
         ProfessorEntity existing = professorRepository.findById(id);
         if (existing == null) throw new RuntimeException("Profesor no encontrado: " + id);
 
@@ -96,6 +100,7 @@ public class ProfessorService {
         return existing;
     }
 
+    @Transactional
     public void delete(Long id) {
         ProfessorEntity existing = professorRepository.findById(id);
         if (existing == null) return;
@@ -112,16 +117,24 @@ public class ProfessorService {
     }
 
     public GradeEntity saveGrade(GradeEntity grade, String professorRut) {
+        if (grade == null || grade.getEnrollmentId() == null || grade.getValue() == null) {
+            throw new IllegalArgumentException("enrollmentId y value son obligatorios");
+        }
+        if (grade.getValue() < 1.0 || grade.getValue() > 7.0) {
+            throw new IllegalArgumentException("La nota debe estar entre 1.0 y 7.0");
+        }
         if (grade.getEntryDate() == null) {
             grade.setEntryDate(java.time.LocalDate.now());
         }
-        GradeEntity savedGrade = gradeRepository.save(grade);
-        String newDataJson = "{\"enrollment_id\": " + grade.getEnrollmentId() +
-                             ", \"value\": " + grade.getValue() + "}";
-        auditRepository.logAudit(
-            "grade", "INSERT", professorRut,
-            java.time.LocalDateTime.now(), null, newDataJson
-        );
-        return savedGrade;
+        return gradeRepository.save(grade);
+    }
+
+    private void validateProfessor(usach.cl.demo.dto.ProfessorDTO dto, boolean passwordRequired) {
+        if (dto == null || dto.name() == null || dto.name().isBlank() ||
+                dto.email() == null || dto.email().isBlank() ||
+                dto.department() == null || dto.department().isBlank() ||
+                (passwordRequired && (dto.password() == null || dto.password().isBlank()))) {
+            throw new IllegalArgumentException("Nombre, email, departamento y contraseña son obligatorios");
+        }
     }
 }

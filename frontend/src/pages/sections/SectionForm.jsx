@@ -129,12 +129,6 @@ export default function SectionForm() {
     }
   };
 
-  const statusLabel = (status) => {
-    if (status === "IN_PROGRESS") return " ✅ En curso";
-    if (status === "CLOSED") return " 🔒 Cerrado";
-    return " 📅 Planificado";
-  };
-
   return (
     <div className="container py-4" style={{ maxWidth: 600 }}>
       <div className="d-flex align-items-center gap-3 mb-4">
@@ -191,7 +185,6 @@ export default function SectionForm() {
                   {semesters.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.year} — {s.period}
-                      {statusLabel(s.status)}
                     </option>
                   ))}
                 </select>

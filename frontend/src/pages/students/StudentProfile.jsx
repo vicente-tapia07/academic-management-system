@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -53,7 +53,7 @@ export default function StudentProfile() {
   const [saveLoading,   setSaveLoading]   = useState(false);
   const [saveSuccess,   setSaveSuccess]   = useState('');
 
-  const loadSavedLocation = async () => {
+  const loadSavedLocation = useCallback(async () => {
     try {
       const res = await api.get(`/api/students/${user.id}/location`);
       const { latitude, longitude } = res.data;
@@ -62,7 +62,7 @@ export default function StudentProfile() {
     } catch {
       setSavedAddress(''); // sin ubicación guardada
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     api.get(`/api/students/${user.id}`)
@@ -70,7 +70,7 @@ export default function StudentProfile() {
       .catch(() => setError('No se pudo cargar el perfil.'))
       .finally(() => setLoading(false));
     loadSavedLocation();
-  }, [user.id]);
+  }, [user.id, loadSavedLocation]);
 
   // Paso 1: buscar coordenadas de la dirección ingresada
   const handleSearch = async (e) => {
@@ -122,16 +122,6 @@ export default function StudentProfile() {
   if (error)   return <div className="container py-5"><div className="alert alert-danger">{error}</div></div>;
 
   const st = statusMap[student?.academicStatus] ?? { cls: 'secondary', label: student?.academicStatus };
-
-  // Construimos un marcador para el mapa de preview
-  const previewBuilding = preview ? [{
-    id: 'preview',
-    name: preview.displayName,
-    geomGeoJson: JSON.stringify({
-      type: 'Point',
-      coordinates: [preview.lng, preview.lat],
-    }),
-  }] : [];
 
   return (
     <div className="container py-4" style={{ maxWidth: 640 }}>

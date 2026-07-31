@@ -74,24 +74,26 @@ public class SectionRepository {
     }
 
     public SectionEntity save(SectionEntity section) {
-        // Verificar conflicto: misma sala, mismo día, horario que se superpone
         String checkSql = """
-            SELECT COUNT(*) FROM section
-            WHERE room_id = ?
-            AND day_of_week = ?
-            AND NOT (end_time <= ? OR start_time >= ?)
-            """;
+        SELECT COUNT(*) FROM section
+        WHERE semester_id = ?
+        AND day_of_week = ?
+        AND NOT (end_time <= ? OR start_time >= ?)
+        AND (room_id = ? OR professor_id = ?)
+        """;
         try (Connection conn = dataSource.getConnection();
              PreparedStatement check = conn.prepareStatement(checkSql)) {
 
-            check.setLong(1, section.getRoomId());
+            check.setLong(1, section.getSemesterId());
             check.setInt(2, section.getDayOfWeek());
             check.setTime(3, Time.valueOf(section.getStartTime()));
             check.setTime(4, Time.valueOf(section.getEndTime()));
+            check.setLong(5, section.getRoomId());
+            check.setLong(6, section.getProfessorId());
             ResultSet cr = check.executeQuery();
             if (cr.next() && cr.getInt(1) > 0) {
                 throw new RuntimeException(
-                    "Conflicto de horario: la sala ya está ocupada en ese día y bloque."
+                        "Conflicto de horario: la sala o el profesor ya están ocupados en ese bloque."
                 );
             }
         } catch (SQLException e) {
@@ -99,8 +101,8 @@ public class SectionRepository {
         }
 
         String sql = "INSERT INTO section (subject_id, professor_id, semester_id, " +
-                     "total_seats, available_seats, room_id, day_of_week, start_time, end_time) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                "total_seats, available_seats, room_id, day_of_week, start_time, end_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -112,9 +114,9 @@ public class SectionRepository {
             ps.setLong(6, section.getRoomId());
             ps.setInt(7, section.getDayOfWeek());
             ps.setTime(8, section.getStartTime() != null
-                ? Time.valueOf(section.getStartTime()) : null);
+                    ? Time.valueOf(section.getStartTime()) : null);
             ps.setTime(9, section.getEndTime() != null
-                ? Time.valueOf(section.getEndTime()) : null);
+                    ? Time.valueOf(section.getEndTime()) : null);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) section.setId(rs.getLong("id"));
             return section;
@@ -141,26 +143,28 @@ public class SectionRepository {
     }
 
     public SectionEntity update(SectionEntity section) {
-        // Verificar conflicto excluyendo la propia sección
         String checkSql = """
-            SELECT COUNT(*) FROM section
-            WHERE room_id = ?
-            AND day_of_week = ?
-            AND id != ?
-            AND NOT (end_time <= ? OR start_time >= ?)
-            """;
+        SELECT COUNT(*) FROM section
+        WHERE semester_id = ?
+        AND day_of_week = ?
+        AND id != ?
+        AND NOT (end_time <= ? OR start_time >= ?)
+        AND (room_id = ? OR professor_id = ?)
+        """;
         try (Connection conn = dataSource.getConnection();
              PreparedStatement check = conn.prepareStatement(checkSql)) {
 
-            check.setLong(1, section.getRoomId());
+            check.setLong(1, section.getSemesterId());
             check.setInt(2, section.getDayOfWeek());
             check.setLong(3, section.getId());
             check.setTime(4, Time.valueOf(section.getStartTime()));
             check.setTime(5, Time.valueOf(section.getEndTime()));
+            check.setLong(6, section.getRoomId());
+            check.setLong(7, section.getProfessorId());
             ResultSet cr = check.executeQuery();
             if (cr.next() && cr.getInt(1) > 0) {
                 throw new RuntimeException(
-                    "Conflicto de horario: la sala ya está ocupada en ese día y bloque."
+                        "Conflicto de horario: la sala o el profesor ya están ocupados en ese bloque."
                 );
             }
         } catch (SQLException e) {
@@ -171,12 +175,12 @@ public class SectionRepository {
         }
 
         String sql = """
-            UPDATE section SET
-                subject_id = ?, professor_id = ?, semester_id = ?,
-                total_seats = ?, available_seats = ?,
-                room_id = ?, day_of_week = ?, start_time = ?, end_time = ?
-            WHERE id = ?
-            """;
+        UPDATE section SET
+            subject_id = ?, professor_id = ?, semester_id = ?,
+            total_seats = ?, available_seats = ?,
+            room_id = ?, day_of_week = ?, start_time = ?, end_time = ?
+        WHERE id = ?
+        """;
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -217,8 +221,10 @@ public class SectionRepository {
             SELECT s.*
             FROM section s
             JOIN enrollment e ON e.section_id = s.id
+            JOIN semester sem ON sem.id = s.semester_id
             WHERE e.student_id = ?
             AND e.status = 'ACTIVE'
+            AND sem.status = 'IN_PROGRESS'
             ORDER BY s.day_of_week, s.start_time
             """;
         try (Connection conn = dataSource.getConnection();

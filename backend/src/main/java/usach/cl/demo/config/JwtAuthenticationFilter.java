@@ -18,6 +18,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    public static final String AUTHENTICATED_REQUEST_ATTRIBUTE =
+            JwtAuthenticationFilter.class.getName() + ".authenticated";
+
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
 
@@ -34,9 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtUtils.getEmailFromToken(token);
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
+            request.setAttribute(AUTHENTICATED_REQUEST_ATTRIBUTE, Boolean.TRUE);
         }
         filterChain.doFilter(request, response);
     }

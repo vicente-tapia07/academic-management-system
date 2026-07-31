@@ -30,17 +30,13 @@ public class SubjectService {
     }
 
     public SubjectEntity save(SubjectEntity subject) {
-        if (subject.getCode() == null || subject.getCode().isBlank()) {
-            throw new RuntimeException("Subject code cannot be empty");
-        }
-        if (subject.getCredits() <= 0) {
-            throw new RuntimeException("Credits must be greater than 0");
-        }
+        validate(subject);
         return subjectRepository.save(subject);
     }
 
     public SubjectEntity update(Long id, SubjectEntity subject) {
         findById(id);
+        validate(subject);
         subject.setId(id);
         subjectRepository.update(subject);
         return subject;
@@ -49,5 +45,15 @@ public class SubjectService {
     public void delete(Long id) {
         findById(id);
         subjectRepository.delete(id);
+    }
+
+    private void validate(SubjectEntity subject) {
+        if (subject == null || subject.getCode() == null || subject.getCode().isBlank() ||
+                subject.getName() == null || subject.getName().isBlank() || subject.getCareerId() == null) {
+            throw new IllegalArgumentException("Código, nombre y carrera son obligatorios");
+        }
+        if (subject.getCredits() <= 0) {
+            throw new IllegalArgumentException("Los créditos deben ser mayores que 0");
+        }
     }
 }

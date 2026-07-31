@@ -30,10 +30,12 @@ public class AccessibilityPoiService {
     }
 
     public int save(AccessibilityPoiEntity poi) {
+        validate(poi);
         return accessibilityPoiRepository.save(poi);
     }
 
     public int update(AccessibilityPoiEntity poi) {
+        validate(poi);
         return accessibilityPoiRepository.update(poi);
     }
 
@@ -43,5 +45,13 @@ public class AccessibilityPoiService {
 
     public List<AccessibleRoomDTO> findAccessibleRooms(Long buildingId) {
         return accessibilityPoiRepository.findAccessibleRooms(buildingId);
+    }
+
+    private void validate(AccessibilityPoiEntity poi) {
+        if (poi == null || poi.getName() == null || poi.getName().isBlank() ||
+                poi.getBuildingId() == null || poi.getGeomGeoJson() == null ||
+                poi.getGeomGeoJson().isBlank()) {
+            throw new IllegalArgumentException("Nombre, edificio y geometría GeoJSON son obligatorios");
+        }
     }
 }

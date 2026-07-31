@@ -25,14 +25,27 @@ public class BuildingService {
     }
 
     public int save(BuildingEntity building) {
+        validate(building);
         return buildingRepository.save(building);
     }
 
     public int update(BuildingEntity building) {
+        validate(building);
         return buildingRepository.update(building);
     }
 
     public int deleteById(Long id) {
         return buildingRepository.deleteById(id);
+    }
+
+    private void validate(BuildingEntity building) {
+        if (building == null || isBlank(building.getCode()) || isBlank(building.getName()) ||
+                isBlank(building.getGeomGeoJson())) {
+            throw new IllegalArgumentException("Código, nombre y geometría GeoJSON son obligatorios");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

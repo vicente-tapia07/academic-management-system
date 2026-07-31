@@ -7,8 +7,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -31,6 +29,16 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) ->
+                    response.sendError(
+                        Boolean.TRUE.equals(request.getAttribute(
+                            JwtAuthenticationFilter.AUTHENTICATED_REQUEST_ATTRIBUTE)) ? 403 : 401,
+                        Boolean.TRUE.equals(request.getAttribute(
+                            JwtAuthenticationFilter.AUTHENTICATED_REQUEST_ATTRIBUTE))
+                            ? "Access denied" : "Authentication required"))
+                .accessDeniedHandler((request, response, exception) ->
+                    response.sendError(403, "Access denied")))
             .authorizeHttpRequests(auth -> auth
 
                 // ── PÚBLICAS ──────────────────────────────────────────────
@@ -60,6 +68,15 @@ public class SecurityConfig {
                     .hasAnyRole("ADMIN", "PROFESSOR")
                 .requestMatchers(HttpMethod.PUT,  "/api/grades/**")
                     .hasAnyRole("ADMIN", "PROFESSOR")
+
+                // Usuarios y catálogos académicos: escritura solo ADMIN
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/subjects/**", "/api/careers/**", "/api/semesters/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/subjects/**", "/api/careers/**", "/api/semesters/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/subjects/**", "/api/careers/**", "/api/semesters/**")
+                    .hasRole("ADMIN")
 
                 // ── INSCRIPCIONES ─────────────────────────────────────────
                 // PATCH solo ADMIN (cambiar estado de inscripción)
@@ -117,7 +134,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,  "/api/reports/**")
                     .authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/reports/**")
-                    .authenticated()
+                    .hasRole("ADMIN")
 
                 // ── TODO LO DEMÁS: solo autenticado ──────────────────────
                 .anyRequest().authenticated()
@@ -144,8 +161,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

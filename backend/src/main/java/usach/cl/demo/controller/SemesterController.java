@@ -1,14 +1,10 @@
 package usach.cl.demo.controller;
-
 import usach.cl.demo.model.SemesterEntity;
 import usach.cl.demo.service.SemesterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
-// controlador que expone los endpoints REST para semestres
 @RestController
 @RequestMapping("/api/semesters")
 public class SemesterController {

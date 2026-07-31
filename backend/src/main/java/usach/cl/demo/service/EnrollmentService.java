@@ -8,6 +8,8 @@ import usach.cl.demo.repository.EnrollmentRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EnrollmentService {
@@ -34,25 +36,42 @@ public class EnrollmentService {
         return enrollmentRepository.save(enrollment);
     }
 
+    @Transactional
     public int updateStatus(Long id, String status) {
+        if (status == null || !Set.of("ACTIVE", "CANCELLED", "COMPLETED").contains(status)) {
+            throw new IllegalArgumentException("Estado inválido. Use ACTIVE, CANCELLED o COMPLETED");
+        }
+        EnrollmentEntity enrollment = findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Inscripción no encontrada: " + id));
+        String current = enrollment.getStatus();
+        if (current.equals(status)) return 1;
+        if ("COMPLETED".equals(current)) {
+            throw new IllegalArgumentException("Una inscripción completada no puede cambiar de estado");
+        }
+        if ("CANCELLED".equals(status)) {
+            return cancelEnrollment(id) ? 1 : 0;
+        }
+        if ("ACTIVE".equals(status)) {
+            if (!"CANCELLED".equals(current)) {
+                throw new IllegalArgumentException("Solo una inscripción cancelada puede reactivarse");
+            }
+            enrollStudent(enrollment.getStudentId(), enrollment.getSectionId());
+            return 1;
+        }
+        if (!enrollmentRepository.hasGrade(id)) {
+            throw new IllegalArgumentException("No se puede completar una inscripción sin nota");
+        }
         return enrollmentRepository.updateStatus(id, status);
     }
 
-    public int deleteById(Long id) {
-        return enrollmentRepository.deleteById(id);
-    }
-
     public boolean cancelEnrollment(Long enrollmentId) {
-        Long sectionId = enrollmentRepository.getSectionIdByEnrollmentId(enrollmentId);
-        if (sectionId == null) return false;
-
-        enrollmentRepository.restoreSeat(sectionId);
-
-        int deleted = enrollmentRepository.deleteById(enrollmentId);
-        return deleted > 0;
+        return enrollmentRepository.cancelAndRestoreSeat(enrollmentId);
     }
 
     public void enrollStudent(Long studentId, Long sectionId) {
+        if (studentId == null || sectionId == null) {
+            throw new IllegalArgumentException("studentId y sectionId son obligatorios");
+        }
         enrollmentRepository.enrollStudent(studentId, sectionId);
     }
 

@@ -38,21 +38,22 @@ public class UserRepository {
     }
 
     public UserEntity save(@Nonnull UserEntity user) {
-        jdbcClient.sql(
-                        "INSERT INTO usuario (rut, email, password_hash, rol) VALUES (?, ?, ?, ?)")
+        return jdbcClient.sql(
+                        "INSERT INTO usuario (rut, email, password_hash, rol) VALUES (?, ?, ?, ?) " +
+                        "RETURNING id, rut, email, password_hash, rol")
                 .params(
                         user.getRut(),
                         user.getEmail(),
                         user.getPassword(),
                         user.getRole().name()
                 )
-                .update();
-        return user;
+                .query(this::mapRowToUser)
+                .single();
     }
 
-    public void updateUser(int id, String email, String rol) {
-        jdbcClient.sql("UPDATE usuario SET email = ?, rol = ? WHERE id = ?")
-                .params(email, rol, id)
+    public void updateUser(int id, String rut, String email) {
+        jdbcClient.sql("UPDATE usuario SET rut = ?, email = ? WHERE id = ?")
+                .params(rut, email, id)
                 .update();
     }
 
