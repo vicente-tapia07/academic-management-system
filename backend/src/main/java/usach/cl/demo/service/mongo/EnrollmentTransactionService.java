@@ -18,16 +18,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import usach.cl.demo.model.mongo.EnrollmentDocument;
+import usach.cl.demo.model.mongo.SectionDocument;
+import usach.cl.demo.model.mongo.StudentDocument;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.in;
+import static com.mongodb.client.model.Sorts.ascending;
+import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Updates.inc;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.ALREADY_ENROLLED;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.DATABASE_ERROR;
@@ -72,6 +77,46 @@ public class EnrollmentTransactionService {
         this.sections = mongoDatabase.getCollection("sections");
         this.enrollments = mongoDatabase.getCollection("enrollments");
         this.grades = mongoDatabase.getCollection("grades");
+    }
+
+    public Optional<StudentDocument> findStudent(String studentId) {
+        ObjectId studentObjectId = requiredObjectId(studentId, "studentId");
+        try {
+            Document student = students.find(eq("_id", studentObjectId)).first();
+            return Optional.ofNullable(student).map(StudentDocument::fromDocument);
+        } catch (MongoException exception) {
+            throw databaseReadException("consultar el estudiante", exception);
+        }
+    }
+
+    public List<SectionDocument> findAvailableSections(String subjectId, String semesterId) {
+        ObjectId subjectObjectId = requiredObjectId(subjectId, "subjectId");
+        ObjectId semesterObjectId = requiredObjectId(semesterId, "semesterId");
+        try {
+            List<Document> documents = sections.find(and(
+                            eq("subjectId", subjectObjectId),
+                            eq("semesterId", semesterObjectId),
+                            eq("status", "OPEN"),
+                            gt("availableSeats", 0)
+                    ))
+                    .sort(ascending("schedule.dayOfWeek", "schedule.startTime"))
+                    .into(new ArrayList<>());
+            return documents.stream().map(SectionDocument::fromDocument).toList();
+        } catch (MongoException exception) {
+            throw databaseReadException("consultar las secciones disponibles", exception);
+        }
+    }
+
+    public List<EnrollmentDocument> findEnrollmentsByStudent(String studentId) {
+        ObjectId studentObjectId = requiredObjectId(studentId, "studentId");
+        try {
+            List<Document> documents = enrollments.find(eq("studentId", studentObjectId))
+                    .sort(descending("enrolledAt"))
+                    .into(new ArrayList<>());
+            return documents.stream().map(EnrollmentDocument::fromDocument).toList();
+        } catch (MongoException exception) {
+            throw databaseReadException("consultar las inscripciones del estudiante", exception);
+        }
     }
 
     public EnrollmentDocument enroll(String studentId, String sectionId) {
@@ -263,6 +308,16 @@ public class EnrollmentTransactionService {
         return new EnrollmentTransactionException(
                 DATABASE_ERROR,
                 "MongoDB rechazó la inscripción",
+                exception
+        );
+    }
+
+    private EnrollmentTransactionException databaseReadException(
+            String operation,
+            MongoException exception) {
+        return new EnrollmentTransactionException(
+                DATABASE_ERROR,
+                "No se pudo " + operation + " en MongoDB",
                 exception
         );
     }

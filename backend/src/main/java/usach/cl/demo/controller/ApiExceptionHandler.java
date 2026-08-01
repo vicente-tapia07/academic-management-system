@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
+import usach.cl.demo.service.mongo.EnrollmentTransactionException;
+
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
@@ -34,6 +36,26 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> invalidArgument(IllegalArgumentException exception) {
         return error(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(EnrollmentTransactionException.class)
+    public ResponseEntity<Map<String, String>> mongoEnrollmentError(
+            EnrollmentTransactionException exception) {
+        HttpStatus status = switch (exception.getReason()) {
+            case STUDENT_NOT_FOUND, SECTION_NOT_FOUND, SUBJECT_NOT_FOUND, SEMESTER_NOT_FOUND ->
+                    HttpStatus.NOT_FOUND;
+            case STUDENT_NOT_ACTIVE, SECTION_NOT_OPEN, NO_AVAILABLE_SEATS,
+                    SEMESTER_NOT_ACTIVE, ALREADY_ENROLLED -> HttpStatus.CONFLICT;
+            case PREREQUISITES_NOT_MET, SCHEMA_VALIDATION_FAILED ->
+                    HttpStatus.UNPROCESSABLE_CONTENT;
+            case DATABASE_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+
+        return ResponseEntity.status(status).body(Map.of(
+                "status", String.valueOf(status.value()),
+                "code", exception.getReason().name(),
+                "error", exception.getMessage()
+        ));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
