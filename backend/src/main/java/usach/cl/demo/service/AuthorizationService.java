@@ -31,6 +31,19 @@ public class AuthorizationService {
         if (matches == null || matches == 0) deny();
     }
 
+    public void requireMongoStudentAccess(Authentication authentication, Long userId) {
+        if (isAdmin(authentication)) return;
+        requireAuthenticated(authentication);
+        if (userId == null) deny();
+
+        Integer matches = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM usuario
+                WHERE id = ? AND email = ? AND rol = 'STUDENT'
+                """, Integer.class, userId, authentication.getName());
+        if (matches == null || matches == 0) deny();
+    }
+
     public void requireProfessorAccess(Authentication authentication, Long professorId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
