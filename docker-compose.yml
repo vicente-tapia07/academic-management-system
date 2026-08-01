@@ -90,6 +90,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - "MONGO_URI=mongodb://mongo-primary:27017,mongo-secondary:27017/?replicaSet=${MONGO_REPLICA_SET}&serverSelectionTimeoutMS=5000"
+      - MONGO_DATABASE=${MONGO_DATABASE}
     depends_on:
       db:
         condition: service_healthy
