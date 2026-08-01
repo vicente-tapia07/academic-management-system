@@ -17,6 +17,67 @@ services:
       timeout: 6s
       retries: 5
       start_period: 10s
+  mongo-primary:
+    image: mongo:7.0
+    container_name: mongo_primary
+    command:
+      - mongod
+      - --replSet
+      - ${MONGO_REPLICA_SET}
+      - --bind_ip_all
+      - --port
+      - "27017"
+    ports:
+      - "${MONGO_PRIMARY_HOST_PORT}:27017"
+    volumes:
+      - mongo_primary_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--host", "localhost:27017", "--quiet", "--eval", "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    stop_grace_period: 30s
+  mongo-secondary:
+    image: mongo:7.0
+    container_name: mongo_secondary
+    command:
+      - mongod
+      - --replSet
+      - ${MONGO_REPLICA_SET}
+      - --bind_ip_all
+      - --port
+      - "27017"
+    ports:
+      - "${MONGO_SECONDARY_HOST_PORT}:27017"
+    volumes:
+      - mongo_secondary_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--host", "localhost:27017", "--quiet", "--eval", "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    stop_grace_period: 30s
+  mongo-init:
+    image: mongo:7.0
+    container_name: mongo_replica_init
+    environment:
+      - MONGO_REPLICA_SET=${MONGO_REPLICA_SET}
+    depends_on:
+      mongo-primary:
+        condition: service_healthy
+      mongo-secondary:
+        condition: service_healthy
+    volumes:
+      - ./database/mongo/0_init_replica_set.js:/scripts/0_init_replica_set.js:ro
+    entrypoint:
+      - mongosh
+      - --host
+      - mongo-primary:27017
+      - --quiet
+      - /scripts/0_init_replica_set.js
+    restart: "no"
   backend:
     build:
       context: ./backend
@@ -32,6 +93,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
   frontend:
     build:
       context: ./frontend
@@ -45,3 +108,5 @@ services:
       - backend
 volumes:
   pgdata:
+  mongo_primary_data:
+  mongo_secondary_data:
