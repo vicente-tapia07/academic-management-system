@@ -24,9 +24,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email y contraseña son obligatorios"));
+        }
         try {
             Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(credentials.get("email"), credentials.get("password"))
+                    new UsernamePasswordAuthenticationToken(email, password)
             );
             String token = jwtUtils.generateToken(auth);
             return ResponseEntity.ok(Map.of("token", token));

@@ -1,9 +1,7 @@
 package usach.cl.demo.dto;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,6 +10,9 @@ public class SubjectStatusDTO {
     private String subjectCode;
     private String subjectName;
     private Integer credits;
-    private String status;      // APPROVED, FAILED, ENROLLED, PENDING
-    private Double grade;       // null si no tiene nota
+    private String status;
+    private Double grade;
+    private Long semesterId;
+    private Integer semesterYear;
+    private String semesterPeriod;
 }

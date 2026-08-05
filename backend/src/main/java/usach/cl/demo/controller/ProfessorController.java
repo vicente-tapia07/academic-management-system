@@ -2,12 +2,14 @@ package usach.cl.demo.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 import usach.cl.demo.model.ProfessorEntity;
 import usach.cl.demo.dto.ProfessorDTO;
 import usach.cl.demo.dto.FailureRateDTO;
 import usach.cl.demo.model.GradeEntity;
 import usach.cl.demo.model.SectionEntity;
 import usach.cl.demo.service.ProfessorService;
+import usach.cl.demo.service.AuthorizationService;
 
 import java.util.List;
 
@@ -16,9 +18,12 @@ import java.util.List;
 public class ProfessorController {
 
     private final ProfessorService professorService;
+    private final AuthorizationService authorizationService;
 
-    public ProfessorController(ProfessorService professorService) {
+    public ProfessorController(ProfessorService professorService,
+                               AuthorizationService authorizationService) {
         this.professorService = professorService;
+        this.authorizationService = authorizationService;
     }
 
 
@@ -60,12 +65,17 @@ public class ProfessorController {
 
 
     @PostMapping("/grade")
-    public GradeEntity submitGrade(@RequestBody GradeEntity grade, @RequestParam String professorRut) {
+    public GradeEntity submitGrade(@RequestBody GradeEntity grade, @RequestParam String professorRut,
+                                   Authentication authentication) {
+        authorizationService.requireProfessorRut(authentication, professorRut);
+        authorizationService.requireProfessorOwnsEnrollment(authentication, grade.getEnrollmentId());
         return professorService.saveGrade(grade, professorRut);
     }
 
     @GetMapping("/{id}/sections")
-    public ResponseEntity<List<SectionEntity>> getSectionsByProfessor(@PathVariable Long id) {
+    public ResponseEntity<List<SectionEntity>> getSectionsByProfessor(@PathVariable Long id,
+                                                                       Authentication authentication) {
+        authorizationService.requireProfessorAccess(authentication, id);
         return ResponseEntity.ok(professorService.getSectionsByProfessorId(id));
     }
 }

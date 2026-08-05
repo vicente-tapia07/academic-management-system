@@ -16,13 +16,21 @@ public class ProfessorRepository {
     }
 
     public ProfessorEntity save(ProfessorEntity professor) {
-        jdbcClient.sql(
+        ProfessorEntity saved = jdbcClient.sql(
             "INSERT INTO professor (usuario_id, department, first_name, last_name) " +
-            "VALUES (?, ?, ?, ?)")
+            "VALUES (?, ?, ?, ?) " +
+            "RETURNING id, usuario_id, first_name, last_name, department")
             .params(professor.getUsuarioId(), professor.getDepartment(),
                     professor.getFirstName(), professor.getLastName())
-            .update();
-        return professor;
+            .query((rs, rowNum) -> new ProfessorEntity(
+                rs.getLong("id"),
+                rs.getLong("usuario_id"),
+                rs.getString("first_name"),
+                rs.getString("last_name"),
+                rs.getString("department")
+            ))
+            .single();
+        return saved;
     }
 
     public ProfessorEntity findById(Long id) {

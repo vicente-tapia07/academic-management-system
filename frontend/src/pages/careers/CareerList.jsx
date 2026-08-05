@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
 export default function CareerList() {
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
-
+  const navigate = useNavigate();
   const load = async () => {
     try {
       setLoading(true);
@@ -34,7 +34,7 @@ export default function CareerList() {
   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <button className="btn btn-outline-secondary me-3" onClick={() => window.history.back()}>
+        <button className="btn btn-outline-secondary me-3" onClick={() => navigate('/dashboard')}>
           ← Volver
         </button>
         <div>

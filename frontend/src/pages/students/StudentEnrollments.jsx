@@ -10,12 +10,20 @@ export default function StudentEnrollments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const enrollRes = await api.get(`/api/enrollments/student/${user.id}`);
+      setError('');
+      const [enrollRes, gradesRes, semestersRes] = await Promise.all([
+        api.get(`/api/enrollments/student/${user.id}`),
+        api.get(`/api/grades/student/${user.id}`),
+        api.get('/api/semesters'),
+      ]);
       const raw = enrollRes.data;
+      const grades = gradesRes.data;
+      const semesters = semestersRes.data;
 
       const enriched = await Promise.all(
         raw.map(async (e) => {
@@ -40,12 +48,21 @@ export default function StudentEnrollments() {
               /* mantiene — */
             }
 
+            const semester = semesters.find((s) => s.id === section.semesterId);
+            const grade = grades.find(
+              (g) => g.subjectId === section.subjectId && g.semesterId === section.semesterId
+            );
+
             return {
               ...e,
               subjectName,
               professorName,
               availableSeats: section.availableSeats,
               totalSeats: section.totalSeats,
+              semesterLabel: semester ? `${semester.year} — ${semester.period}` : '—',
+              semesterYear: semester?.year,
+              semesterPeriod: semester?.period,
+              grade: grade?.value ?? null,
             };
           } catch {
             return e;
@@ -76,13 +93,40 @@ export default function StudentEnrollments() {
       await api.delete(`/api/enrollments/${enrollmentId}`);
       await fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error al cancelar la inscripción.');
+      const detail = err.response?.data;
+      alert(
+        (typeof detail === 'string' ? detail : detail?.error || detail?.message) ||
+          'Error al cancelar la inscripción.'
+      );
     } finally {
       setCancelling(null);
     }
   };
 
-  const visibles = enrollments.filter((e) => e.status !== 'CANCELLED');
+  const statusOptions = [
+    { value: 'ALL', label: 'Todas', color: 'secondary' },
+    { value: 'ACTIVE', label: 'Activas', color: 'success' },
+    { value: 'COMPLETED', label: 'Completadas', color: 'primary' },
+    { value: 'CANCELLED', label: 'Canceladas', color: 'danger' },
+  ];
+
+  const statusLabel = (status) => {
+    if (status === 'ACTIVE') return { label: 'Activa', cls: 'bg-success' };
+    if (status === 'COMPLETED') return { label: 'Completada', cls: 'bg-primary' };
+    if (status === 'CANCELLED') return { label: 'Cancelada', cls: 'bg-danger' };
+    return { label: status, cls: 'bg-secondary' };
+  };
+
+  const counts = enrollments.reduce(
+    (acc, enrollment) => ({
+      ...acc,
+      [enrollment.status]: (acc[enrollment.status] ?? 0) + 1,
+    }),
+    {}
+  );
+  const visibles = statusFilter === 'ALL'
+    ? enrollments
+    : enrollments.filter((e) => e.status === statusFilter);
 
   return (
     <div className="container py-4">
@@ -96,7 +140,7 @@ export default function StudentEnrollments() {
           </button>
           <div>
             <h2 className="fw-bold mb-0">Mis Inscripciones</h2>
-            <p className="text-muted mb-0 small">Cursos inscritos en el semestre activo</p>
+            <p className="text-muted mb-0 small">Historial de inscripciones por estado</p>
           </div>
         </div>
         <Link to="/my-enroll" className="btn btn-primary btn-sm">
@@ -114,6 +158,24 @@ export default function StudentEnrollments() {
 
       {!loading && !error && (
         <>
+          <div className="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrar inscripciones">
+            {statusOptions.map((option) => {
+              const count = option.value === 'ALL'
+                ? enrollments.length
+                : counts[option.value] ?? 0;
+              const selected = statusFilter === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`btn btn-sm ${selected ? `btn-${option.color}` : `btn-outline-${option.color}`}`}
+                  onClick={() => setStatusFilter(option.value)}
+                >
+                  {option.label} <span className="badge bg-light text-dark ms-1">{count}</span>
+                </button>
+              );
+            })}
+          </div>
           <p className="text-muted small mb-2">{visibles.length} inscripción(es)</p>
           <div className="card shadow-sm border-0">
             <div className="table-responsive">
@@ -123,6 +185,8 @@ export default function StudentEnrollments() {
                     <th>Asignatura</th>
                     <th>Sección</th>
                     <th>Profesor</th>
+                    <th>Semestre</th>
+                    <th>Estado</th>
                     <th>Cupos</th>
                     <th>Nota</th>
                     <th className="text-end">Acciones</th>
@@ -131,8 +195,8 @@ export default function StudentEnrollments() {
                 <tbody>
                   {visibles.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-muted py-4">
-                        No tienes inscripciones activas
+                      <td colSpan={8} className="text-center text-muted py-4">
+                        No hay inscripciones en esta categoría
                       </td>
                     </tr>
                   )}
@@ -140,6 +204,7 @@ export default function StudentEnrollments() {
                     const enrollId = e.id;
                     const tieneNota = e.grade != null;
                     const estaActiva = e.status === 'ACTIVE';
+                    const status = statusLabel(e.status);
 
                     return (
                       <tr key={enrollId}>
@@ -150,6 +215,8 @@ export default function StudentEnrollments() {
                           </span>
                         </td>
                         <td className="text-muted small">{e.professorName}</td>
+                        <td className="text-muted small text-nowrap">{e.semesterLabel ?? '—'}</td>
+                        <td><span className={`badge ${status.cls}`}>{status.label}</span></td>
                         <td className="text-muted small">
                           {e.availableSeats != null
                             ? `${e.availableSeats} / ${e.totalSeats}`

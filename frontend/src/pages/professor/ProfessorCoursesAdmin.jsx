@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
@@ -17,7 +17,7 @@ export default function ProfessorCoursesAdmin() {
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [profRes, secRes, subRes, roomRes, semRes] = await Promise.all([
@@ -37,9 +37,9 @@ export default function ProfessorCoursesAdmin() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const subjectName  = (sid) => subjects.find((s) => s.id === sid)?.name ?? `Asignatura #${sid}`;
   const subjectCode  = (sid) => subjects.find((s) => s.id === sid)?.code ?? '---';

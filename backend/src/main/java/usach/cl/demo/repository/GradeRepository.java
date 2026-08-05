@@ -34,6 +34,9 @@ public class GradeRepository {
         dto.setSubjectId(rs.getLong("subject_id"));
         dto.setSubjectCode(rs.getString("subject_code"));
         dto.setSubjectName(rs.getString("subject_name"));
+        dto.setSemesterId(rs.getLong("semester_id"));
+        dto.setSemesterYear(rs.getInt("semester_year"));
+        dto.setSemesterPeriod(rs.getString("semester_period"));
         return dto;
     };
 
@@ -43,28 +46,39 @@ public class GradeRepository {
 
     public GradeEntity save(GradeEntity g) {
         if (g.getId() == null) {
-            jdbcTemplate.update(
-                    "INSERT INTO grade (enrollment_id, value, entry_date) VALUES (?, ?, ?)",
-                    g.getEnrollmentId(), g.getValue(), g.getEntryDate()
-            );
+            Long id = jdbcTemplate.queryForObject(
+                    "INSERT INTO grade (enrollment_id, value, entry_date) VALUES (?, ?, ?) RETURNING id",
+                    Long.class, g.getEnrollmentId(), g.getValue(), g.getEntryDate());
+            g.setId(id);
         } else {
-            jdbcTemplate.update(
+            int updated = jdbcTemplate.update(
                     "UPDATE grade SET enrollment_id = ?, value = ?, entry_date = ? WHERE id = ?",
                     g.getEnrollmentId(), g.getValue(), g.getEntryDate(), g.getId()
             );
+            if (updated == 0) throw new IllegalArgumentException("Nota no encontrada: " + g.getId());
         }
         return g;
+    }
+
+    public boolean existsByEnrollmentId(Long enrollmentId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM grade WHERE enrollment_id = ?", Integer.class, enrollmentId);
+        return count != null && count > 0;
     }
 
     public List<GradeDTO> findByStudentId(Long studentId) {
         String sql =
                 "SELECT g.id AS grade_id, g.value, g.entry_date, " +
-                        "sub.id AS subject_id, sub.code AS subject_code, sub.name AS subject_name " +
+                        "sub.id AS subject_id, sub.code AS subject_code, sub.name AS subject_name, " +
+                        "sem.id AS semester_id, sem.year AS semester_year, " +
+                        "sem.period AS semester_period " +
                         "FROM grade g " +
                         "JOIN enrollment e ON e.id = g.enrollment_id " +
                         "JOIN section sec  ON sec.id = e.section_id " +
                         "JOIN subject sub  ON sub.id = sec.subject_id " +
-                        "WHERE e.student_id = ?";
+                        "JOIN semester sem ON sem.id = sec.semester_id " +
+                        "WHERE e.student_id = ? AND e.status = 'COMPLETED' " +
+                        "ORDER BY sem.year DESC, sem.period DESC, sub.code";
         return jdbcTemplate.query(sql, gradeDTOMapper, studentId);
     }
 }

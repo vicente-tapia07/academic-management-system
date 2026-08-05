@@ -37,10 +37,12 @@ public class AdminService {
     }
 
     public void update(int id, UserDTO dto) {
+        getById(id);
         userService.updateUser(id, dto.name(), dto.email());
     }
 
     public void delete(int id) {
+        getById(id);
         userService.deleteUser(id);
     }
 }

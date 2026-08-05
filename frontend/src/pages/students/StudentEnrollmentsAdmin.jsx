@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
@@ -41,7 +41,7 @@ export default function StudentEnrollmentsAdmin() {
   const [moveLoading,   setMoveLoading]   = useState(false);
   const [moveError,     setMoveError]     = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [stuRes, enrRes, secRes, subRes, roomRes, semRes] = await Promise.all([
@@ -66,9 +66,9 @@ export default function StudentEnrollmentsAdmin() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const getSection  = (sid) => sections.find((s) => s.id === sid);
   const subjectName = (subId) => subjects.find((s) => s.id === subId)?.name ?? `Asignatura #${subId}`;

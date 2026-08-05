@@ -10,21 +10,30 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Nonnull
     public UserEntity create(@Nonnull UserDTO userData) throws Exception {
+        if (userData.name() == null || userData.name().isBlank() ||
+                userData.email() == null || userData.email().isBlank() ||
+                userData.password() == null || userData.password().isBlank() ||
+                userData.role() == null) {
+            throw new IllegalArgumentException("RUT, email, contraseña y rol son obligatorios");
+        }
         try {
             return repository.save(
                     new UserEntity(-1, userData.name(), userData.email(),
-                            userData.password(), userData.role())
+                            passwordEncoder.encode(userData.password()), userData.role())
             );
         } catch (DuplicateKeyException e) {
             throw new Exception("Email ya esta en uso");
@@ -39,8 +48,11 @@ public class UserService implements UserDetailsService {
         return repository.findByEmail(email);
     }
 
-    public void updateUser(int id, String name, String email) {
-        repository.updateUser(id, name, email);
+    public void updateUser(int id, String rut, String email) {
+        if (rut == null || rut.isBlank() || email == null || email.isBlank()) {
+            throw new IllegalArgumentException("RUT y email son obligatorios");
+        }
+        repository.updateUser(id, rut, email);
     }
 
     public void deleteUser(int id) {

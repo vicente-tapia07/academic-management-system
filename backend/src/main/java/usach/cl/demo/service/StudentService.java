@@ -3,6 +3,7 @@ package usach.cl.demo.service;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import usach.cl.demo.dto.StudentDTO;
 import usach.cl.demo.dto.SubjectStatusDTO;
@@ -32,7 +33,12 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
+    @Transactional
     public void saveWithUsuario(StudentDTO dto) {
+        if (dto == null || isBlank(dto.rut()) || isBlank(dto.email()) || isBlank(dto.password()) ||
+                isBlank(dto.firstName()) || isBlank(dto.lastName()) || isBlank(dto.enrollmentNumber())) {
+            throw new IllegalArgumentException("Todos los datos del estudiante son obligatorios");
+        }
         studentRepository.saveWithUsuario(dto);
     }
 
@@ -48,6 +54,7 @@ public class StudentService {
         return studentRepository.update(studentEntity);
     }
 
+    @Transactional
     public int deleteById(Long id) {
         Optional<StudentEntity> student = studentRepository.findById(id);
         int deleted = studentRepository.deleteById(id);
@@ -95,5 +102,9 @@ public class StudentService {
         } else if (newEmail != null && !newEmail.isEmpty()) {
             jdbcTemplate.update("UPDATE usuario SET email = ? WHERE id = ?", newEmail, usuarioId);
         }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

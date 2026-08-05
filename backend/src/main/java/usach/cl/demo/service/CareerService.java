@@ -26,17 +26,13 @@ public class CareerService {
     }
 
     public CareerEntity save(CareerEntity career) {
-        if (career.getCode() == null || career.getCode().isBlank()) {
-            throw new RuntimeException("Career code cannot be empty");
-        }
-        if (career.getName() == null || career.getName().isBlank()) {
-            throw new RuntimeException("Career name cannot be empty");
-        }
+        validate(career);
         return careerRepository.save(career);
     }
 
     public CareerEntity update(Long id, CareerEntity career) {
         findById(id);
+        validate(career);
         career.setId(id);
         careerRepository.update(career);
         return career;
@@ -45,5 +41,12 @@ public class CareerService {
     public void delete(Long id) {
         findById(id);
         careerRepository.delete(id);
+    }
+
+    private void validate(CareerEntity career) {
+        if (career == null || career.getCode() == null || career.getCode().isBlank() ||
+                career.getName() == null || career.getName().isBlank()) {
+            throw new IllegalArgumentException("Código y nombre de carrera son obligatorios");
+        }
     }
 }

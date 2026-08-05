@@ -5,7 +5,6 @@ import useGeolocation from '../../hooks/useGeolocation';
 import MapView from '../../components/MapView';
 import api from '../../services/api';
 
-const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const NEARBY_THRESHOLD_M = 150; // umbral "muy cercana" pedido en el enunciado (I3)
 
 export default function EnrollForm() {
