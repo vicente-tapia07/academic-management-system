@@ -43,6 +43,11 @@ import ProfessorForm from "../pages/professor/ProfessorForm";
 import StudentEnrollmentsAdmin from "../pages/students/StudentEnrollmentsAdmin";
 import ProfessorCoursesAdmin from "../pages/professor/ProfessorCoursesAdmin";
 
+// ── Laboratorio 3 · MongoDB (Integrante 4 · Frontend 2) ──
+import PassFailReport from "../pages/mongo/PassFailReport";
+import StudentCertificate from "../pages/mongo/StudentCertificate";
+import SubjectSearch from "../pages/mongo/SubjectSearch";
+
 function Layout({ children }) {
   const { user } = useAuth();
   return (
@@ -131,6 +136,23 @@ export default function AppRouter() {
           element={<PrivateRoute roles={["ROLE_ADMIN", "ROLE_PROFESSOR"]} />}
         >
           <Route path="/reports" element={<FailureReport />} />
+
+          {/* ── Laboratorio 3 · MongoDB ── */}
+          <Route path="/mongo/reports" element={<PassFailReport />} />
+          <Route path="/mongo/certificate" element={<StudentCertificate />} />
+          <Route
+            path="/mongo/certificate/:studentId"
+            element={<StudentCertificate />}
+          />
+        </Route>
+
+        {/* ── MongoDB · buscador del catálogo: todos los roles ── */}
+        <Route
+          element={
+            <PrivateRoute roles={["ROLE_ADMIN", "ROLE_PROFESSOR", "ROLE_STUDENT"]} />
+          }
+        >
+          <Route path="/mongo/search" element={<SubjectSearch />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
