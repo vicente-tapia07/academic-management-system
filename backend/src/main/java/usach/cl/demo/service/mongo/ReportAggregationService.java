@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import usach.cl.demo.dto.mongo.GradeDistributionBucket;
 import usach.cl.demo.dto.mongo.PassFailRateItem;
+import usach.cl.demo.dto.mongo.SemesterSummary;
 import usach.cl.demo.dto.mongo.SubjectSummary;
 
 import java.util.ArrayList;
@@ -46,10 +47,57 @@ public class ReportAggregationService {
 
     private final MongoCollection<Document> grades;
     private final MongoCollection<Document> subjects;
+    private final MongoCollection<Document> semesters;
 
     public ReportAggregationService(MongoDatabase mongoDatabase) {
         this.grades = mongoDatabase.getCollection("grades");
         this.subjects = mongoDatabase.getCollection("subjects");
+        this.semesters = mongoDatabase.getCollection("semesters");
+    }
+
+    /**
+     * Catálogo completo de asignaturas (solo activas), ordenado por código.
+     * Expone la colección subjects como documentos JSON para el flujo de
+     * inscripción del Frontend 1 (Laboratorio 3).
+     */
+    public List<SubjectSummary> listSubjects() {
+        try {
+            List<Document> results = subjects.find(eq("active", true))
+                    .sort(Sorts.ascending("code"))
+                    .into(new ArrayList<>());
+            return results.stream().map(this::toSubjectSummary).toList();
+        } catch (MongoException exception) {
+            throw new EnrollmentTransactionException(
+                    EnrollmentTransactionException.Reason.DATABASE_ERROR,
+                    "No se pudo consultar el catálogo de asignaturas",
+                    exception
+            );
+        }
+    }
+
+    /**
+     * Semestre actualmente en curso (status IN_PROGRESS), si existe.
+     * Devuelve {@code null} cuando no hay un semestre activo.
+     */
+    public SemesterSummary findActiveSemester() {
+        try {
+            Document document = semesters.find(eq("status", "IN_PROGRESS")).first();
+            if (document == null) {
+                return null;
+            }
+            return new SemesterSummary(
+                    document.getObjectId("_id").toHexString(),
+                    document.getInteger("year", 0),
+                    document.getString("period"),
+                    document.getString("status")
+            );
+        } catch (MongoException exception) {
+            throw new EnrollmentTransactionException(
+                    EnrollmentTransactionException.Reason.DATABASE_ERROR,
+                    "No se pudo consultar el semestre activo",
+                    exception
+            );
+        }
     }
 
     /**

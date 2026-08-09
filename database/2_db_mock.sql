@@ -53,17 +53,19 @@ VALUES
 
 -- ── Usuarios de demostración ─────────────────────────────────
 -- Todas las claves son fixtures locales; no representan credenciales reales.
-INSERT INTO usuario (rut, email, password_hash, rol) VALUES
-    ('12345678-9', 'juan@usach.cl',          crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
-    ('98765432-1', 'maria@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
-    ('13579246-8', 'pedro@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
-    ('24681357-9', 'lucas@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
-    ('11111111-1', 'admin@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'ADMIN'),
-    ('22222222-2', 'admin2@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'ADMIN'),
-    ('11222333-4', 'carlos@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
-    ('55666777-8', 'ana@usach.cl',           crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
-    ('33344455-6', 'diego@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
-    ('44455566-7', 'elena.vargas@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
+INSERT INTO usuario (id, rut, email, password_hash, rol) VALUES
+    (1001, '12345678-9', 'juan@usach.cl',          crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (1002, '98765432-1', 'maria@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (1003, '13579246-8', 'pedro@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (1004, '24681357-9', 'lucas@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (1005, '12312312-3', 'valentina@usach.cl',     crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (1006, '45645645-6', 'matias@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'STUDENT'),
+    (2001, '11111111-1', 'admin@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'ADMIN'),
+    (2002, '22222222-2', 'admin2@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'ADMIN'),
+    (3001, '11222333-4', 'carlos@usach.cl',        crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
+    (3002, '55666777-8', 'ana@usach.cl',           crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
+    (3003, '33344455-6', 'diego@usach.cl',         crypt('1234', gen_salt('bf', 10)), 'PROFESSOR'),
+    (3004, '44455566-7', 'elena.vargas@usach.cl',  crypt('1234', gen_salt('bf', 10)), 'PROFESSOR');
 
 INSERT INTO professor (usuario_id, first_name, last_name, department)
 SELECT u.id, data.first_name, data.last_name, data.department
@@ -84,7 +86,9 @@ FROM (
         ('juan@usach.cl',  '2024001', 'Juan',  'Pérez'),
         ('maria@usach.cl', '2024002', 'María', 'González'),
         ('pedro@usach.cl', '2024003', 'Pedro', 'Soto'),
-        ('lucas@usach.cl', '2024004', 'Lucas', 'Torres')
+        ('lucas@usach.cl', '2024004', 'Lucas', 'Torres'),
+        ('valentina@usach.cl', '2024005', 'Valentina', 'Muñoz'),
+        ('matias@usach.cl',  '2024006', 'Matías', 'Contreras')
 ) AS data(email, enrollment_number, first_name, last_name)
 JOIN usuario u ON u.email = data.email;
 

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import usach.cl.demo.dto.mongo.GradeDistributionBucket;
 import usach.cl.demo.dto.mongo.PassFailRateItem;
+import usach.cl.demo.dto.mongo.SemesterSummary;
 import usach.cl.demo.dto.mongo.SubjectSummary;
 import usach.cl.demo.service.mongo.CertificateChangeStreamService;
 import usach.cl.demo.service.mongo.ReportAggregationService;
@@ -27,6 +28,28 @@ public class MongoReportController {
             CertificateChangeStreamService certificateChangeStreamService) {
         this.reportAggregationService = reportAggregationService;
         this.certificateChangeStreamService = certificateChangeStreamService;
+    }
+
+    /**
+     * Catálogo de asignaturas activas (documentos JSON de la colección subjects).
+     * GET /api/mongo/subjects
+     */
+    @GetMapping("/subjects")
+    public ResponseEntity<List<SubjectSummary>> listSubjects() {
+        return ResponseEntity.ok(reportAggregationService.listSubjects());
+    }
+
+    /**
+     * Semestre actualmente en curso (status IN_PROGRESS).
+     * GET /api/mongo/semesters/active
+     */
+    @GetMapping("/semesters/active")
+    public ResponseEntity<SemesterSummary> getActiveSemester() {
+        SemesterSummary semester = reportAggregationService.findActiveSemester();
+        if (semester == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(semester);
     }
 
     /**

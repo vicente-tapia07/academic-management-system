@@ -1,23 +1,25 @@
 package usach.cl.demo.service;
 
 
+import usach.cl.demo.model.Role;
 import usach.cl.demo.model.UserEntity;
 import usach.cl.demo.dto.UserDTO;
-import usach.cl.demo.repository.UserRepository;
+import usach.cl.demo.repository.MongoUserRepository;
 import jakarta.annotation.Nonnull;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+
 @Service
 public class UserService implements UserDetailsService {
-    private final UserRepository repository;
+    private final MongoUserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(MongoUserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -30,14 +32,17 @@ public class UserService implements UserDetailsService {
                 userData.role() == null) {
             throw new IllegalArgumentException("RUT, email, contraseña y rol son obligatorios");
         }
-        try {
-            return repository.save(
-                    new UserEntity(-1, userData.name(), userData.email(),
-                            passwordEncoder.encode(userData.password()), userData.role())
-            );
-        } catch (DuplicateKeyException e) {
+        if (repository.existsByEmail(userData.email())) {
             throw new Exception("Email ya esta en uso");
         }
+        return repository.save(
+                new UserEntity(-1, userData.name(), userData.email(),
+                        passwordEncoder.encode(userData.password()), userData.role())
+        );
+    }
+
+    public List<UserEntity> findAllByRole(Role role) {
+        return repository.findAllByRole(role);
     }
 
     public UserEntity getById(int id) {

@@ -42,6 +42,8 @@ import ProfessorList from "../pages/professor/ProfessorList";
 import ProfessorForm from "../pages/professor/ProfessorForm";
 import StudentEnrollmentsAdmin from "../pages/students/StudentEnrollmentsAdmin";
 import ProfessorCoursesAdmin from "../pages/professor/ProfessorCoursesAdmin";
+import EnrollFormMongo from "../pages/mongo/EnrollFormMongo";
+import MyEnrollmentsMongo from "../pages/mongo/MyEnrollmentsMongo";
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -112,6 +114,8 @@ export default function AppRouter() {
           <Route path="/my-profile" element={<StudentProfile />} />
           <Route path="/my-grades" element={<MyGrades />} />
           <Route path="/my-location" element={<MyLocation />} />
+          <Route path="/mongo/enroll" element={<EnrollFormMongo />} />
+          <Route path="/mongo/my-enrollments" element={<MyEnrollmentsMongo />} />
         </Route>
 
         {/* ── PROFESOR ── */}

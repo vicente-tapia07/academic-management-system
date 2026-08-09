@@ -301,11 +301,44 @@ const gradesValidator = {
   }
 };
 
+const usersValidator = {
+  $jsonSchema: {
+    bsonType: "object",
+    title: "Usuario del sistema",
+    description: "Credenciales de autenticación gestionadas en MongoDB",
+    required: ["id", "rut", "email", "passwordHash", "rol", "createdAt"],
+    additionalProperties: false,
+    properties: {
+      _id: { bsonType: "objectId" },
+      id: {
+        bsonType: ["int", "long"],
+        minimum: 1,
+        description: "Identificador único del usuario"
+      },
+      rut: {
+        bsonType: "string",
+        pattern: "^[0-9]{7,8}-[0-9Kk]{1}$"
+      },
+      email: {
+        bsonType: "string",
+        pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+      },
+      passwordHash: { bsonType: "string", minLength: 20, maxLength: 100 },
+      rol: { enum: ["STUDENT", "PROFESSOR", "ADMIN"] },
+      createdAt: { bsonType: "date" },
+      updatedAt: { bsonType: "date" }
+    }
+  }
+};
+
 applyValidator("students", studentsValidator);
 applyValidator("subjects", subjectsValidator);
 applyValidator("semesters", semestersValidator);
 applyValidator("sections", sectionsValidator);
 applyValidator("enrollments", enrollmentsValidator);
 applyValidator("grades", gradesValidator);
+applyValidator("users", usersValidator);
+
+academicDb.users.createIndex({ email: 1 }, { unique: true });
 
 print(`Esquema MongoDB aplicado correctamente en ${databaseName}`);

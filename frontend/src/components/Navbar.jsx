@@ -235,6 +235,22 @@ export default function Navbar() {
                     📍 Mi Ubicación
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${active("/mongo/enroll")}`}
+                    to="/mongo/enroll"
+                  >
+                    🍃 Inscribir (Mongo)
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${active("/mongo/my-enrollments")}`}
+                    to="/mongo/my-enrollments"
+                  >
+                    🗄️ Mis Inscripciones (Mongo)
+                  </Link>
+                </li>
               </>
             )}
           </ul>

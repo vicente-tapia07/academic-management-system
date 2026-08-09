@@ -62,6 +62,10 @@ public class SecurityConfig {
                     .hasAnyRole("ADMIN", "STUDENT")
                 .requestMatchers(HttpMethod.POST, "/api/mongo/enrollments/enroll")
                     .hasAnyRole("ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/mongo/semesters/**")
+                    .hasAnyRole("ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/mongo/subjects/**")
+                    .hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
 
                 // ── PROFESORES: CRUD solo ADMIN ───────────────────────────
                 .requestMatchers(HttpMethod.POST,   "/api/professors")

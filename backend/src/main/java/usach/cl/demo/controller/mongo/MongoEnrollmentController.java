@@ -43,6 +43,23 @@ public class MongoEnrollmentController {
         return ResponseEntity.ok(student);
     }
 
+    /**
+     * Resuelve el estudiante MongoDB a partir del id de usuario del JWT.
+     * GET /api/mongo/students/by-user/{userId}
+     */
+    @GetMapping("/students/by-user/{userId}")
+    public ResponseEntity<StudentDocument> getStudentByUser(
+            @PathVariable Long userId,
+            Authentication authentication) {
+        StudentDocument student = enrollmentService.findStudentByUser(userId)
+                .orElseThrow(() -> new EnrollmentTransactionException(
+                        EnrollmentTransactionException.Reason.STUDENT_NOT_FOUND,
+                        "El estudiante no existe"
+                ));
+        authorizationService.requireMongoStudentAccess(authentication, student.getUserId());
+        return ResponseEntity.ok(student);
+    }
+
     @GetMapping("/sections")
     public ResponseEntity<List<SectionDocument>> getAvailableSections(
             @RequestParam String subjectId,

@@ -89,6 +89,18 @@ public class EnrollmentTransactionService {
         }
     }
 
+    public Optional<StudentDocument> findStudentByUser(Long userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+        try {
+            Document student = students.find(eq("userId", userId)).first();
+            return Optional.ofNullable(student).map(StudentDocument::fromDocument);
+        } catch (MongoException exception) {
+            throw databaseReadException("consultar el estudiante por usuario", exception);
+        }
+    }
+
     public List<SectionDocument> findAvailableSections(String subjectId, String semesterId) {
         ObjectId subjectObjectId = requiredObjectId(subjectId, "subjectId");
         ObjectId semesterObjectId = requiredObjectId(semesterId, "semesterId");

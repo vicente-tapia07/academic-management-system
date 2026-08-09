@@ -3,7 +3,6 @@ package usach.cl.demo.service;
 import usach.cl.demo.model.UserEntity;
 import usach.cl.demo.model.Role;
 import usach.cl.demo.dto.UserDTO;
-import usach.cl.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,11 +10,9 @@ import java.util.List;
 @Service
 public class AdminService {
     private final UserService userService;
-    private final UserRepository userRepository;
 
-    public AdminService(UserService userService, UserRepository userRepository) {
+    public AdminService(UserService userService) {
         this.userService = userService;
-        this.userRepository = userRepository;
     }
 
     public UserEntity create(UserDTO dto) throws Exception {
@@ -25,7 +22,7 @@ public class AdminService {
     }
 
     public List<UserEntity> getAll() {
-        return userRepository.findAllByRole(Role.ADMIN);
+        return userService.findAllByRole(Role.ADMIN);
     }
 
     public UserEntity getById(int id) {

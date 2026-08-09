@@ -94,6 +94,22 @@ services:
       - --quiet
       - /scripts/1_collections_and_schema.js
     restart: "no"
+  mongo-seed-users:
+    image: mongo:7.0
+    container_name: mongo_users_seed
+    environment:
+      - MONGO_DATABASE=${MONGO_DATABASE}
+    depends_on:
+      mongo-schema:
+        condition: service_completed_successfully
+    volumes:
+      - ./database/mongo/1_5_seed_users.js:/scripts/1_5_seed_users.js:ro
+    entrypoint:
+      - mongosh
+      - "mongodb://mongo-primary:27017,mongo-secondary:27017/?replicaSet=${MONGO_REPLICA_SET}"
+      - --quiet
+      - /scripts/1_5_seed_users.js
+    restart: "no"
   backend:
     build:
       context: ./backend
