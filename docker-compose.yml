@@ -94,6 +94,38 @@ services:
       - --quiet
       - /scripts/1_collections_and_schema.js
     restart: "no"
+  mongo-indexes:
+    image: mongo:7.0
+    container_name: mongo_indexes_init
+    environment:
+      - MONGO_DATABASE=${MONGO_DATABASE}
+    depends_on:
+      mongo-schema:
+        condition: service_completed_successfully
+    volumes:
+      - ./database/mongo/2_indexes.js:/scripts/2_indexes.js:ro
+    entrypoint:
+      - mongosh
+      - "mongodb://mongo-primary:27017,mongo-secondary:27017/?replicaSet=${MONGO_REPLICA_SET}"
+      - --quiet
+      - /scripts/2_indexes.js
+    restart: "no"
+  mongo-seed:
+    image: mongo:7.0
+    container_name: mongo_seed_init
+    environment:
+      - MONGO_DATABASE=${MONGO_DATABASE}
+    depends_on:
+      mongo-indexes:
+        condition: service_completed_successfully
+    volumes:
+      - ./database/mongo/3_seed_mongo.js:/scripts/3_seed_mongo.js:ro
+    entrypoint:
+      - mongosh
+      - "mongodb://mongo-primary:27017,mongo-secondary:27017/?replicaSet=${MONGO_REPLICA_SET}"
+      - --quiet
+      - /scripts/3_seed_mongo.js
+    restart: "no"
   backend:
     build:
       context: ./backend
@@ -111,7 +143,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      mongo-schema:
+      mongo-seed:
         condition: service_completed_successfully
   frontend:
     build:

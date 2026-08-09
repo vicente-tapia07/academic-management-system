@@ -53,7 +53,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/professors/reports")
                     .hasAnyRole("ADMIN", "PROFESSOR")
 
-                // ── MONGODB: flujo de inscripción del Laboratorio 3 ──────
+                // ── MONGODB: flujo de inscripción del Laboratorio 3 (I1) ──
                 .requestMatchers(HttpMethod.GET, "/api/mongo/sections")
                     .hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
                 .requestMatchers(HttpMethod.GET,
@@ -62,6 +62,20 @@ public class SecurityConfig {
                     .hasAnyRole("ADMIN", "STUDENT")
                 .requestMatchers(HttpMethod.POST, "/api/mongo/enrollments/enroll")
                     .hasAnyRole("ADMIN", "STUDENT")
+
+                // ── MONGODB: reportes y certificados (Integrante 4) ───────
+                // Reportes y certificados son datos agregados/sensibles de
+                // rendimiento académico: solo personal docente/administrativo.
+                .requestMatchers(HttpMethod.GET, "/api/mongo/reports/**")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
+                .requestMatchers(HttpMethod.GET, "/api/mongo/certificates/**")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
+                .requestMatchers(HttpMethod.GET, "/api/mongo/directory/**")
+                    .hasAnyRole("ADMIN", "PROFESSOR")
+                // El buscador del catálogo es información pública dentro del
+                // sistema (nombre y créditos de asignaturas): todos los roles.
+                .requestMatchers(HttpMethod.GET, "/api/mongo/subjects/search")
+                    .hasAnyRole("ADMIN", "PROFESSOR", "STUDENT")
 
                 // ── PROFESORES: CRUD solo ADMIN ───────────────────────────
                 .requestMatchers(HttpMethod.POST,   "/api/professors")
