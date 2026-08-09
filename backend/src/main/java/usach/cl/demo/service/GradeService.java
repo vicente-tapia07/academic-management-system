@@ -3,16 +3,16 @@ package usach.cl.demo.service;
 import org.springframework.stereotype.Service;
 import usach.cl.demo.dto.GradeDTO;
 import usach.cl.demo.model.GradeEntity;
-import usach.cl.demo.repository.GradeRepository;
+import usach.cl.demo.repository.MongoGradeRepository;
 import java.util.List;
 import java.time.LocalDate;
 
 @Service
 public class GradeService {
 
-    private final GradeRepository gradeRepository;
+    private final MongoGradeRepository gradeRepository;
 
-    public GradeService(GradeRepository gradeRepository) {
+    public GradeService(MongoGradeRepository gradeRepository) {
         this.gradeRepository = gradeRepository;
     }
 
@@ -28,7 +28,7 @@ public class GradeService {
             throw new IllegalArgumentException("La nota debe estar entre 1.0 y 7.0");
         }
         if (grade.getEntryDate() == null) grade.setEntryDate(LocalDate.now());
-        return gradeRepository.save(grade);
+        return gradeRepository.save(grade, null);
     }
 
     public List<GradeDTO> getGradesByStudent(Long studentId) {

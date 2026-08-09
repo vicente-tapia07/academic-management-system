@@ -33,7 +33,9 @@ import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.in;
 import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Sorts.descending;
+import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.inc;
+import static com.mongodb.client.model.Updates.set;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.ALREADY_ENROLLED;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.DATABASE_ERROR;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.NO_AVAILABLE_SEATS;
@@ -158,6 +160,49 @@ public class EnrollmentTransactionService {
                     exception
             );
         }
+    }
+
+    public boolean cancelAndRestoreSeat(String enrollmentId) {
+        ObjectId enrollmentObjectId = requiredObjectId(enrollmentId, "enrollmentId");
+        try (ClientSession session = mongoClient.startSession()) {
+            Boolean cancelled = session.withTransaction(
+                    () -> cancelWithinTransaction(session, enrollmentObjectId),
+                    TRANSACTION_OPTIONS
+            );
+            return Boolean.TRUE.equals(cancelled);
+        } catch (MongoException exception) {
+            throw new EnrollmentTransactionException(
+                    DATABASE_ERROR,
+                    "No se pudo cancelar la inscripción por un error de MongoDB",
+                    exception
+            );
+        }
+    }
+
+    private Boolean cancelWithinTransaction(ClientSession session, ObjectId enrollmentId) {
+        Document enrollment = enrollments.find(session, eq("_id", enrollmentId)).first();
+        if (enrollment == null || !"ACTIVE".equals(enrollment.getString("status"))) {
+            return false;
+        }
+
+        ObjectId sectionId = enrollment.getObjectId("sectionId");
+        Instant now = Instant.now();
+
+        enrollments.updateOne(
+                session,
+                eq("_id", enrollmentId),
+                combine(
+                        set("status", "CANCELLED"),
+                        set("cancelledAt", now),
+                        set("updatedAt", now)
+                )
+        );
+        sections.updateOne(
+                session,
+                eq("_id", sectionId),
+                inc("availableSeats", 1)
+        );
+        return true;
     }
 
     private EnrollmentDocument enrollWithinTransaction(

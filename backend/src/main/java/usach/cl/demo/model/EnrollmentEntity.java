@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-// Representa la tabla "enrollment" en la base de datos
+// Representa una inscripción en MongoDB (colección enrollments)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnrollmentEntity {
-    private Long id;
+    private String id;
     private Long studentId;
-    private Long sectionId;
+    private String sectionId;
     private LocalDate enrollmentDate;
     private String status;
 }

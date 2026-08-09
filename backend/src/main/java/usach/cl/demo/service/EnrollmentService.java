@@ -2,21 +2,19 @@ package usach.cl.demo.service;
 
 import org.springframework.stereotype.Service;
 
-import usach.cl.demo.dto.NearbySectionResponse;
 import usach.cl.demo.model.EnrollmentEntity;
-import usach.cl.demo.repository.EnrollmentRepository;
+import usach.cl.demo.repository.MongoEnrollmentRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EnrollmentService {
 
-    private final EnrollmentRepository enrollmentRepository;
+    private final MongoEnrollmentRepository enrollmentRepository;
 
-    public EnrollmentService(EnrollmentRepository enrollmentRepository) {
+    public EnrollmentService(MongoEnrollmentRepository enrollmentRepository) {
         this.enrollmentRepository = enrollmentRepository;
     }
 
@@ -24,7 +22,7 @@ public class EnrollmentService {
         return enrollmentRepository.findAll();
     }
 
-    public Optional<EnrollmentEntity> findById(Long id) {
+    public Optional<EnrollmentEntity> findById(String id) {
         return enrollmentRepository.findById(id);
     }
 
@@ -32,12 +30,7 @@ public class EnrollmentService {
         return enrollmentRepository.findByStudentId(studentId);
     }
 
-    public int save(EnrollmentEntity enrollment) {
-        return enrollmentRepository.save(enrollment);
-    }
-
-    @Transactional
-    public int updateStatus(Long id, String status) {
+    public int updateStatus(String id, String status) {
         if (status == null || !Set.of("ACTIVE", "CANCELLED", "COMPLETED").contains(status)) {
             throw new IllegalArgumentException("Estado inválido. Use ACTIVE, CANCELLED o COMPLETED");
         }
@@ -64,22 +57,18 @@ public class EnrollmentService {
         return enrollmentRepository.updateStatus(id, status);
     }
 
-    public boolean cancelEnrollment(Long enrollmentId) {
+    public boolean cancelEnrollment(String enrollmentId) {
         return enrollmentRepository.cancelAndRestoreSeat(enrollmentId);
     }
 
-    public void enrollStudent(Long studentId, Long sectionId) {
+    public void enrollStudent(Long studentId, String sectionId) {
         if (studentId == null || sectionId == null) {
             throw new IllegalArgumentException("studentId y sectionId son obligatorios");
         }
         enrollmentRepository.enrollStudent(studentId, sectionId);
     }
 
-    public List<EnrollmentEntity> findBySectionId(Long sectionId) {
+    public List<EnrollmentEntity> findBySectionId(String sectionId) {
         return enrollmentRepository.findBySectionId(sectionId);
-    }
-
-    public List<NearbySectionResponse> findNearbySections(Long subjectId, Double lat, Double lng) {
-        return enrollmentRepository.findNearbySections(subjectId, lat, lng);
     }
 }

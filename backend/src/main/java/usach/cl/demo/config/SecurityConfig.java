@@ -53,20 +53,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/professors/reports")
                     .hasAnyRole("ADMIN", "PROFESSOR")
 
-                // ── MONGODB: flujo de inscripción del Laboratorio 3 ──────
-                .requestMatchers(HttpMethod.GET, "/api/mongo/sections")
-                    .hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
-                .requestMatchers(HttpMethod.GET,
-                        "/api/mongo/students/**",
-                        "/api/mongo/enrollments/student/**")
-                    .hasAnyRole("ADMIN", "STUDENT")
-                .requestMatchers(HttpMethod.POST, "/api/mongo/enrollments/enroll")
-                    .hasAnyRole("ADMIN", "STUDENT")
-                .requestMatchers(HttpMethod.GET, "/api/mongo/semesters/**")
-                    .hasAnyRole("ADMIN", "STUDENT")
-                .requestMatchers(HttpMethod.GET, "/api/mongo/subjects/**")
-                    .hasAnyRole("ADMIN", "STUDENT", "PROFESSOR")
-
                 // ── PROFESORES: CRUD solo ADMIN ───────────────────────────
                 .requestMatchers(HttpMethod.POST,   "/api/professors")
                     .hasRole("ADMIN")
@@ -113,22 +99,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/students/**")
                     .hasRole("ADMIN")
 
-                // ── EDIFICIOS Y SALAS ─────────────────────────────────────
-                .requestMatchers(HttpMethod.POST,   "/api/buildings/**", "/api/rooms/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,    "/api/buildings/**", "/api/rooms/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/buildings/**", "/api/rooms/**")
-                    .hasRole("ADMIN")
-
-                // ── ACCESIBILIDAD ─────────────────────────────────────────
-                .requestMatchers(HttpMethod.POST,   "/api/accessibility-pois/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,    "/api/accessibility-pois/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/accessibility-pois/**")
-                    .hasRole("ADMIN")
-
                 // ── ADMIN general ─────────────────────────────────────────
                 .requestMatchers("/api/admins/**").hasRole("ADMIN")
 
@@ -138,16 +108,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT,    "/api/sections/**")
                     .hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/sections/**")
-                    .hasRole("ADMIN")
-
-                // ── UBICACIÓN (Integrante 2) ──────────────────────────────
-                .requestMatchers(HttpMethod.POST, "/api/location/**")
-                    .authenticated()
-
-                // ── REPORTES GEOESPACIALES ────────────────────────────────
-                .requestMatchers(HttpMethod.GET,  "/api/reports/**")
-                    .authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/reports/**")
                     .hasRole("ADMIN")
 
                 // ── TODO LO DEMÁS: solo autenticado ──────────────────────

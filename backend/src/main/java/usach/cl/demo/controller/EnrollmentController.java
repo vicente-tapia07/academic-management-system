@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
-import usach.cl.demo.dto.NearbySectionResponse;
 import usach.cl.demo.model.EnrollmentEntity;
 import usach.cl.demo.service.EnrollmentService;
 import usach.cl.demo.service.AuthorizationService;
@@ -33,7 +32,7 @@ public class EnrollmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EnrollmentEntity> getById(@PathVariable Long id,
+    public ResponseEntity<EnrollmentEntity> getById(@PathVariable String id,
                                                      Authentication authentication) {
         authorizationService.requireEnrollmentReadAccess(authentication, id);
         Optional<EnrollmentEntity> enrollment = enrollmentService.findById(id);
@@ -51,7 +50,7 @@ public class EnrollmentController {
     }
 
     @GetMapping("/section/{sectionId}")
-    public ResponseEntity<List<EnrollmentEntity>> getBySectionId(@PathVariable Long sectionId,
+    public ResponseEntity<List<EnrollmentEntity>> getBySectionId(@PathVariable String sectionId,
                                                                   Authentication authentication) {
         authorizationService.requireProfessorOwnsSection(authentication, sectionId);
         List<EnrollmentEntity> enrollments = enrollmentService.findBySectionId(sectionId);
@@ -78,19 +77,13 @@ public class EnrollmentController {
             );
             return ResponseEntity.status(HttpStatus.CREATED).body("Student enrolled successfully");
         } catch (Exception e) {
-            String fullMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-
-            if (fullMessage.contains("enrollment_student_id_section_id_key")) {
-                return ResponseEntity.badRequest().body("Ya estás inscrito en esta asignatura");
-            }
-
-            String cleanMessage = fullMessage.split("\n")[0].replace("ERROR: ", "").trim();
+            String cleanMessage = e.getMessage() == null ? "Error al inscribir" : e.getMessage();
             return ResponseEntity.badRequest().body(cleanMessage);
         }
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestBody String status) {
+    public ResponseEntity<String> updateStatus(@PathVariable String id, @RequestBody String status) {
         String cleanStatus = status.replace("\"", "").trim();
         int result = enrollmentService.updateStatus(id, cleanStatus);
         if (result > 0) {
@@ -100,7 +93,7 @@ public class EnrollmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id,
+    public ResponseEntity<String> delete(@PathVariable String id,
                                          Authentication authentication) {
         authorizationService.requireEnrollmentStudentAccess(authentication, id);
         Optional<EnrollmentEntity> enrollment = enrollmentService.findById(id);
@@ -118,14 +111,5 @@ public class EnrollmentController {
         }
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body("La inscripción ya no se encuentra activa");
-    }
-
-    @GetMapping("/nearby-sections")
-    public ResponseEntity<List<NearbySectionResponse>> getNearbySections(
-            @RequestParam Long subjectId,
-            @RequestParam Double lat,
-            @RequestParam Double lng) {
-        List<NearbySectionResponse> sections = enrollmentService.findNearbySections(subjectId, lat, lng);
-        return ResponseEntity.ok(sections);
     }
 }

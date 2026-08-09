@@ -34,7 +34,7 @@ public class GradeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GradeEntity> update(@PathVariable Long id, @RequestBody GradeEntity grade,
+    public ResponseEntity<GradeEntity> update(@PathVariable String id, @RequestBody GradeEntity grade,
                                                Authentication authentication) {
         authorizationService.requireProfessorOwnsEnrollment(authentication, grade.getEnrollmentId());
         grade.setId(id);

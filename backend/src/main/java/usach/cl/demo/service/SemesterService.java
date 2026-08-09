@@ -1,18 +1,17 @@
 package usach.cl.demo.service;
 
 import usach.cl.demo.model.SemesterEntity;
-import usach.cl.demo.repository.SemesterRepository;
+import usach.cl.demo.repository.MongoSemesterRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SemesterService {
 
-    private final SemesterRepository semesterRepository;
+    private final MongoSemesterRepository semesterRepository;
 
-    public SemesterService(SemesterRepository semesterRepository) {
+    public SemesterService(MongoSemesterRepository semesterRepository) {
         this.semesterRepository = semesterRepository;
     }
 
@@ -20,9 +19,10 @@ public class SemesterService {
         return semesterRepository.findAll();
     }
 
-    public SemesterEntity findById(Long id) {
-        Optional<SemesterEntity> semester = semesterRepository.findById(id);
-        return semester.orElseThrow(() -> new RuntimeException("Semester not found with id: " + id));
+    public SemesterEntity findById(String id) {
+        SemesterEntity semester = semesterRepository.findById(id);
+        if (semester == null) throw new RuntimeException("Semester not found with id: " + id);
+        return semester;
     }
 
     public SemesterEntity save(SemesterEntity semester) {
@@ -33,15 +33,14 @@ public class SemesterService {
         return semesterRepository.save(semester);
     }
 
-    public SemesterEntity update(Long id, SemesterEntity semester) {
+    public SemesterEntity update(String id, SemesterEntity semester) {
         findById(id);
         validate(semester);
         semester.setId(id);
-        semesterRepository.update(semester);
-        return semester;
+        return semesterRepository.save(semester);
     }
 
-    public void closeSemester(Long id) {
+    public void closeSemester(String id) {
         SemesterEntity semester = findById(id);
         if (semester.isClosed()) {
             throw new RuntimeException("Semester is already closed");

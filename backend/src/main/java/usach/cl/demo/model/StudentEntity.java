@@ -13,5 +13,6 @@ public class StudentEntity {
     private String enrollmentNumber;
     private String firstName;
     private String lastName;
+    private String careerCode;
     private String academicStatus;
 }

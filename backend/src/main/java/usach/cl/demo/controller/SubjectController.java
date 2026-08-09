@@ -24,8 +24,13 @@ public class SubjectController {
         return ResponseEntity.ok(subjectService.findAll());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<SubjectEntity>> search(@RequestParam String q) {
+        return ResponseEntity.ok(subjectService.search(q));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<SubjectEntity> findById(@PathVariable Long id) {
+    public ResponseEntity<SubjectEntity> findById(@PathVariable String id) {
         try {
             return ResponseEntity.ok(subjectService.findById(id));
         } catch (RuntimeException e) {
@@ -43,7 +48,7 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SubjectEntity> update(@PathVariable Long id,
+    public ResponseEntity<SubjectEntity> update(@PathVariable String id,
                                                 @RequestBody SubjectEntity subject) {
         try {
             return ResponseEntity.ok(subjectService.update(id, subject));
@@ -53,7 +58,7 @@ public class SubjectController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         try {
             subjectService.delete(id);
             return ResponseEntity.noContent().build();

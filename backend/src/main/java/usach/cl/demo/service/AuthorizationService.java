@@ -1,17 +1,31 @@
 package usach.cl.demo.service;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
+
 @Service
 public class AuthorizationService {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final MongoCollection<Document> users;
+    private final MongoCollection<Document> students;
+    private final MongoCollection<Document> professors;
+    private final MongoCollection<Document> sections;
+    private final MongoCollection<Document> enrollments;
 
-    public AuthorizationService(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public AuthorizationService(MongoDatabase mongoDatabase) {
+        this.users = mongoDatabase.getCollection("users");
+        this.students = mongoDatabase.getCollection("students");
+        this.professors = mongoDatabase.getCollection("professors");
+        this.sections = mongoDatabase.getCollection("sections");
+        this.enrollments = mongoDatabase.getCollection("enrollments");
     }
 
     public boolean isAdmin(Authentication authentication) {
@@ -22,112 +36,107 @@ public class AuthorizationService {
     public void requireStudentAccess(Authentication authentication, Long studentId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM student st
-                JOIN usuario u ON u.id = st.usuario_id
-                WHERE st.id = ? AND u.email = ?
-                """, Integer.class, studentId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (studentId == null) deny();
+        if (students.find(eq("userId", studentId)).first() == null) deny();
+        if (users.find(and(eq("id", studentId.intValue()), eq("email", authentication.getName()))).first() == null) deny();
     }
 
     public void requireMongoStudentAccess(Authentication authentication, Long userId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
         if (userId == null) deny();
-
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM usuario
-                WHERE id = ? AND email = ? AND rol = 'STUDENT'
-                """, Integer.class, userId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (users.find(and(eq("id", userId.intValue()),
+                eq("email", authentication.getName()),
+                eq("rol", "STUDENT"))).first() == null) deny();
     }
 
     public void requireProfessorAccess(Authentication authentication, Long professorId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM professor p
-                JOIN usuario u ON u.id = p.usuario_id
-                WHERE p.id = ? AND u.email = ?
-                """, Integer.class, professorId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (professorId == null) deny();
+        if (professors.find(eq("userId", professorId)).first() == null) deny();
+        if (users.find(and(eq("id", professorId.intValue()), eq("email", authentication.getName()))).first() == null) deny();
     }
 
-    public void requireEnrollmentStudentAccess(Authentication authentication, Long enrollmentId) {
+    public void requireEnrollmentStudentAccess(Authentication authentication, String enrollmentId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM enrollment e
-                JOIN student st ON st.id = e.student_id
-                JOIN usuario u ON u.id = st.usuario_id
-                WHERE e.id = ? AND u.email = ?
-                """, Integer.class, enrollmentId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (enrollmentId == null || !ObjectId.isValid(enrollmentId)) deny();
+        Document enrollment = enrollments.find(eq("_id", new ObjectId(enrollmentId))).first();
+        if (enrollment == null) deny();
+        Document student = students.find(eq("_id", enrollment.getObjectId("studentId"))).first();
+        if (student == null) deny();
+        Number userId = student.get("userId", Number.class);
+        if (userId == null) deny();
+        if (users.find(and(eq("id", userId.intValue()), eq("email", authentication.getName()))).first() == null) deny();
     }
 
-    public void requireEnrollmentReadAccess(Authentication authentication, Long enrollmentId) {
+    public void requireEnrollmentReadAccess(Authentication authentication, String enrollmentId) {
         if (isAdmin(authentication)) return;
-        if (hasRole(authentication, "ROLE_STUDENT")) {
-            requireEnrollmentStudentAccess(authentication, enrollmentId);
-            return;
+        requireAuthenticated(authentication);
+        if (enrollmentId == null || !ObjectId.isValid(enrollmentId)) deny();
+        Document enrollment = enrollments.find(eq("_id", new ObjectId(enrollmentId))).first();
+        if (enrollment == null) deny();
+        String email = authentication.getName();
+
+        Document student = students.find(eq("_id", enrollment.getObjectId("studentId"))).first();
+        if (student != null) {
+            Number userId = student.get("userId", Number.class);
+            if (userId != null && users.find(and(eq("id", userId.intValue()), eq("email", email))).first() != null) {
+                return;
+            }
         }
-        if (hasRole(authentication, "ROLE_PROFESSOR")) {
-            requireProfessorOwnsEnrollment(authentication, enrollmentId);
-            return;
+        Document section = sections.find(eq("_id", enrollment.getObjectId("sectionId"))).first();
+        if (section != null) {
+            String professorId = section.getString("professorId");
+            if (professorId != null && professorId.matches("\\d+")) {
+                int professorUserId = Integer.parseInt(professorId);
+                if (users.find(and(eq("id", professorUserId), eq("email", email))).first() != null) {
+                    return;
+                }
+            }
         }
         deny();
     }
 
-    public void requireProfessorOwnsSection(Authentication authentication, Long sectionId) {
+    public void requireProfessorOwnsSection(Authentication authentication, String sectionId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM section sec
-                JOIN professor p ON p.id = sec.professor_id
-                JOIN usuario u ON u.id = p.usuario_id
-                WHERE sec.id = ? AND u.email = ?
-                """, Integer.class, sectionId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (sectionId == null || !ObjectId.isValid(sectionId)) deny();
+        Document section = sections.find(eq("_id", new ObjectId(sectionId))).first();
+        if (section == null) deny();
+        String professorId = section.getString("professorId");
+        if (professorId == null || !professorId.matches("\\d+")) deny();
+        if (users.find(and(eq("id", Integer.parseInt(professorId)), eq("email", authentication.getName()))).first() == null) deny();
     }
 
-    public void requireProfessorOwnsEnrollment(Authentication authentication, Long enrollmentId) {
+    public void requireProfessorOwnsEnrollment(Authentication authentication, String enrollmentId) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM enrollment e
-                JOIN section sec ON sec.id = e.section_id
-                JOIN professor p ON p.id = sec.professor_id
-                JOIN usuario u ON u.id = p.usuario_id
-                WHERE e.id = ? AND u.email = ?
-                """, Integer.class, enrollmentId, authentication.getName());
-        if (matches == null || matches == 0) deny();
+        if (enrollmentId == null || !ObjectId.isValid(enrollmentId)) deny();
+        Document enrollment = enrollments.find(eq("_id", new ObjectId(enrollmentId))).first();
+        if (enrollment == null) deny();
+        Document section = sections.find(eq("_id", enrollment.getObjectId("sectionId"))).first();
+        if (section == null) deny();
+        String professorId = section.getString("professorId");
+        if (professorId == null || !professorId.matches("\\d+")) deny();
+        if (users.find(and(eq("id", Integer.parseInt(professorId)), eq("email", authentication.getName()))).first() == null) deny();
     }
 
     public void requireProfessorRut(Authentication authentication, String professorRut) {
         if (isAdmin(authentication)) return;
         requireAuthenticated(authentication);
-        Integer matches = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM usuario WHERE email = ? AND rut = ? AND rol = 'PROFESSOR'",
-                Integer.class, authentication.getName(), professorRut);
-        if (matches == null || matches == 0) deny();
+        if (professorRut == null || professorRut.isBlank()) deny();
+        if (users.find(and(eq("rut", professorRut),
+                eq("email", authentication.getName()),
+                eq("rol", "PROFESSOR"))).first() == null) deny();
     }
 
-    private void requireAuthenticated(Authentication authentication) {
+    public void requireAuthenticated(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) deny();
     }
 
-    private boolean hasRole(Authentication authentication, String role) {
-        return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> role.equals(authority.getAuthority()));
-    }
-
     private void deny() {
-        throw new AccessDeniedException("No tienes permiso para acceder a este recurso");
+        throw new AccessDeniedException("Acceso denegado");
     }
 }

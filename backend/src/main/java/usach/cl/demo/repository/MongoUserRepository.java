@@ -4,7 +4,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import org.springframework.dao.DuplicateKeyException;
+import org.bson.conversions.Bson;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 import usach.cl.demo.model.Role;
@@ -68,7 +68,7 @@ public class MongoUserRepository {
             users.insertOne(document);
         } catch (MongoWriteException exception) {
             if (exception.getError().getCode() == DUPLICATE_KEY_ERROR) {
-                throw new DuplicateKeyException("Email ya esta en uso", exception);
+                throw new IllegalArgumentException("Email ya esta en uso", exception);
             }
             throw exception;
         }
@@ -77,6 +77,16 @@ public class MongoUserRepository {
 
     public void updateUser(int id, String rut, String email) {
         users.updateOne(eq("id", id), combine(set("rut", rut), set("email", email)));
+    }
+
+    public void updateCredentials(int id, String email, String rut, String passwordHash) {
+        List<Bson> changes = new ArrayList<>();
+        if (email != null && !email.isBlank()) changes.add(set("email", email));
+        if (rut != null && !rut.isBlank()) changes.add(set("rut", rut));
+        if (passwordHash != null && !passwordHash.isBlank()) changes.add(set("passwordHash", passwordHash));
+        if (!changes.isEmpty()) {
+            users.updateOne(eq("id", id), combine(changes));
+        }
     }
 
     public void deleteById(int id) {

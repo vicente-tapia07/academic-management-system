@@ -25,7 +25,7 @@ public class SectionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SectionEntity> findById(@PathVariable Long id) {
+    public ResponseEntity<SectionEntity> findById(@PathVariable String id) {
         try {
             return ResponseEntity.ok(sectionService.findById(id));
         } catch (RuntimeException e) {
@@ -67,7 +67,7 @@ public class SectionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody SectionEntity section) {
+    public ResponseEntity<?> update(@PathVariable String id, @RequestBody SectionEntity section) {
         try {
             return ResponseEntity.ok(sectionService.update(id, section));
         } catch (RuntimeException e) {
@@ -76,7 +76,7 @@ public class SectionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
+    public ResponseEntity<String> delete(@PathVariable String id) {
         try {
             sectionService.deleteById(id);
             return ResponseEntity.ok("Sección eliminada correctamente");

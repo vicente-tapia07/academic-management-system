@@ -1,18 +1,17 @@
 package usach.cl.demo.service;
 
 import usach.cl.demo.model.CareerEntity;
-import usach.cl.demo.repository.CareerRepository;
+import usach.cl.demo.repository.MongoCareerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CareerService {
 
-    private final CareerRepository careerRepository;
+    private final MongoCareerRepository careerRepository;
 
-    public CareerService(CareerRepository careerRepository) {
+    public CareerService(MongoCareerRepository careerRepository) {
         this.careerRepository = careerRepository;
     }
 
@@ -20,9 +19,10 @@ public class CareerService {
         return careerRepository.findAll();
     }
 
-    public CareerEntity findById(Long id) {
-        Optional<CareerEntity> career = careerRepository.findById(id);
-        return career.orElseThrow(() -> new RuntimeException("Career not found with id: " + id));
+    public CareerEntity findById(String id) {
+        CareerEntity career = careerRepository.findById(id);
+        if (career == null) throw new RuntimeException("Career not found with id: " + id);
+        return career;
     }
 
     public CareerEntity save(CareerEntity career) {
@@ -30,17 +30,16 @@ public class CareerService {
         return careerRepository.save(career);
     }
 
-    public CareerEntity update(Long id, CareerEntity career) {
+    public CareerEntity update(String id, CareerEntity career) {
         findById(id);
         validate(career);
         career.setId(id);
-        careerRepository.update(career);
-        return career;
+        return careerRepository.save(career);
     }
 
-    public void delete(Long id) {
+    public void delete(String id) {
         findById(id);
-        careerRepository.delete(id);
+        careerRepository.deleteById(id);
     }
 
     private void validate(CareerEntity career) {

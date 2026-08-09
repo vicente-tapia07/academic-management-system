@@ -59,8 +59,9 @@ public class ProfessorController {
 
 
     @GetMapping("/reports")
-    public List<FailureRateDTO> getReports() {
-        return professorService.getFailureReport();
+    public List<FailureRateDTO> getReports(@RequestParam(required = false) String semesterId,
+                                           @RequestParam(required = false) String subjectId) {
+        return professorService.getFailureReport(semesterId, subjectId);
     }
 
 

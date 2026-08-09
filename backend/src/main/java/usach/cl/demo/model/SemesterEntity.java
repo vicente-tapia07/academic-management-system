@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class SemesterEntity {
 
-    private Long id;
+    private String id;
     private int year;
     private String period;
     private LocalDate startDate;
@@ -19,15 +19,16 @@ public class SemesterEntity {
 
     public boolean isInGradePeriod() {
         LocalDate today = LocalDate.now();
-        return !today.isBefore(gradeStartDate) && !today.isAfter(gradeEndDate);
+        return gradeStartDate != null && gradeEndDate != null
+                && !today.isBefore(gradeStartDate) && !today.isAfter(gradeEndDate);
     }
 
     public boolean isClosed() {
         return "CLOSED".equals(this.status);
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public int getYear() { return year; }
     public void setYear(int year) { this.year = year; }

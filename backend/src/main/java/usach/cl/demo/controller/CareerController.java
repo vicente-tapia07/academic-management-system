@@ -28,7 +28,7 @@ public class CareerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CareerEntity> findById(@PathVariable Long id) {
+    public ResponseEntity<CareerEntity> findById(@PathVariable String id) {
         try {
             return ResponseEntity.ok(careerService.findById(id));
         } catch (RuntimeException e) {
@@ -37,7 +37,7 @@ public class CareerController {
     }
 
     @GetMapping("/{id}/subjects")
-    public ResponseEntity<List<SubjectEntity>> findSubjectsByCareer(@PathVariable Long id) {
+    public ResponseEntity<List<SubjectEntity>> findSubjectsByCareer(@PathVariable String id) {
         try {
             return ResponseEntity.ok(subjectService.findByCareerId(id));
         } catch (RuntimeException e) {
@@ -55,7 +55,7 @@ public class CareerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CareerEntity> update(@PathVariable Long id,
+    public ResponseEntity<CareerEntity> update(@PathVariable String id,
                                                @RequestBody CareerEntity career) {
         try {
             return ResponseEntity.ok(careerService.update(id, career));
@@ -65,7 +65,7 @@ public class CareerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         try {
             careerService.delete(id);
             return ResponseEntity.noContent().build();

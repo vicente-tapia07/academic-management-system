@@ -1,24 +1,36 @@
 package usach.cl.demo.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import usach.cl.demo.dto.FailureRateDTO;
-import usach.cl.demo.model.*;
-import usach.cl.demo.repository.*;
+import usach.cl.demo.dto.ProfessorDTO;
+import usach.cl.demo.model.GradeEntity;
+import usach.cl.demo.model.ProfessorEntity;
+import usach.cl.demo.model.SectionEntity;
+import usach.cl.demo.repository.MongoGradeRepository;
+import usach.cl.demo.repository.MongoProfessorRepository;
+import usach.cl.demo.repository.MongoSectionRepository;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class ProfessorService {
 
-    @Autowired private GradeRepository      gradeRepository;
-    @Autowired private FailureRateRepository failureRateRepository;
-    @Autowired private ProfessorRepository   professorRepository;
-    @Autowired private SectionRepository     sectionRepository;
-    @Autowired private JdbcTemplate          jdbcTemplate;
-    @Autowired private PasswordEncoder       passwordEncoder;
+    private final MongoProfessorRepository professorRepository;
+    private final MongoSectionRepository sectionRepository;
+    private final MongoGradeRepository gradeRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public ProfessorService(MongoProfessorRepository professorRepository,
+                            MongoSectionRepository sectionRepository,
+                            MongoGradeRepository gradeRepository,
+                            PasswordEncoder passwordEncoder) {
+        this.professorRepository = professorRepository;
+        this.sectionRepository = sectionRepository;
+        this.gradeRepository = gradeRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public List<ProfessorEntity> getAll() {
         return professorRepository.findAll();
@@ -32,66 +44,26 @@ public class ProfessorService {
         return sectionRepository.findByProfessorId(professorId);
     }
 
-    @Transactional
-    public ProfessorEntity create(usach.cl.demo.dto.ProfessorDTO dto) {
+    public ProfessorEntity create(ProfessorDTO dto) {
         validateProfessor(dto, true);
-        String hash = passwordEncoder.encode(dto.password());
-
-        // Usar RUT del DTO, o timestamp como fallback si no se envió
-        String rut = (dto.rut() != null && !dto.rut().isBlank())
-            ? dto.rut()
-            : "PROF-" + System.currentTimeMillis();
-
-        // Schema real: id, rut, email, password_hash, rol
-        Long usuarioId = jdbcTemplate.queryForObject(
-            "INSERT INTO usuario (rut, email, password_hash, rol) " +
-            "VALUES (?, ?, ?, 'PROFESSOR') RETURNING id",
-            Long.class,
-            rut,
-            dto.email(),
-            hash
-        );
-
-        String[] parts    = dto.name().trim().split("\\s+", 2);
-        String firstName  = parts[0];
-        String lastName   = parts.length > 1 ? parts[1] : "";
-
-        ProfessorEntity professor = new ProfessorEntity();
-        professor.setUsuarioId(usuarioId);
-        professor.setFirstName(firstName);
-        professor.setLastName(lastName);
-        professor.setDepartment(dto.department());
-
-        return professorRepository.save(professor);
+        return professorRepository.saveWithUsuario(dto, passwordEncoder.encode(dto.password()));
     }
 
-    @Transactional
-    public ProfessorEntity update(Long id, usach.cl.demo.dto.ProfessorDTO dto) {
+    public ProfessorEntity update(Long id, ProfessorDTO dto) {
         validateProfessor(dto, false);
         ProfessorEntity existing = professorRepository.findById(id);
         if (existing == null) throw new RuntimeException("Profesor no encontrado: " + id);
 
-        String[] parts   = dto.name().trim().split("\\s+", 2);
+        String[] parts = dto.name().trim().split("\\s+", 2);
         String firstName = parts[0];
-        String lastName  = parts.length > 1 ? parts[1] : "";
+        String lastName = parts.length > 1 ? parts[1] : "";
 
-        // Actualizar credenciales si se enviaron
         if (dto.email() != null && !dto.email().isBlank()) {
-            if (dto.password() != null && !dto.password().isBlank()) {
-                String hash = passwordEncoder.encode(dto.password());
-                jdbcTemplate.update(
-                    "UPDATE usuario SET email = ?, password_hash = ? WHERE id = ?",
-                    dto.email(), hash, existing.getUsuarioId()
-                );
-            } else {
-                jdbcTemplate.update(
-                    "UPDATE usuario SET email = ? WHERE id = ?",
-                    dto.email(), existing.getUsuarioId()
-                );
-            }
+            String passwordHash = (dto.password() != null && !dto.password().isBlank())
+                    ? passwordEncoder.encode(dto.password()) : null;
+            professorRepository.updateCredentials(id, dto.email(), null, passwordHash);
         }
 
-        // updateProfessor(id, department, firstName, lastName)
         professorRepository.updateProfessor(id, dto.department(), firstName, lastName);
 
         existing.setFirstName(firstName);
@@ -100,20 +72,29 @@ public class ProfessorService {
         return existing;
     }
 
-    @Transactional
     public void delete(Long id) {
         ProfessorEntity existing = professorRepository.findById(id);
         if (existing == null) return;
-        Long usuarioId = existing.getUsuarioId();
-        jdbcTemplate.update("DELETE FROM professor WHERE id = ?", id);
-        if (usuarioId != null) {
-            jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", usuarioId);
-        }
+        professorRepository.deleteByUserId(id);
     }
 
     public List<FailureRateDTO> getFailureReport() {
-        failureRateRepository.refreshView();
-        return failureRateRepository.getFailureRateReport();
+        return getFailureReport(null, null);
+    }
+
+    public List<FailureRateDTO> getFailureReport(String semesterId, String subjectId) {
+        List<FailureRateDTO> report = gradeRepository.getFailureRateReport();
+        if (semesterId != null && !semesterId.isBlank()) {
+            report = report.stream()
+                    .filter(dto -> semesterId.equals(dto.getSemesterId()))
+                    .toList();
+        }
+        if (subjectId != null && !subjectId.isBlank()) {
+            report = report.stream()
+                    .filter(dto -> subjectId.equals(dto.getSubjectId()))
+                    .toList();
+        }
+        return report;
     }
 
     public GradeEntity saveGrade(GradeEntity grade, String professorRut) {
@@ -124,12 +105,12 @@ public class ProfessorService {
             throw new IllegalArgumentException("La nota debe estar entre 1.0 y 7.0");
         }
         if (grade.getEntryDate() == null) {
-            grade.setEntryDate(java.time.LocalDate.now());
+            grade.setEntryDate(LocalDate.now());
         }
-        return gradeRepository.save(grade);
+        return gradeRepository.save(grade, professorRut);
     }
 
-    private void validateProfessor(usach.cl.demo.dto.ProfessorDTO dto, boolean passwordRequired) {
+    private void validateProfessor(ProfessorDTO dto, boolean passwordRequired) {
         if (dto == null || dto.name() == null || dto.name().isBlank() ||
                 dto.email() == null || dto.email().isBlank() ||
                 dto.department() == null || dto.department().isBlank() ||

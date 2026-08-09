@@ -1,10 +1,11 @@
 package usach.cl.demo.service;
+import usach.cl.demo.model.ProfessorEntity;
 import usach.cl.demo.model.SectionEntity;
-import usach.cl.demo.model.RoomEntity;
+import usach.cl.demo.model.SectionRoom;
 import usach.cl.demo.model.SemesterEntity;
-import usach.cl.demo.repository.SectionRepository;
-import usach.cl.demo.repository.RoomRepository;
-import usach.cl.demo.repository.SemesterRepository;
+import usach.cl.demo.repository.MongoProfessorRepository;
+import usach.cl.demo.repository.MongoSectionRepository;
+import usach.cl.demo.repository.MongoSemesterRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.time.LocalTime;
@@ -23,37 +24,43 @@ public class SectionService {
             LocalTime.of(20, 5), LocalTime.of(21, 25),
             LocalTime.of(21, 25), LocalTime.of(22, 45)
     );
-    private final SectionRepository sectionRepository;
-    private final RoomRepository roomRepository;
-    private final SemesterRepository semesterRepository;
+    private final MongoSectionRepository sectionRepository;
+    private final MongoSemesterRepository semesterRepository;
+    private final MongoProfessorRepository professorRepository;
 
-    public SectionService(SectionRepository sectionRepository, RoomRepository roomRepository,
-                          SemesterRepository semesterRepository) {
+    public SectionService(MongoSectionRepository sectionRepository,
+                          MongoSemesterRepository semesterRepository,
+                          MongoProfessorRepository professorRepository) {
         this.sectionRepository = sectionRepository;
-        this.roomRepository = roomRepository;
         this.semesterRepository = semesterRepository;
+        this.professorRepository = professorRepository;
     }
 
     public List<SectionEntity> findAll() {
         return sectionRepository.findAll();
     }
 
-    public SectionEntity findById(Long id) {
-        return sectionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Section not found with id: " + id));
+    public SectionEntity findById(String id) {
+        SectionEntity section = sectionRepository.findById(id);
+        if (section == null) throw new RuntimeException("Section not found with id: " + id);
+        return section;
     }
 
-    private void validateRoomCapacity(SectionEntity section) {
-        RoomEntity room = roomRepository.findById(section.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Sala no encontrada"));
-        if (section.getTotalSeats() > room.getCapacity()) {
-            throw new RuntimeException("Los cupos (" + section.getTotalSeats() + ") superan la capacidad de la sala (" + room.getCapacity() + ")");
+    public List<SectionRoom> findDistinctRooms() {
+        return sectionRepository.findDistinctRooms();
+    }
+
+    private void resolveProfessorName(SectionEntity section) {
+        ProfessorEntity professor = professorRepository.findById(section.getProfessorId());
+        if (professor == null) {
+            throw new RuntimeException("Profesor no encontrado");
         }
+        section.setProfessorName(professor.getFirstName() + " " + professor.getLastName());
     }
 
     private void validateActiveSemester(SectionEntity section) {
-        SemesterEntity semester = semesterRepository.findById(section.getSemesterId())
-                .orElseThrow(() -> new RuntimeException("Semestre no encontrado"));
+        SemesterEntity semester = semesterRepository.findById(section.getSemesterId());
+        if (semester == null) throw new RuntimeException("Semestre no encontrado");
         if (!"IN_PROGRESS".equals(semester.getStatus())) {
             throw new RuntimeException("Solo se pueden crear/editar secciones en el semestre en curso.");
         }
@@ -62,17 +69,17 @@ public class SectionService {
     public SectionEntity save(SectionEntity section) {
         validate(section);
         validateActiveSemester(section);
-        validateRoomCapacity(section);
+        resolveProfessorName(section);
 
         section.setAvailableSeats(section.getTotalSeats());
         return sectionRepository.save(section);
     }
 
-    public SectionEntity update(Long id, SectionEntity section) {
+    public SectionEntity update(String id, SectionEntity section) {
         SectionEntity existing = findById(id);
         validate(section);
         validateActiveSemester(section);
-        validateRoomCapacity(section);
+        resolveProfessorName(section);
         int occupiedSeats = existing.getTotalSeats() - existing.getAvailableSeats();
         if (section.getTotalSeats() < occupiedSeats) {
             throw new IllegalArgumentException(
@@ -80,10 +87,10 @@ public class SectionService {
         }
         section.setAvailableSeats(section.getTotalSeats() - occupiedSeats);
         section.setId(id);
-        return sectionRepository.update(section);
+        return sectionRepository.update(id, section);
     }
 
-    public int deleteById(Long id) {
+    public int deleteById(String id) {
         findById(id);
         return sectionRepository.deleteById(id);
     }
@@ -102,10 +109,13 @@ public class SectionService {
 
     private void validate(SectionEntity section) {
         if (section == null || section.getSubjectId() == null || section.getProfessorId() == null ||
-                section.getSemesterId() == null || section.getRoomId() == null ||
+                section.getSemesterId() == null || section.getRoom() == null ||
                 section.getDayOfWeek() == null || section.getStartTime() == null ||
                 section.getEndTime() == null) {
             throw new IllegalArgumentException("Asignatura, profesor, semestre, sala, día y horario son obligatorios");
+        }
+        if (section.getRoom().getCode() == null || section.getRoom().getCode().isBlank()) {
+            throw new IllegalArgumentException("El código de la sala es obligatorio");
         }
         if (section.getTotalSeats() <= 0) {
             throw new IllegalArgumentException("Los cupos totales deben ser mayores que 0");

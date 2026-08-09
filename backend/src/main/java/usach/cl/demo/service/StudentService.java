@@ -1,31 +1,26 @@
 package usach.cl.demo.service;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import usach.cl.demo.dto.StudentDTO;
 import usach.cl.demo.dto.SubjectStatusDTO;
 import usach.cl.demo.model.StudentEntity;
-import usach.cl.demo.repository.StudentRepository;
+import usach.cl.demo.repository.MongoStudentRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class StudentService {
 
-    private final StudentRepository studentRepository;
-    private final JdbcTemplate jdbcTemplate;
+    private final MongoStudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Inyección recomendada por constructor (sin necesidad de poner @Autowired)
-    public StudentService(StudentRepository studentRepository, 
-                          JdbcTemplate jdbcTemplate, 
+    public StudentService(MongoStudentRepository studentRepository,
                           PasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
-        this.jdbcTemplate = jdbcTemplate;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -33,75 +28,43 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
-    @Transactional
-    public void saveWithUsuario(StudentDTO dto) {
+    public StudentEntity saveWithUsuario(StudentDTO dto) {
         if (dto == null || isBlank(dto.rut()) || isBlank(dto.email()) || isBlank(dto.password()) ||
                 isBlank(dto.firstName()) || isBlank(dto.lastName()) || isBlank(dto.enrollmentNumber())) {
             throw new IllegalArgumentException("Todos los datos del estudiante son obligatorios");
         }
-        studentRepository.saveWithUsuario(dto);
+        return studentRepository.saveWithUsuario(dto, passwordEncoder.encode(dto.password()));
     }
 
     public Optional<StudentEntity> findById(Long id) {
-        return studentRepository.findById(id);
+        return Optional.ofNullable(studentRepository.findById(id));
     }
 
-    public int save(StudentEntity studentEntity) {
-        return studentRepository.save(studentEntity);
+    public StudentEntity update(Long id, StudentEntity student) {
+        StudentEntity existing = findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
+        if (student.getFirstName() == null || student.getFirstName().isBlank() ||
+                student.getLastName() == null || student.getLastName().isBlank()) {
+            throw new IllegalArgumentException("Nombre y apellido son obligatorios");
+        }
+        String status = student.getAcademicStatus();
+        if (status == null || status.isBlank() || !Set.of("ACTIVE", "BLOCKED", "GRADUATED").contains(status)) {
+            throw new IllegalArgumentException("Estado académico inválido");
+        }
+        existing.setFirstName(student.getFirstName());
+        existing.setLastName(student.getLastName());
+        existing.setAcademicStatus(status);
+        studentRepository.update(existing);
+        return existing;
     }
 
-    public int update(StudentEntity studentEntity) {
-        return studentRepository.update(studentEntity);
-    }
-
-    @Transactional
-    public int deleteById(Long id) {
-        Optional<StudentEntity> student = studentRepository.findById(id);
-        int deleted = studentRepository.deleteById(id);
-        
-        // Limpiamos también el usuario vinculado en la BD si existe
-        student.ifPresent(s -> {
-            if (s.getUsuarioId() != null) {
-                jdbcTemplate.update("DELETE FROM usuario WHERE id = ?", s.getUsuarioId());
-            }
-        });
-        
-        return deleted;
+    public void delete(Long id) {
+        findById(id).orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
+        studentRepository.deleteById(id);
     }
 
     public List<SubjectStatusDTO> findCurriculum(Long studentId) {
         return studentRepository.findCurriculum(studentId);
-    }
-
-    /**
-     * Actualiza la ubicación de residencia del estudiante.
-     * Usada cuando el estudiante ingresa su dirección en Mi Perfil.
-     */
-    public void updateLocation(Long studentId, Double latitude, Double longitude) {
-        studentRepository.updateLocation(studentId, latitude, longitude);
-    }
-
-    /**
-     * Devuelve las coordenadas de home_location del estudiante.
-     * Retorna null si no tiene ubicación guardada.
-     */
-    public double[] getLocation(Long studentId) {
-        return studentRepository.getLocation(studentId);
-    }
-
-    /**
-     * Permite al Administrador actualizar el correo y/o la contraseña
-     * del usuario asociado al estudiante.
-     */
-    public void updateCredentials(Long usuarioId, String newEmail, String newPassword) {
-        if (usuarioId == null) return;
-
-        if (newPassword != null && !newPassword.isEmpty()) {
-            String hash = passwordEncoder.encode(newPassword);
-            jdbcTemplate.update("UPDATE usuario SET email = ?, password_hash = ? WHERE id = ?", newEmail, hash, usuarioId);
-        } else if (newEmail != null && !newEmail.isEmpty()) {
-            jdbcTemplate.update("UPDATE usuario SET email = ? WHERE id = ?", newEmail, usuarioId);
-        }
     }
 
     private boolean isBlank(String value) {

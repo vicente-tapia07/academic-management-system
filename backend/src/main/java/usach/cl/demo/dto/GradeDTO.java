@@ -9,13 +9,13 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GradeDTO {
-    private Long gradeId;
+    private String gradeId;
     private Double value;
     private LocalDate entryDate;
-    private Long subjectId;
+    private String subjectId;
     private String subjectCode;
     private String subjectName;
-    private Long semesterId;
+    private String semesterId;
     private Integer semesterYear;
     private String semesterPeriod;
 }

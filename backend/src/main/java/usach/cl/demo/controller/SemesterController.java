@@ -21,7 +21,7 @@ public class SemesterController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SemesterEntity> findById(@PathVariable Long id) {
+    public ResponseEntity<SemesterEntity> findById(@PathVariable String id) {
         try {
             return ResponseEntity.ok(semesterService.findById(id));
         } catch (RuntimeException e) {
@@ -39,7 +39,7 @@ public class SemesterController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SemesterEntity> update(@PathVariable Long id,
+    public ResponseEntity<SemesterEntity> update(@PathVariable String id,
                                                  @RequestBody SemesterEntity semester) {
         try {
             return ResponseEntity.ok(semesterService.update(id, semester));
@@ -49,7 +49,7 @@ public class SemesterController {
     }
 
     @PostMapping("/{id}/close")
-    public ResponseEntity<String> closeSemester(@PathVariable Long id) {
+    public ResponseEntity<String> closeSemester(@PathVariable String id) {
         try {
             semesterService.closeSemester(id);
             return ResponseEntity.ok("Semester closed successfully");
