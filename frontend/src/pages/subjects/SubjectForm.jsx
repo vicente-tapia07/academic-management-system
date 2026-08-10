@@ -82,7 +82,7 @@ export default function SubjectForm() {
                   value={form.careerCode} onChange={handleChange} required>
                   <option value="">— Selecciona una carrera —</option>
                   {careers.map((c) => (
-                    <option key={c.id} value={c.code}>{c.name} ({c.code})</option>
+                    <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
               </div>

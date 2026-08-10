@@ -49,11 +49,7 @@ export default function SubjectList() {
     if (e.key === 'Enter') runSearch(query);
   };
 
-  const careerName = (code) => {
-    if (!code) return '—';
-    const career = careers.find((c) => c.code === code);
-    return career ? `${career.name} (${career.code})` : code;
-  };
+  const careerName = (code) => careers.find((c) => c.code === code)?.name ?? code;
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar esta asignatura?')) return;
