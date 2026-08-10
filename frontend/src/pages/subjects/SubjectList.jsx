@@ -49,7 +49,7 @@ export default function SubjectList() {
     if (e.key === 'Enter') runSearch(query);
   };
 
-  const careerName = (id) => careers.find((c) => c.id === id)?.name ?? `#${id}`;
+  const careerName = (code) => careers.find((c) => c.code === code)?.name ?? code;
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar esta asignatura?')) return;
@@ -124,7 +124,7 @@ export default function SubjectList() {
                     <td><span className="badge bg-primary">{s.code}</span></td>
                     <td className="fw-semibold">{s.name}</td>
                     <td>{s.credits}</td>
-                    <td className="text-muted small">{careerName(s.careerId)}</td>
+                    <td className="text-muted small">{careerName(s.careerCode)}</td>
                     <td>
                       <span className={`badge ${s.active ? 'bg-success' : 'bg-secondary'}`}>
                         {s.active ? 'Activa' : 'Inactiva'}
