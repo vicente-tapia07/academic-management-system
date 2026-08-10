@@ -7,7 +7,7 @@ export default function SubjectForm() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [form, setForm]     = useState({ code: '', name: '', credits: '', careerId: '', active: true });
+  const [form, setForm]     = useState({ code: '', name: '', credits: '', careerCode: '', active: true });
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
@@ -16,8 +16,8 @@ export default function SubjectForm() {
     api.get('/api/careers').then((r) => setCareers(r.data));
     if (!isEdit) return;
     api.get(`/api/subjects/${id}`).then((r) => {
-      const { code, name, credits, careerId, active } = r.data;
-      setForm({ code, name, credits, careerId, active });
+      const { code, name, credits, careerCode, active } = r.data;
+      setForm({ code, name, credits, careerCode, active });
     });
   }, [id, isEdit]);
 
@@ -33,7 +33,7 @@ export default function SubjectForm() {
     const payload = {
       ...form,
       credits: Number(form.credits),
-      careerId: form.careerId,
+      careerCode: form.careerCode,
       ...(isEdit && { id }),
     };
     try {
@@ -78,11 +78,11 @@ export default function SubjectForm() {
               </div>
               <div className="col-sm-8">
                 <label className="form-label fw-semibold">Carrera</label>
-                <select name="careerId" className="form-select"
-                  value={form.careerId} onChange={handleChange} required>
+                <select name="careerCode" className="form-select"
+                  value={form.careerCode} onChange={handleChange} required>
                   <option value="">— Selecciona una carrera —</option>
                   {careers.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.code}>{c.name} ({c.code})</option>
                   ))}
                 </select>
               </div>

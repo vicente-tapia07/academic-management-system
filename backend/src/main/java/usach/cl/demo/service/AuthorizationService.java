@@ -29,8 +29,29 @@ public class AuthorizationService {
     }
 
     public boolean isAdmin(Authentication authentication) {
-        return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        return hasRole(authentication, "ROLE_ADMIN");
+    }
+
+    public boolean isProfessor(Authentication authentication) {
+        return hasRole(authentication, "ROLE_PROFESSOR");
+    }
+
+    public boolean canReadAllStudentProfiles(Authentication authentication) {
+        return isAdmin(authentication) || isProfessor(authentication);
+    }
+
+    public Long authenticatedUserId(Authentication authentication) {
+        requireAuthenticated(authentication);
+        Document user = users.find(eq("email", authentication.getName())).first();
+        if (user == null) deny();
+        Number id = user.get("id", Number.class);
+        if (id == null) deny();
+        return id.longValue();
+    }
+
+    public void requireStudentProfileReadAccess(Authentication authentication, Long studentId) {
+        if (canReadAllStudentProfiles(authentication)) return;
+        requireStudentAccess(authentication, studentId);
     }
 
     public void requireStudentAccess(Authentication authentication, Long studentId) {
@@ -138,5 +159,10 @@ public class AuthorizationService {
 
     private void deny() {
         throw new AccessDeniedException("Acceso denegado");
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> role.equals(authority.getAuthority()));
     }
 }

@@ -27,12 +27,20 @@ public class StudentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<StudentEntity>> getAll() {
+    public ResponseEntity<List<StudentEntity>> getAll(Authentication authentication) {
+        if (!authorizationService.canReadAllStudentProfiles(authentication)) {
+            Long currentUserId = authorizationService.authenticatedUserId(authentication);
+            return ResponseEntity.ok(studentService.findById(currentUserId)
+                    .map(List::of)
+                    .orElseGet(List::of));
+        }
         return ResponseEntity.ok(studentService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StudentEntity> getById(@PathVariable Long id) {
+    public ResponseEntity<StudentEntity> getById(@PathVariable Long id,
+                                                  Authentication authentication) {
+        authorizationService.requireStudentProfileReadAccess(authentication, id);
         Optional<StudentEntity> student = studentService.findById(id);
         return student.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }

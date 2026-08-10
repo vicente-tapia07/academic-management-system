@@ -1,5 +1,11 @@
 package usach.cl.demo.repository;
 
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -24,6 +30,13 @@ import static com.mongodb.client.model.Filters.eq;
 @Repository
 public class MongoGradeRepository {
 
+    private static final TransactionOptions TRANSACTION_OPTIONS = TransactionOptions.builder()
+            .readPreference(ReadPreference.primary())
+            .readConcern(ReadConcern.SNAPSHOT)
+            .writeConcern(WriteConcern.MAJORITY)
+            .build();
+
+    private final MongoClient mongoClient;
     private final MongoCollection<Document> grades;
     private final MongoCollection<Document> enrollments;
     private final MongoCollection<Document> sections;
@@ -31,7 +44,8 @@ public class MongoGradeRepository {
     private final MongoCollection<Document> semesters;
     private final MongoCollection<Document> students;
 
-    public MongoGradeRepository(MongoDatabase mongoDatabase) {
+    public MongoGradeRepository(MongoClient mongoClient, MongoDatabase mongoDatabase) {
+        this.mongoClient = mongoClient;
         this.grades = mongoDatabase.getCollection("grades");
         this.enrollments = mongoDatabase.getCollection("enrollments");
         this.sections = mongoDatabase.getCollection("sections");
@@ -53,12 +67,30 @@ public class MongoGradeRepository {
             throw new IllegalArgumentException("Inscripción no encontrada: " + g.getEnrollmentId());
         }
         ObjectId enrollmentId = new ObjectId(g.getEnrollmentId());
-        Document enrollment = enrollments.find(eq("_id", enrollmentId)).first();
-        if (enrollment == null) {
-            throw new IllegalArgumentException("Inscripción no encontrada: " + g.getEnrollmentId());
+
+        try (ClientSession session = mongoClient.startSession()) {
+            return session.withTransaction(
+                    () -> saveWithinTransaction(session, g, enrollmentId, recordedBy),
+                    TRANSACTION_OPTIONS
+            );
         }
+    }
+
+    private GradeEntity saveWithinTransaction(
+            ClientSession session,
+            GradeEntity grade,
+            ObjectId enrollmentId,
+            String recordedBy) {
+        Document enrollment = enrollments.find(session, eq("_id", enrollmentId)).first();
+        if (enrollment == null) {
+            throw new IllegalArgumentException("Inscripción no encontrada: " + grade.getEnrollmentId());
+        }
+        if ("CANCELLED".equals(enrollment.getString("status"))) {
+            throw new IllegalArgumentException("No se puede registrar una nota en una inscripción cancelada");
+        }
+
         String fallbackRecordedBy = null;
-        Document section = sections.find(eq("_id", enrollment.getObjectId("sectionId"))).first();
+        Document section = sections.find(session, eq("_id", enrollment.getObjectId("sectionId"))).first();
         if (section != null) {
             fallbackRecordedBy = section.getString("professorId");
         }
@@ -66,28 +98,68 @@ public class MongoGradeRepository {
                 ? fallbackRecordedBy : recordedBy;
         if (effectiveRecordedBy == null) effectiveRecordedBy = "system";
 
-        Date recordedAt = new Date();
-        Document existing = grades.find(eq("enrollmentId", enrollmentId)).first();
+        Date now = new Date();
+        Document existing = grades.find(session, eq("enrollmentId", enrollmentId)).first();
         if (existing != null) {
-            grades.updateOne(eq("_id", existing.getObjectId("_id")), new Document("$set", new Document()
-                    .append("value", g.getValue())
-                    .append("recordedAt", recordedAt)
-                    .append("recordedBy", effectiveRecordedBy)));
-            g.setId(existing.getObjectId("_id").toHexString());
-            return g;
+            grades.updateOne(
+                    session,
+                    eq("_id", existing.getObjectId("_id")),
+                    new Document("$set", new Document()
+                            .append("value", grade.getValue())
+                            .append("recordedBy", effectiveRecordedBy)
+                            .append("updatedAt", now))
+            );
+            completeEnrollment(session, enrollment, enrollmentId, existing.getDate("recordedAt"));
+            grade.setId(existing.getObjectId("_id").toHexString());
+            grade.setEntryDate(toLocalDate(existing.getDate("recordedAt")));
+            return grade;
         }
+
+        if (!"ACTIVE".equals(enrollment.getString("status"))) {
+            throw new IllegalArgumentException("Solo se puede registrar una nota nueva en una inscripción activa");
+        }
+
+        Date recordedAt = grade.getEntryDate() == null
+                ? now
+                : Date.from(grade.getEntryDate().atStartOfDay().toInstant(ZoneOffset.UTC));
 
         Document doc = new Document("_id", new ObjectId())
                 .append("studentId", enrollment.getObjectId("studentId"))
                 .append("subjectId", enrollment.getObjectId("subjectId"))
                 .append("semesterId", enrollment.getObjectId("semesterId"))
                 .append("enrollmentId", enrollmentId)
-                .append("value", g.getValue())
+                .append("value", grade.getValue())
                 .append("recordedAt", recordedAt)
                 .append("recordedBy", effectiveRecordedBy);
-        grades.insertOne(doc);
-        g.setId(doc.getObjectId("_id").toHexString());
-        return g;
+        grades.insertOne(session, doc);
+        completeEnrollment(session, enrollment, enrollmentId, recordedAt);
+
+        grade.setId(doc.getObjectId("_id").toHexString());
+        grade.setEntryDate(toLocalDate(recordedAt));
+        return grade;
+    }
+
+    private void completeEnrollment(
+            ClientSession session,
+            Document enrollment,
+            ObjectId enrollmentId,
+            Date completedAt) {
+        if ("COMPLETED".equals(enrollment.getString("status"))) {
+            enrollments.updateOne(
+                    session,
+                    eq("_id", enrollmentId),
+                    new Document("$set", new Document("updatedAt", new Date()))
+            );
+            return;
+        }
+        enrollments.updateOne(
+                session,
+                eq("_id", enrollmentId),
+                new Document("$set", new Document()
+                        .append("status", "COMPLETED")
+                        .append("completedAt", completedAt)
+                        .append("updatedAt", new Date()))
+        );
     }
 
     public boolean existsByEnrollmentId(String enrollmentId) {

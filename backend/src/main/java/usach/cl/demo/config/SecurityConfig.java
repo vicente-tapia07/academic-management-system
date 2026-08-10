@@ -92,6 +92,9 @@ public class SecurityConfig {
                     .hasRole("ADMIN")
 
                 // ── INSCRIPCIONES ─────────────────────────────────────────
+                // El listado general contiene datos de todos los estudiantes.
+                .requestMatchers(HttpMethod.GET, "/api/enrollments")
+                    .hasRole("ADMIN")
                 // PATCH solo ADMIN (cambiar estado de inscripción)
                 .requestMatchers(HttpMethod.PATCH, "/api/enrollments/**")
                     .hasRole("ADMIN")

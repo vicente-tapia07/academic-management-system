@@ -148,7 +148,7 @@ const studentDocs = {
 studentsData.forEach((s) => {
   const doc = {
     _id: new ObjectId(),
-    userId: NumberLong(s.userId),
+    userId: NumberLong(String(s.userId)),
     enrollmentNumber: s.enrollmentNumber,
     firstName: s.firstName,
     lastName: s.lastName,
@@ -217,7 +217,7 @@ sectionSpecs.forEach(([subjectCode, professorUserId, year, period, roomCode, day
     availableSeats: NumberInt(availableSeats),
     schedule: { dayOfWeek: NumberInt(dayOfWeek), startTime: start, endTime: end },
     room: ROOMS[roomCode],
-    status: "OPEN",
+    status: semesterDocs[`${year}-${period}`].status === "IN_PROGRESS" ? "OPEN" : "CLOSED",
     createdAt: now()
   };
   sectionDocs[`${subjectCode}|${year}-${period}`] = doc;

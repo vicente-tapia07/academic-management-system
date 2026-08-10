@@ -36,6 +36,7 @@ import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.inc;
 import static com.mongodb.client.model.Updates.set;
+import static com.mongodb.client.model.Updates.unset;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.ALREADY_ENROLLED;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.DATABASE_ERROR;
 import static usach.cl.demo.service.mongo.EnrollmentTransactionException.Reason.NO_AVAILABLE_SEATS;
@@ -249,7 +250,14 @@ public class EnrollmentTransactionService {
             );
         }
 
-        ensureNotAlreadyEnrolled(session, studentId, sectionId, semesterId);
+        Document existingEnrollment = findExistingEnrollment(session, studentId, sectionId, semesterId);
+        if (existingEnrollment != null
+                && !"CANCELLED".equals(existingEnrollment.getString("status"))) {
+            throw new EnrollmentTransactionException(
+                    ALREADY_ENROLLED,
+                    "El estudiante ya posee una inscripción para esta sección"
+            );
+        }
         ensurePrerequisitesApproved(session, studentId, subject);
 
         Document reservedSection = sections.findOneAndUpdate(
@@ -270,6 +278,38 @@ public class EnrollmentTransactionService {
         }
 
         Instant now = Instant.now();
+        if (existingEnrollment != null) {
+            Document businessRules = new Document("prerequisitesSatisfied", true)
+                    .append("seatAvailableAtEnrollment", true)
+                    .append("validatedAt", java.util.Date.from(now));
+            long modified = enrollments.updateOne(
+                    session,
+                    and(
+                            eq("_id", existingEnrollment.getObjectId("_id")),
+                            eq("status", "CANCELLED")
+                    ),
+                    combine(
+                            set("status", "ACTIVE"),
+                            set("businessRules", businessRules),
+                            set("enrolledAt", now),
+                            set("updatedAt", now),
+                            unset("cancelledAt"),
+                            unset("completedAt")
+                    )
+            ).getModifiedCount();
+            if (modified != 1) {
+                throw new EnrollmentTransactionException(
+                        ALREADY_ENROLLED,
+                        "La inscripción cancelada ya fue reactivada"
+                );
+            }
+            Document reactivated = enrollments.find(
+                    session,
+                    eq("_id", existingEnrollment.getObjectId("_id"))
+            ).first();
+            return EnrollmentDocument.fromDocument(reactivated);
+        }
+
         EnrollmentDocument enrollment = new EnrollmentDocument(
                 new ObjectId().toHexString(),
                 studentId.toHexString(),
@@ -288,7 +328,7 @@ public class EnrollmentTransactionService {
         return enrollment;
     }
 
-    private void ensureNotAlreadyEnrolled(
+    private Document findExistingEnrollment(
             ClientSession session,
             ObjectId studentId,
             ObjectId sectionId,
@@ -302,12 +342,7 @@ public class EnrollmentTransactionService {
                 )
         ).first();
 
-        if (existingEnrollment != null) {
-            throw new EnrollmentTransactionException(
-                    ALREADY_ENROLLED,
-                    "El estudiante ya posee una inscripción para esta sección"
-            );
-        }
+        return existingEnrollment;
     }
 
     private void ensurePrerequisitesApproved(
