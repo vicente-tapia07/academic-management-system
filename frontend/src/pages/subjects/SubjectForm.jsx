@@ -33,8 +33,8 @@ export default function SubjectForm() {
     const payload = {
       ...form,
       credits: Number(form.credits),
-      careerId: Number(form.careerId),
-      ...(isEdit && { id: Number(id) }),
+      careerId: form.careerId,
+      ...(isEdit && { id }),
     };
     try {
       if (isEdit) {

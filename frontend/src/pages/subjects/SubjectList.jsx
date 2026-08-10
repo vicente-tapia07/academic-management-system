@@ -7,6 +7,7 @@ export default function SubjectList() {
   const [careers, setCareers]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
+  const [query, setQuery]       = useState('');
   const navigate = useNavigate();
 
   const load = async () => {
@@ -26,6 +27,27 @@ export default function SubjectList() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const runSearch = async (term) => {
+    if (!term.trim()) {
+      load();
+      return;
+    }
+    try {
+      setLoading(true);
+      setError('');
+      const res = await api.get('/api/subjects/search', { params: { q: term } });
+      setSubjects(res.data);
+    } catch {
+      setError('Error al buscar asignaturas.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchKey = (e) => {
+    if (e.key === 'Enter') runSearch(query);
+  };
 
   const careerName = (id) => careers.find((c) => c.id === id)?.name ?? `#${id}`;
 
@@ -59,6 +81,28 @@ export default function SubjectList() {
 
       {!loading && !error && (
         <div className="card shadow-sm border-0">
+          <div className="card-header bg-white d-flex justify-content-between align-items-center gap-3 py-3">
+            <span className="fw-semibold">
+              Buscador del catálogo (índice de texto $text)
+            </span>
+            <div className="d-flex gap-2">
+              <input
+                className="form-control form-control-sm"
+                style={{ width: 260 }}
+                placeholder="Buscar por nombre de asignatura..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleSearchKey}
+              />
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => runSearch(query)}
+                disabled={loading}
+              >
+                Buscar
+              </button>
+            </div>
+          </div>
           <div className="table-responsive">
             <table className="table table-hover mb-0">
               <thead className="table-light">

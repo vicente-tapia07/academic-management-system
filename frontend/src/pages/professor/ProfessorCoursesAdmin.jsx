@@ -11,7 +11,6 @@ export default function ProfessorCoursesAdmin() {
   const [professor,  setProfessor]  = useState(null);
   const [sections,   setSections]   = useState([]);
   const [subjects,   setSubjects]   = useState([]);
-  const [rooms,      setRooms]      = useState([]);
   const [semesters,  setSemesters]  = useState([]);
   const [filter,     setFilter]     = useState('active'); // 'active' | 'all'
   const [loading,    setLoading]    = useState(true);
@@ -20,17 +19,15 @@ export default function ProfessorCoursesAdmin() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [profRes, secRes, subRes, roomRes, semRes] = await Promise.all([
+      const [profRes, secRes, subRes, semRes] = await Promise.all([
         api.get(`/api/professors/${id}`),
         api.get(`/api/professors/${id}/sections`),
         api.get('/api/subjects'),
-        api.get('/api/rooms'),
         api.get('/api/semesters'),
       ]);
       setProfessor(profRes.data);
       setSections(secRes.data);
       setSubjects(subRes.data);
-      setRooms(roomRes.data);
       setSemesters(semRes.data);
     } catch {
       setError('Error al cargar los cursos del profesor.');
@@ -43,7 +40,6 @@ export default function ProfessorCoursesAdmin() {
 
   const subjectName  = (sid) => subjects.find((s) => s.id === sid)?.name ?? `Asignatura #${sid}`;
   const subjectCode  = (sid) => subjects.find((s) => s.id === sid)?.code ?? '---';
-  const roomName     = (rid) => rooms.find((r) => r.id === rid)?.name ?? (rid ? `Sala #${rid}` : '—');
   const getSemester  = (sid) => semesters.find((s) => s.id === sid);
   const activeSemId  = semesters.find((s) => s.status === 'IN_PROGRESS')?.id;
 
@@ -136,7 +132,7 @@ export default function ProfessorCoursesAdmin() {
                     </td>
                     <td>{semesterBadge(sem)}</td>
                     <td className="small text-muted">
-                      {roomName(s.roomId)}
+                      {s.room?.name ?? '—'}
                       {s.dayOfWeek != null && (
                         <div style={{ fontSize: '0.72rem' }}>
                           {DAY_NAMES[s.dayOfWeek]} {s.startTime?.slice(0,5)}–{s.endTime?.slice(0,5)}

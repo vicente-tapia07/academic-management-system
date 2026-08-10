@@ -32,7 +32,7 @@ export default function SectionForm() {
     subjectId: "",
     professorId: "",
     semesterId: "",
-    roomId: "",
+    roomCode: "",
     dayOfWeek: "",
     block: "",
     totalSeats: "",
@@ -69,7 +69,7 @@ export default function SectionForm() {
           subjectId: s.subjectId ?? "",
           professorId: s.professorId ?? "",
           semesterId: s.semesterId ?? "",
-          roomId: s.roomId ?? "",
+          roomCode: s.room?.code ?? "",
           dayOfWeek: s.dayOfWeek ?? "",
           block: start && end ? `${start}-${end}` : "",
           totalSeats: s.totalSeats ?? "",
@@ -95,20 +95,29 @@ export default function SectionForm() {
       setError("Selecciona un bloque horario.");
       return;
     }
+    if (!form.roomCode) {
+      setError("Selecciona una sala.");
+      return;
+    }
 
     const [startTime, endTime] = form.block.split("-");
+    const selectedRoom = rooms.find((r) => r.code === form.roomCode);
     setLoading(true);
 
     const payload = {
-      subjectId: Number(form.subjectId),
+      subjectId: form.subjectId,
       professorId: Number(form.professorId),
-      semesterId: Number(form.semesterId),
-      roomId: Number(form.roomId),
+      semesterId: form.semesterId,
+      room: {
+        code: selectedRoom?.code,
+        name: selectedRoom?.name,
+        building: selectedRoom?.building,
+      },
       dayOfWeek: Number(form.dayOfWeek),
       startTime,
       endTime,
       totalSeats: Number(form.totalSeats),
-      availableSeats: Number(form.availableSeats),
+      availableSeats: Number(form.totalSeats),
     };
 
     try {
@@ -211,16 +220,16 @@ export default function SectionForm() {
               <div className="col-12">
                 <label className="form-label fw-semibold">Sala</label>
                 <select
-                  name="roomId"
+                  name="roomCode"
                   className="form-select"
-                  value={form.roomId}
+                  value={form.roomCode}
                   onChange={handleChange}
                   required
                 >
                   <option value="">— Selecciona sala —</option>
                   {rooms.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.code} — {r.name} (cap. {r.capacity})
+                    <option key={r.code} value={r.code}>
+                      {r.code} — {r.name}{r.building ? ` (${r.building})` : ""}
                     </option>
                   ))}
                 </select>
@@ -262,29 +271,15 @@ export default function SectionForm() {
                 </select>
               </div>
 
-              {/* Cupos con máximo dinámico */}
               <div className="col-sm-6">
                 <label className="form-label fw-semibold">
                   Cupos Totales
-                  {form.roomId && (
-                    <span className="badge bg-info ms-2">
-                      Max:{" "}
-                      {rooms.find((r) => r.id === Number(form.roomId))
-                        ?.capacity || "?"}
-                    </span>
-                  )}
                 </label>
                 <input
                   type="number"
                   name="totalSeats"
                   className="form-control"
                   min="1"
-                  max={
-                    form.roomId
-                      ? rooms.find((r) => r.id === Number(form.roomId))
-                          ?.capacity
-                      : ""
-                  }
                   value={form.totalSeats}
                   onChange={handleTotalSeats}
                   required

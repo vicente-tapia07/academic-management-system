@@ -33,7 +33,7 @@ export default function SemesterForm() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const payload = { ...form, year: Number(form.year), ...(isEdit && { id: Number(id) }) };
+    const payload = { ...form, year: Number(form.year), ...(isEdit && { id }) };
     try {
       if (isEdit) {
         await api.put(`/api/semesters/${id}`, payload);

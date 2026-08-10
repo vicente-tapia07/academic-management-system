@@ -86,19 +86,6 @@ export default function Navbar() {
                 </li>
                 <li className="nav-item">
                   <Link
-                    className={`nav-link ${active("/buildings")}`}
-                    to="/buildings"
-                  >
-                    🏢 Edificios
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className={`nav-link ${active("/rooms")}`} to="/rooms">
-                    🚪 Salas
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
                     className={`nav-link ${active("/semesters")}`}
                     to="/semesters"
                   >
@@ -221,34 +208,18 @@ export default function Navbar() {
                 </li>
                 <li className="nav-item">
                   <Link
+                    className={`nav-link ${active("/my-certificate")}`}
+                    to="/my-certificate"
+                  >
+                    📜 Certificado
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
                     className={`nav-link ${active("/my-profile")}`}
                     to="/my-profile"
                   >
                     👤 Mi Perfil
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className={`nav-link ${active("/my-location")}`}
-                    to="/my-location"
-                  >
-                    📍 Mi Ubicación
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className={`nav-link ${active("/mongo/enroll")}`}
-                    to="/mongo/enroll"
-                  >
-                    🍃 Inscribir (Mongo)
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className={`nav-link ${active("/mongo/my-enrollments")}`}
-                    to="/mongo/my-enrollments"
-                  >
-                    🗄️ Mis Inscripciones (Mongo)
                   </Link>
                 </li>
               </>

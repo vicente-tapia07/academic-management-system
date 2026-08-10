@@ -1,40 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import useGeolocation from '../../hooks/useGeolocation';
-import MapView from '../../components/MapView';
 import api from '../../services/api';
 
-const NEARBY_THRESHOLD_M = 150; // umbral "muy cercana" pedido en el enunciado (I3)
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 export default function EnrollForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { position, error: geoError, loading: geoLoading, requestLocation } = useGeolocation();
 
-  // ── Estado académico (lo que ya existía en EnrollForm) ──
   const [studentId,     setStudentId]     = useState(null);
   const [activeSemester,setActiveSemester]= useState(null);
   const [subjects,      setSubjects]      = useState([]);       // asignaturas disponibles para inscribir
+  const [sections,      setSections]      = useState([]);       // todas las secciones del semestre activo
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [skippedCount,  setSkippedCount]  = useState(0);
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState('');
   const [success,       setSuccess]       = useState('');
+  const [enrollingId,   setEnrollingId]   = useState(null);
 
-  // ── Estado geoespacial (lo que existía en DistanceReport — Integrante 3) ──
-  const [sections,         setSections]         = useState([]); // secciones con distancia, de la asignatura elegida
-  const [showOnlyNearby,   setShowOnlyNearby]    = useState(false);
-  const [loadingSections,  setLoadingSections]   = useState(false);
-  const [enrollingId,      setEnrollingId]       = useState(null);
-
-  const formatDistance = (meters) => {
-    if (meters == null) return { text: '—', isFar: false };
-    if (meters >= 1000) return { text: `${(meters / 1000).toFixed(1)} km`, isFar: true };
-    return { text: `${Math.round(meters)} m`, isFar: meters > 300 };
-  };
-
-  // ── 1. Carga inicial: estudiante, semestre activo, malla, inscripciones ──
+  // ── Carga inicial: estudiante, semestre activo, malla, inscripciones ──
   useEffect(() => {
     const init = async () => {
       try {
@@ -93,6 +79,7 @@ export default function EnrollForm() {
 
         setSkippedCount(skipped);
         setSubjects(disponibles);
+        setSections(allSectionsRes.data);
         if (disponibles.length > 0) setSelectedSubjectId(String(disponibles[0].id));
       } catch {
         setError('No se pudieron cargar los datos de inscripción.');
@@ -103,46 +90,20 @@ export default function EnrollForm() {
     init();
   }, [user.id]);
 
-  // ── 2. Pedir ubicación al montar (Integrante 3) ──
-  useEffect(() => { requestLocation(); }, [requestLocation]);
-
-  // ── 3. Buscar secciones cercanas cuando cambia asignatura o ubicación ──
-  const fetchNearbySections = useCallback(async (subjectId, lat, lng) => {
-    setLoadingSections(true);
-    setError('');
-    try {
-      const res = await api.get('/api/enrollments/nearby-sections', {
-        params: { subjectId, lat, lng },
-      });
-      // El backend ya filtra por semestre activo y cupos (ver enunciado I3),
-      // pero validamos igual por si acaso.
-      setSections(res.data);
-    } catch {
-      setError('Error al cargar las secciones cercanas.');
-      setSections([]);
-    } finally {
-      setLoadingSections(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedSubjectId && position) {
-      fetchNearbySections(selectedSubjectId, position.lat, position.lng);
-    } else {
-      setSections([]);
-    }
-  }, [selectedSubjectId, position, fetchNearbySections]);
-
-  const visibleSections = showOnlyNearby
-    ? sections.filter((s) => s.distanceMeters <= NEARBY_THRESHOLD_M)
-    : sections;
+  // Secciones disponibles de la asignatura elegida (semestre activo + cupos)
+  const visibleSections = selectedSubjectId
+    ? sections.filter((s) =>
+        s.subjectId      === selectedSubjectId &&
+        s.semesterId     === activeSemester?.id &&
+        s.availableSeats > 0
+      )
+    : [];
 
   const handleSubjectChange = (e) => {
     setSelectedSubjectId(e.target.value);
     setError(''); setSuccess('');
   };
 
-  // ── 4. Inscribir (con el manejo robusto de errores de EnrollForm) ──
   const handleEnroll = async (sectionId) => {
     if (!studentId || !sectionId) return;
     setEnrollingId(sectionId);
@@ -150,7 +111,7 @@ export default function EnrollForm() {
     try {
       await api.post('/api/enrollments/enroll', {
         studentId,
-        sectionId: Number(sectionId),
+        sectionId,
       });
       setSuccess('¡Inscripción exitosa!');
       setTimeout(() => navigate('/my-enrollments'), 1500);
@@ -169,16 +130,6 @@ export default function EnrollForm() {
       setEnrollingId(null);
     }
   };
-
-  // Puntos para el mapa
-  const mapPoints = visibleSections
-    .filter((s) => s.geomGeoJson)
-    .map((s) => ({
-      id: s.sectionId,
-      name: s.roomName,
-      geomGeoJson: s.geomGeoJson,
-      popupText: `${s.roomName} (${formatDistance(s.distanceMeters).text})`,
-    }));
 
   const selectedSubject = subjects.find((s) => String(s.id) === String(selectedSubjectId));
 
@@ -235,100 +186,37 @@ export default function EnrollForm() {
 
             {subjects.length > 0 && (
               <>
-                {/* Geolocalización — Integrante 3 */}
-                <div className="mb-3 d-flex align-items-center gap-2 flex-wrap">
-                  {!position && (
-                    <button className="btn btn-outline-primary btn-sm" onClick={requestLocation} disabled={geoLoading}>
-                      {geoLoading ? 'Obteniendo ubicación...' : '📍 Compartir mi ubicación'}
-                    </button>
-                  )}
-                  {position && (
-                    <span className="badge bg-success">
-                      📍 Ubicación: {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
-                    </span>
-                  )}
-                  {geoError && <span className="text-danger small">{geoError}</span>}
-                </div>
-
-                {!position && !geoLoading && (
-                  <div className="alert alert-secondary py-2 small">
-                    Comparte tu ubicación para ver la distancia a cada sección y ordenar por cercanía.
+                {visibleSections.length === 0 ? (
+                  <div className="alert alert-info py-2 small">
+                    No hay secciones disponibles con cupo para esta asignatura en el semestre activo.
                   </div>
-                )}
-
-                {position && (
-                  <>
-                    {/* Toggle solo cercanas */}
-                    <div className="form-check mb-3">
-                      <input
-                        className="form-check-input" type="checkbox" id="nearbyToggle"
-                        checked={showOnlyNearby}
-                        onChange={() => setShowOnlyNearby(!showOnlyNearby)}
-                      />
-                      <label className="form-check-label small" htmlFor="nearbyToggle">
-                        Solo mostrar muy cercanas (≤ {NEARBY_THRESHOLD_M}m)
-                      </label>
-                    </div>
-
-                    {loadingSections && (
-                      <div className="text-center py-3">
-                        <div className="spinner-border spinner-border-sm text-primary" role="status" />
+                ) : (
+                  <div className="list-group mb-3">
+                    {visibleSections.map((s) => (
+                      <div key={s.id}
+                        className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                          <div className="fw-semibold small">
+                            {selectedSubject?.code} — {selectedSubject?.name}
+                          </div>
+                          <div className="text-muted small">
+                            🚪 {s.room?.name ?? '—'}{s.room?.building ? ` (${s.room.building})` : ''} · Sección #{s.id}
+                          </div>
+                          <div className="text-muted small">
+                            🗓️ {s.dayOfWeek != null ? DAY_NAMES[s.dayOfWeek] : '—'}
+                            {s.startTime ? ` ${s.startTime.slice(0,5)}–${s.endTime?.slice(0,5)}` : ''}
+                            {' '}· 👥 {s.availableSeats} cupos
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleEnroll(s.id)}
+                          disabled={enrollingId === s.id}>
+                          {enrollingId === s.id ? 'Inscribiendo...' : 'Inscribir'}
+                        </button>
                       </div>
-                    )}
-
-                    {!loadingSections && visibleSections.length === 0 && (
-                      <div className="alert alert-info py-2 small">
-                        {sections.length === 0
-                          ? 'No hay secciones disponibles con cupo para esta asignatura en el semestre activo.'
-                          : `No hay secciones a ≤ ${NEARBY_THRESHOLD_M}m. Desactiva el filtro para ver todas.`}
-                      </div>
-                    )}
-
-                    {visibleSections.length > 0 && (
-                      <div className="list-group mb-3">
-                        {visibleSections.map((s) => {
-                          const { text, isFar } = formatDistance(s.distanceMeters);
-                          const isNearby = s.distanceMeters <= NEARBY_THRESHOLD_M;
-                          return (
-                            <div key={s.sectionId}
-                              className={`list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 ${isFar ? 'bg-danger bg-opacity-10' : ''}`}>
-                              <div>
-                                <div className="fw-semibold small">
-                                  {selectedSubject?.code} — {selectedSubject?.name}
-                                </div>
-                                <div className="text-muted small">
-                                  🚪 {s.roomName} ({s.buildingName}) · Sección #{s.sectionId}
-                                </div>
-                                <div className="mt-1 d-flex gap-1 flex-wrap">
-                                  {isNearby && <span className="badge bg-success">📍 A {Math.round(s.distanceMeters)}m de ti</span>}
-                                  {isFar    && <span className="badge bg-danger">⚠️ Lejos ({text})</span>}
-                                  {!isNearby && !isFar && <span className="badge bg-secondary">{text}</span>}
-                                </div>
-                              </div>
-                              <button
-                                className="btn btn-primary btn-sm"
-                                onClick={() => handleEnroll(s.sectionId)}
-                                disabled={enrollingId === s.sectionId}>
-                                {enrollingId === s.sectionId ? 'Inscribiendo...' : 'Inscribir'}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Mapa */}
-                    {mapPoints.length > 0 && (
-                      <div className="mt-3" style={{ height: 300 }}>
-                        <MapView
-                          center={[position.lat, position.lng]}
-                          zoom={17}
-                          pendingMarker={[position.lat, position.lng]}
-                          rooms={mapPoints}
-                        />
-                      </div>
-                    )}
-                  </>
+                    ))}
+                  </div>
                 )}
               </>
             )}

@@ -24,7 +24,6 @@ export default function StudentEnrollmentsAdmin() {
   const [enrollments,   setEnrollments]   = useState([]);
   const [sections,      setSections]      = useState([]);
   const [subjects,      setSubjects]      = useState([]);
-  const [rooms,         setRooms]         = useState([]);
   const [activeSemId,   setActiveSemId]   = useState(null); // ID del semestre activo
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState('');
@@ -44,19 +43,17 @@ export default function StudentEnrollmentsAdmin() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [stuRes, enrRes, secRes, subRes, roomRes, semRes] = await Promise.all([
+      const [stuRes, enrRes, secRes, subRes, semRes] = await Promise.all([
         api.get(`/api/students/${id}`),
         api.get(`/api/enrollments/student/${id}`),
         api.get('/api/sections'),
         api.get('/api/subjects'),
-        api.get('/api/rooms'),
         api.get('/api/semesters'),
       ]);
       setStudent(stuRes.data);
       setEnrollments(enrRes.data.filter((e) => e.status !== 'CANCELLED'));
       setSections(secRes.data);
       setSubjects(subRes.data);
-      setRooms(roomRes.data);
 
       // Guardar ID del semestre activo para filtrar secciones al mover
       const active = semRes.data.find((s) => s.status === 'IN_PROGRESS');
@@ -73,7 +70,6 @@ export default function StudentEnrollmentsAdmin() {
   const getSection  = (sid) => sections.find((s) => s.id === sid);
   const subjectName = (subId) => subjects.find((s) => s.id === subId)?.name ?? `Asignatura #${subId}`;
   const subjectCode = (subId) => subjects.find((s) => s.id === subId)?.code ?? '---';
-  const roomName    = (rid)   => rooms.find((r) => r.id === rid)?.name ?? (rid ? `Sala #${rid}` : '—');
 
   const handleStatusChange = async (enrollId, newStatus) => {
     try {
@@ -129,7 +125,7 @@ export default function StudentEnrollmentsAdmin() {
       await api.delete(`/api/enrollments/${moveModal.enrollId}`);
       await api.post('/api/enrollments/enroll', {
         studentId: Number(id),
-        sectionId: Number(newSectionId),
+        sectionId: newSectionId,
       });
       setMoveModal(null); setNewSectionId(''); loadData();
     } catch (err) {
@@ -188,7 +184,7 @@ export default function StudentEnrollmentsAdmin() {
                         <div className="text-muted" style={{ fontSize: '0.72rem' }}>Sección #{e.sectionId}</div>
                       </td>
                       <td className="small text-muted">
-                        {roomName(sec?.roomId)}
+                        {sec?.room?.name ?? '—'}
                         {sec?.dayOfWeek != null && (
                           <div style={{ fontSize: '0.72rem' }}>
                             {DAY_NAMES[sec.dayOfWeek]} {sec.startTime?.slice(0,5)}–{sec.endTime?.slice(0,5)}
@@ -286,7 +282,7 @@ export default function StudentEnrollmentsAdmin() {
                     <option value="">— Selecciona sección destino —</option>
                     {sectionsForMove.map((s) => (
                       <option key={s.id} value={s.id}>
-                        Sección #{s.id} · {DAY_NAMES[s.dayOfWeek ?? 0]} {s.startTime?.slice(0,5)}–{s.endTime?.slice(0,5)} · {roomName(s.roomId)} · {s.availableSeats} cupos
+                        Sección #{s.id} · {DAY_NAMES[s.dayOfWeek ?? 0]} {s.startTime?.slice(0,5)}–{s.endTime?.slice(0,5)} · {s.room?.name ?? '—'} · {s.availableSeats} cupos
                       </option>
                     ))}
                   </select>

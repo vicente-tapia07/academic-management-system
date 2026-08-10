@@ -33,17 +33,11 @@ import ProfessorSchedule from "../pages/professor/ProfessorSchedule";
 import StudentGrades from "../pages/professor/StudentGrades";
 import GradeForm from "../pages/professor/GradeForm";
 import MyGrades from "../pages/students/MyGrades";
-import BuildingList from "../pages/buildings/BuildingList";
-import BuildingForm from "../pages/buildings/BuildingForm";
-import RoomList from "../pages/rooms/RoomList";
-import RoomForm from "../pages/rooms/RoomForm";
-import MyLocation from "../pages/students/MyLocation";
+import StudentCertificate from "../pages/students/StudentCertificate";
 import ProfessorList from "../pages/professor/ProfessorList";
 import ProfessorForm from "../pages/professor/ProfessorForm";
 import StudentEnrollmentsAdmin from "../pages/students/StudentEnrollmentsAdmin";
 import ProfessorCoursesAdmin from "../pages/professor/ProfessorCoursesAdmin";
-import EnrollFormMongo from "../pages/mongo/EnrollFormMongo";
-import MyEnrollmentsMongo from "../pages/mongo/MyEnrollmentsMongo";
 
 function Layout({ children }) {
   const { user } = useAuth();
@@ -85,12 +79,6 @@ export default function AppRouter() {
             element={<StudentCurriculum />}
           />
           <Route path="/students/enroll" element={<StudentEnrollAdmin />} />
-          <Route path="/buildings" element={<BuildingList />} />
-          <Route path="/buildings/new" element={<BuildingForm />} />
-          <Route path="/buildings/edit/:id" element={<BuildingForm />} />
-          <Route path="/rooms" element={<RoomList />} />
-          <Route path="/rooms/new" element={<RoomForm />} />
-          <Route path="/rooms/edit/:id" element={<RoomForm />} />
           <Route
             path="/students/:id/enrollments"
             element={<StudentEnrollmentsAdmin />}
@@ -113,9 +101,7 @@ export default function AppRouter() {
           <Route path="/my-enroll" element={<EnrollForm />} />
           <Route path="/my-profile" element={<StudentProfile />} />
           <Route path="/my-grades" element={<MyGrades />} />
-          <Route path="/my-location" element={<MyLocation />} />
-          <Route path="/mongo/enroll" element={<EnrollFormMongo />} />
-          <Route path="/mongo/my-enrollments" element={<MyEnrollmentsMongo />} />
+          <Route path="/my-certificate" element={<StudentCertificate />} />
         </Route>
 
         {/* ── PROFESOR ── */}

@@ -62,7 +62,6 @@ export default function ProfessorSchedule() {
         const enriched = await Promise.all(sections.map(async (s, index) => {
           let subjectName = `Asignatura #${s.subjectId}`;
           let subjectCode = '---';
-          let roomName    = s.roomId ? `Sala #${s.roomId}` : '—';
 
           try {
             const subRes = await api.get(`/api/subjects/${s.subjectId}`);
@@ -70,16 +69,11 @@ export default function ProfessorSchedule() {
             subjectCode = subRes.data.code;
           } catch { /* mantiene default */ }
 
-          try {
-            const roomRes = await api.get(`/api/rooms/${s.roomId}`);
-            roomName = roomRes.data.name;
-          } catch { /* mantiene default */ }
-
           return {
             ...s,
             subjectName,
             subjectCode,
-            roomName,
+            roomName: s.room?.name ?? '—',
             color: COLORS[index % COLORS.length],
           };
         }));

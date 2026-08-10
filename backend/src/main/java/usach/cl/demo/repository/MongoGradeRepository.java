@@ -119,7 +119,7 @@ public class MongoGradeRepository {
 
             GradeDTO dto = new GradeDTO();
             dto.setGradeId(doc.getObjectId("_id").toHexString());
-            dto.setValue(doc.getDouble("value"));
+            dto.setValue(toDouble(doc.get("value")));
             dto.setEntryDate(toLocalDate(doc.getDate("recordedAt")));
             dto.setSubjectId(subject.getObjectId("_id").toHexString());
             dto.setSubjectCode(subject.getString("code"));
@@ -218,9 +218,15 @@ public class MongoGradeRepository {
         GradeEntity g = new GradeEntity();
         g.setId(doc.getObjectId("_id").toHexString());
         g.setEnrollmentId(doc.getObjectId("enrollmentId").toHexString());
-        g.setValue(doc.getDouble("value"));
+        g.setValue(toDouble(doc.get("value")));
         g.setEntryDate(toLocalDate(doc.getDate("recordedAt")));
         return g;
+    }
+
+    private static Double toDouble(Object raw) {
+        if (raw == null) return null;
+        if (raw instanceof Number number) return number.doubleValue();
+        return null;
     }
 
     private static LocalDate toLocalDate(Date date) {

@@ -69,7 +69,7 @@ export default function StudentEnrollAdmin() {
     try {
       await api.post("/api/enrollments/enroll", {
         studentId: Number(selectedStudent),
-        sectionId: Number(selectedSection),
+        sectionId: selectedSection,
       });
       setSuccess("¡Estudiante inscrito correctamente!");
       setSelectedStudent("");
@@ -95,7 +95,7 @@ export default function StudentEnrollAdmin() {
   };
 
   const seccionSeleccionada = sections.find(
-    (s) => s.id === Number(selectedSection),
+    (s) => s.id === selectedSection,
   );
 
   if (loading) return <p className="text-muted p-4">Cargando...</p>;

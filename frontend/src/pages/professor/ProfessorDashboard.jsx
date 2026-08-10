@@ -12,7 +12,6 @@ export default function ProfessorDashboard() {
   const [professor,       setProfessor]       = useState(null);
   const [activeSections,  setActiveSections]  = useState([]);  // semestre activo
   const [subjects,        setSubjects]        = useState([]);
-  const [rooms,           setRooms]           = useState([]);
   const [totalSections,   setTotalSections]   = useState(0);
   const [loading,         setLoading]         = useState(true);
   const [error,           setError]           = useState('');
@@ -25,17 +24,15 @@ export default function ProfessorDashboard() {
         if (!me) throw new Error('Profesor no encontrado');
         setProfessor(me);
 
-        const [activeRes, allRes, subRes, roomRes] = await Promise.all([
+        const [activeRes, allRes, subRes] = await Promise.all([
           api.get(`/api/sections/professor/${me.id}/active`),
           api.get(`/api/professors/${me.id}/sections`),
           api.get('/api/subjects'),
-          api.get('/api/rooms'),
         ]);
 
         setActiveSections(activeRes.data);
         setTotalSections(allRes.data.length);
         setSubjects(subRes.data);
-        setRooms(roomRes.data);
       } catch {
         setError('Error al cargar el dashboard.');
       } finally {
@@ -47,7 +44,6 @@ export default function ProfessorDashboard() {
 
   const subjectName = (id) => subjects.find((s) => s.id === id)?.name ?? `Asignatura #${id}`;
   const subjectCode = (id) => subjects.find((s) => s.id === id)?.code ?? '---';
-  const roomName    = (id) => rooms.find((r) => r.id === id)?.name ?? (id ? `Sala #${id}` : '—');
 
   if (loading) return <p className="text-muted p-4">Cargando...</p>;
   if (error)   return <div className="alert alert-danger m-4">{error}</div>;
@@ -127,7 +123,7 @@ export default function ProfessorDashboard() {
                     {s.startTime ? ` ${s.startTime.slice(0,5)}–${s.endTime?.slice(0,5)}` : ''}
                   </div>
                   <div className="text-muted small mb-2">
-                    🚪 {roomName(s.roomId)}
+                    🚪 {s.room?.name ?? '—'}
                   </div>
                   <div className="text-muted small mb-3">
                     👥 {s.totalSeats - s.availableSeats} / {s.totalSeats} inscritos

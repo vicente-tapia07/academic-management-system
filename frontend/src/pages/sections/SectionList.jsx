@@ -9,23 +9,20 @@ export default function SectionList() {
   const [sections,   setSections]   = useState([]);
   const [subjects,   setSubjects]   = useState([]);
   const [semesters,  setSemesters]  = useState([]);
-  const [rooms,      setRooms]      = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
 
   const load = async () => {
     try {
       setLoading(true);
-      const [secRes, subRes, semRes, roomRes] = await Promise.all([
+      const [secRes, subRes, semRes] = await Promise.all([
         api.get('/api/sections'),
         api.get('/api/subjects'),
         api.get('/api/semesters'),
-        api.get('/api/rooms'),
       ]);
       setSections(secRes.data);
       setSubjects(subRes.data);
       setSemesters(semRes.data);
-      setRooms(roomRes.data);
     } catch {
       setError('Error al cargar las secciones.');
     } finally {
@@ -37,7 +34,6 @@ export default function SectionList() {
 
   const subjectName = (id) => subjects.find((s) => s.id === id)?.name ?? `#${id}`;
   const subjectCode = (id) => subjects.find((s) => s.id === id)?.code ?? '---';
-  const roomName    = (id) => rooms.find((r) => r.id === id)?.name ?? (id ? `Sala #${id}` : '—');
 
   const semesterBadge = (id) => {
     const s = semesters.find((s) => s.id === id);
@@ -100,7 +96,7 @@ export default function SectionList() {
                       <span className="fw-semibold small">{subjectName(s.subjectId)}</span>
                     </td>
                     <td>{semesterBadge(s.semesterId)}</td>
-                    <td className="small text-muted">{roomName(s.roomId)}</td>
+                    <td className="small text-muted">{s.room?.name ?? '—'}</td>
                     <td className="small text-muted text-nowrap">
                       {s.dayOfWeek != null
                         ? `${DAY_NAMES[s.dayOfWeek]} ${s.startTime?.slice(0,5) ?? ''}–${s.endTime?.slice(0,5) ?? ''}`

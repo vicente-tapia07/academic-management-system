@@ -19,12 +19,10 @@ export default function StudentCourses() {
         const secRes = await api.get(`/api/sections/student/${user.id}`);
         const sections = secRes.data;
 
-        // Enriquecer cada sección con nombre de asignatura y sala
+        // Enriquecer cada sección con nombre de asignatura
         const enriched = await Promise.all(sections.map(async (s) => {
           let subjectName = `Asignatura #${s.subjectId}`;
           let subjectCode = '---';
-          let roomName    = `Sala #${s.roomId}`;
-          let buildingName = '';
 
           try {
             const subRes = await api.get(`/api/subjects/${s.subjectId}`);
@@ -32,14 +30,7 @@ export default function StudentCourses() {
             subjectCode = subRes.data.code;
           } catch { /* mantiene default */ }
 
-          try {
-            const roomRes = await api.get(`/api/rooms/${s.roomId}`);
-            roomName = roomRes.data.name;
-            const buildRes = await api.get(`/api/buildings/${roomRes.data.buildingId}`);
-            buildingName = buildRes.data.name;
-          } catch { /* mantiene default */ }
-
-          return { ...s, subjectName, subjectCode, roomName, buildingName };
+          return { ...s, subjectName, subjectCode };
         }));
 
         setCourses(enriched);
@@ -106,8 +97,8 @@ export default function StudentCourses() {
                   <div className="d-flex align-items-center gap-2 mb-2">
                     <span className="text-primary">🚪</span>
                     <span className="small">
-                      <strong>{c.roomName}</strong>
-                      {c.buildingName ? ` · ${c.buildingName}` : ''}
+                      <strong>{c.room?.name ?? '—'}</strong>
+                      {c.room?.building ? ` · ${c.room.building}` : ''}
                     </span>
                   </div>
 

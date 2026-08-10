@@ -115,7 +115,16 @@ const semestersValidator = {
       $jsonSchema: {
         bsonType: "object",
         title: "Semestre académico",
-        required: ["year", "period", "startDate", "endDate", "status", "createdAt"],
+        required: [
+          "year",
+          "period",
+          "startDate",
+          "endDate",
+          "gradeStartDate",
+          "gradeEndDate",
+          "status",
+          "createdAt"
+        ],
         additionalProperties: false,
         properties: {
           _id: { bsonType: "objectId" },
@@ -123,6 +132,8 @@ const semestersValidator = {
           period: { enum: ["1S", "2S", "SUMMER"] },
           startDate: { bsonType: "date" },
           endDate: { bsonType: "date" },
+          gradeStartDate: { bsonType: "date" },
+          gradeEndDate: { bsonType: "date" },
           status: { enum: ["PLANNED", "IN_PROGRESS", "CLOSED"] },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" }
@@ -130,7 +141,14 @@ const semestersValidator = {
       }
     },
     {
-      $expr: { $lt: ["$startDate", "$endDate"] }
+      $expr: {
+        $and: [
+          { $lt: ["$startDate", "$endDate"] },
+          { $lte: ["$gradeStartDate", "$gradeEndDate"] },
+          { $lte: ["$startDate", "$gradeStartDate"] },
+          { $lte: ["$gradeEndDate", "$endDate"] }
+        ]
+      }
     }
   ]
 };
@@ -331,6 +349,68 @@ const usersValidator = {
   }
 };
 
+const careersValidator = {
+  $jsonSchema: {
+    bsonType: "object",
+    title: "Carrera",
+    description: "Catálogo de carreras referenciado por subjects y students (careerCode)",
+    required: ["code", "name", "createdAt"],
+    additionalProperties: false,
+    properties: {
+      _id: { bsonType: "objectId" },
+      code: {
+        bsonType: "string",
+        pattern: "^[A-Z0-9-]{2,20}$"
+      },
+      name: { bsonType: "string", minLength: 2, maxLength: 100 },
+      createdAt: { bsonType: "date" },
+      updatedAt: { bsonType: "date" }
+    }
+  }
+};
+
+const professorsValidator = {
+  $jsonSchema: {
+    bsonType: "object",
+    title: "Profesor",
+    description: "Perfil académico referenciado por sections (professorId = userId)",
+    required: ["userId", "firstName", "lastName", "department", "createdAt"],
+    additionalProperties: false,
+    properties: {
+      _id: { bsonType: "objectId" },
+      userId: {
+        bsonType: ["int", "long"],
+        minimum: 1,
+        description: "Identificador del usuario (users.id) asociado"
+      },
+      firstName: { bsonType: "string", minLength: 1, maxLength: 100 },
+      lastName: { bsonType: "string", minLength: 1, maxLength: 100 },
+      department: { bsonType: "string", minLength: 1, maxLength: 100 },
+      createdAt: { bsonType: "date" },
+      updatedAt: { bsonType: "date" }
+    }
+  }
+};
+
+const auditLogsValidator = {
+  $jsonSchema: {
+    bsonType: "object",
+    title: "Registro de auditoría",
+    description: "Bitácora operativa con retención TTL (expira a los 90 días)",
+    required: ["affectedCollection", "operation", "operationDate", "newData"],
+    additionalProperties: false,
+    properties: {
+      _id: { bsonType: "objectId" },
+      affectedCollection: { bsonType: "string", minLength: 1, maxLength: 100 },
+      operation: { enum: ["INSERT", "UPDATE", "DELETE"] },
+      usuarioRut: { bsonType: "string", minLength: 1, maxLength: 50 },
+      operationDate: { bsonType: "date" },
+      oldData: { bsonType: "object" },
+      newData: { bsonType: "object" }
+    }
+  }
+};
+
 applyValidator("students", studentsValidator);
 applyValidator("subjects", subjectsValidator);
 applyValidator("semesters", semestersValidator);
@@ -338,7 +418,11 @@ applyValidator("sections", sectionsValidator);
 applyValidator("enrollments", enrollmentsValidator);
 applyValidator("grades", gradesValidator);
 applyValidator("users", usersValidator);
+applyValidator("careers", careersValidator);
+applyValidator("professors", professorsValidator);
+applyValidator("audit_logs", auditLogsValidator);
 
-academicDb.users.createIndex({ email: 1 }, { unique: true });
+// Nota: todos los índices (incluido el único sobre users.email) se gestionan
+// centralmente en 2_indexes.js, que se ejecuta justo después de este script.
 
 print(`Esquema MongoDB aplicado correctamente en ${databaseName}`);

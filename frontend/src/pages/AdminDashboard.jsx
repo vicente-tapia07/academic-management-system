@@ -8,8 +8,6 @@ const cards = [
   { to: '/semesters', icon: '📅', title: 'Semestres',   desc: 'Gestionar semestres y cierre académico' },
   { to: '/students',  icon: '👥', title: 'Estudiantes', desc: 'Listado y estado académico de alumnos' },
   { to: '/reports',   icon: '📊', title: 'Reportes',    desc: 'Tasa de reprobación histórica por asignatura' },
-  { to: '/buildings', icon: '🏢', title: 'Edificios', desc: 'Gestionar edificios y sus salas' },
-  { to: '/rooms', icon: '🚪', title: 'Salas', desc: 'Ver todas las salas del campus' },
 ];
 
 export default function AdminDashboard() {

@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
-import DensityHeatmap from "./DensityHeatmap";
-import DistrictFailureMap from "./DistrictFailureMap";
 
 /**
- * FailureReport — página principal de reportes.
- *
- * Organiza los tres reportes en pestañas:
- *   1. Reprobación por asignatura
- *   2. Densidad estudiantil por edificio
- *   3. Reprobación por distrito
+ * FailureReport — reporte de reprobación por asignatura y semestre.
+ * Backend: pipeline de agregación con $group + $bucket (ver enunciado tarea 1.1).
  */
 
 const ALERT_THRESHOLD = 40;
@@ -19,16 +13,14 @@ function FailureBySubject() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [semesterFilter, setSemesterFilter] = useState("");
 
   const load = async () => {
     setLoading(true);
     setError("");
     try {
       const res = await api.get("/api/professors/reports");
-      const sorted = [...res.data].sort(
-        (a, b) => b.failurePercentage - a.failurePercentage,
-      );
-      setReports(sorted);
+      setReports(res.data);
       setLastRefresh(new Date().toLocaleTimeString("es-CL"));
     } catch {
       setError("Error al cargar el reporte de reprobación.");
@@ -41,7 +33,22 @@ function FailureBySubject() {
     load();
   }, []);
 
-  const alerts = reports.filter((r) => r.failurePercentage > ALERT_THRESHOLD);
+  const semesters = [
+    ...new Map(
+      reports
+        .filter((r) => r.semesterId)
+        .map((r) => [
+          r.semesterId,
+          `${r.semesterYear}-${r.semesterPeriod}`,
+        ]),
+    ).entries(),
+  ].sort((a, b) => a[1].localeCompare(b[1]));
+
+  const visible = semesterFilter
+    ? reports.filter((r) => r.semesterId === semesterFilter)
+    : reports;
+
+  const alerts = visible.filter((r) => r.failurePercentage > ALERT_THRESHOLD);
 
   const getBarColor = (pct) => {
     if (pct > 60) return "bg-danger";
@@ -51,26 +58,54 @@ function FailureBySubject() {
   };
 
   return (
-    <div>
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => window.history.back()}
+        >
+          ← Volver
+        </button>
+        <div className="text-center">
+          <h2 className="fw-bold mb-0">Reportes Académicos</h2>
+          <p className="text-muted mb-0">Reprobación por asignatura y semestre</p>
+        </div>
+        <div style={{ width: 80 }} />
+      </div>
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h5 className="fw-semibold mb-0">
-            📊 Reprobación Histórica por Asignatura
+            📊 Reprobación Histórica por Asignatura y Semestre
           </h5>
           <p className="text-muted small mb-0">
-            Vista materializada
+            Agregación con $group + $bucket (tarea 1.1)
             {lastRefresh && (
               <span className="ms-2">— Actualizado: {lastRefresh}</span>
             )}
           </p>
         </div>
-        <button
-          className="btn btn-outline-secondary btn-sm"
-          onClick={load}
-          disabled={loading}
-        >
-          {loading ? "..." : "↻ Actualizar"}
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <select
+            className="form-select form-select-sm"
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+          >
+            <option value="">Todos los semestres</option>
+            {semesters.map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={load}
+            disabled={loading}
+          >
+            {loading ? "..." : "↻ Actualizar"}
+          </button>
+        </div>
       </div>
 
       {loading && <p className="text-muted">Cargando reporte...</p>}
@@ -83,13 +118,14 @@ function FailureBySubject() {
               <span className="fs-5">⚠️</span>
               <div>
                 <strong>
-                  {alerts.length} asignatura(s) con más del {ALERT_THRESHOLD}%
+                  {alerts.length} registro(s) con más del {ALERT_THRESHOLD}%
                   de reprobación:
                 </strong>
                 <ul className="mb-0 mt-1">
                   {alerts.map((r) => (
-                    <li key={r.subjectId}>
-                      <strong>{r.subjectCode}</strong> — {r.subjectName}:&nbsp;
+                    <li key={`${r.semesterId}-${r.subjectId}`}>
+                      <strong>{r.subjectCode}</strong> — {r.subjectName}
+                      &nbsp;({r.semesterYear}-{r.semesterPeriod}):&nbsp;
                       <strong>{r.failurePercentage.toFixed(1)}%</strong>
                       &nbsp;({r.failedGrades}/{r.totalGrades} reprobados)
                     </li>
@@ -100,17 +136,18 @@ function FailureBySubject() {
           )}
           {alerts.length === 0 && (
             <div className="alert alert-success mb-3">
-              ✅ Ninguna asignatura supera el {ALERT_THRESHOLD}% de reprobación.
+              ✅ Ningún registro supera el {ALERT_THRESHOLD}% de reprobación.
             </div>
           )}
           <div className="card shadow-sm border-0">
             <div className="card-header bg-white fw-semibold py-3">
-              Todas las asignaturas ({reports.length})
+              Asignaturas por semestre ({visible.length})
             </div>
             <div className="table-responsive">
               <table className="table table-hover mb-0 align-middle">
                 <thead className="table-light">
                   <tr>
+                    <th>Semestre</th>
                     <th>Código</th>
                     <th>Asignatura</th>
                     <th style={{ width: 90 }}>Total</th>
@@ -122,21 +159,24 @@ function FailureBySubject() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.length === 0 && (
+                  {visible.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-muted py-4">
-                        Sin datos en la vista materializada
+                      <td colSpan={7} className="text-center text-muted py-4">
+                        Sin datos para el filtro seleccionado
                       </td>
                     </tr>
                   )}
-                  {reports.map((r) => {
+                  {visible.map((r) => {
                     const pct = r.failurePercentage ?? 0;
                     const isAlert = pct > ALERT_THRESHOLD;
                     return (
                       <tr
-                        key={r.subjectId}
+                        key={`${r.semesterId}-${r.subjectId}`}
                         className={isAlert ? "table-danger" : ""}
                       >
+                        <td className="text-nowrap text-muted">
+                          {r.semesterYear}-{r.semesterPeriod}
+                        </td>
                         <td>
                           <span className="badge bg-primary font-monospace">
                             {r.subjectCode}
@@ -201,52 +241,6 @@ function FailureBySubject() {
   );
 }
 
-// Pestaña activa por defecto
-const TABS = [
-  { key: "subjects", label: "📊 Por Asignatura" },
-  { key: "density", label: "🗺️ Densidad Estudiantil" },
-  { key: "districts", label: "🏘️ Por Distrito" },
-];
-
 export default function FailureReport() {
-  const [activeTab, setActiveTab] = useState("subjects");
-
-  return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-start mb-4">
-        <button
-          className="btn btn-outline-secondary"
-          onClick={() => window.history.back()}
-        >
-          ← Volver
-        </button>
-        <div className="text-center">
-          <h2 className="fw-bold mb-0">Reportes Académicos</h2>
-          <p className="text-muted mb-0">
-            Análisis de rendimiento y distribución geoespacial
-          </p>
-        </div>
-        <div style={{ width: 80 }} />
-      </div>
-
-      {/* Pestañas de navegación */}
-      <ul className="nav nav-tabs mb-4">
-        {TABS.map((tab) => (
-          <li className="nav-item" key={tab.key}>
-            <button
-              className={`nav-link ${activeTab === tab.key ? "active fw-semibold" : ""}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {/* Contenido de la pestaña activa */}
-      {activeTab === "subjects" && <FailureBySubject />}
-      {activeTab === "density" && <DensityHeatmap />}
-      {activeTab === "districts" && <DistrictFailureMap />}
-    </div>
-  );
+  return <FailureBySubject />;
 }

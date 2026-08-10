@@ -24,7 +24,7 @@ export default function CareerForm() {
     setLoading(true);
     try {
       if (isEdit) {
-        await api.put(`/api/careers/${id}`, { ...form, id: Number(id) });
+        await api.put(`/api/careers/${id}`, { ...form, id });
       } else {
         await api.post('/api/careers', form);
       }

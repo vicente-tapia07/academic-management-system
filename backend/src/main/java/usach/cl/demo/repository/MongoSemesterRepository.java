@@ -143,7 +143,8 @@ public class MongoSemesterRepository {
             ObjectId subjectId = enrollment.getObjectId("subjectId");
             Integer credits = creditsBySubject.getOrDefault(subjectId, 0);
             double[] acc = gradeSumByStudent.computeIfAbsent(studentId, k -> new double[]{0.0, 0.0});
-            acc[0] += grade.getDouble("value") * credits;
+            Object rawValue = grade.get("value");
+            acc[0] += (rawValue instanceof Number number ? number.doubleValue() : 0.0) * credits;
             acc[1] += credits;
         }
 

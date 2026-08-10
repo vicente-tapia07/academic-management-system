@@ -12,7 +12,6 @@ export default function ProfessorCourses() {
   const [sections,   setSections]   = useState([]);
   const [subjects,   setSubjects]   = useState([]);
   const [semesters,  setSemesters]  = useState([]);
-  const [rooms,      setRooms]      = useState([]);
   const [filter,     setFilter]     = useState('active'); // 'active' | 'all'
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
@@ -24,16 +23,14 @@ export default function ProfessorCourses() {
         const me = profRes.data.find((p) => p.usuarioId === user.id);
         if (!me) throw new Error('Profesor no encontrado');
 
-        const [secRes, subRes, semRes, roomRes] = await Promise.all([
+        const [secRes, subRes, semRes] = await Promise.all([
           api.get(`/api/professors/${me.id}/sections`),
           api.get('/api/subjects'),
           api.get('/api/semesters'),
-          api.get('/api/rooms'),
         ]);
         setSections(secRes.data);
         setSubjects(subRes.data);
         setSemesters(semRes.data);
-        setRooms(roomRes.data);
       } catch {
         setError('Error al cargar los cursos.');
       } finally {
@@ -45,7 +42,6 @@ export default function ProfessorCourses() {
 
   const subjectName = (id) => subjects.find((s) => s.id === id)?.name ?? `Asignatura #${id}`;
   const subjectCode = (id) => subjects.find((s) => s.id === id)?.code ?? '---';
-  const roomName    = (id) => rooms.find((r) => r.id === id)?.name ?? (id ? `Sala #${id}` : '—');
   const getSemester = (id) => semesters.find((s) => s.id === id);
 
   const semesterBadge = (sem) => {
@@ -121,7 +117,7 @@ export default function ProfessorCourses() {
                     {s.startTime ? ` ${s.startTime.slice(0,5)}–${s.endTime?.slice(0,5)}` : ''}
                   </div>
                   <div className="text-muted small mb-1">
-                    🚪 {roomName(s.roomId)}
+                    🚪 {s.room?.name ?? '—'}
                   </div>
                   <div className="text-muted small mb-3">
                     👥 {s.totalSeats - s.availableSeats} / {s.totalSeats} inscritos
