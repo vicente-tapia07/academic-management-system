@@ -116,6 +116,14 @@ export default function Navbar() {
                     📈 Reportes
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${active("/mongo")}`}
+                    to="/mongo/reports"
+                  >
+                    🍃 MongoDB
+                  </Link>
+                </li>
               </>
             )}
 
@@ -151,6 +159,14 @@ export default function Navbar() {
                     to="/reports"
                   >
                     📈 Reportes
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${active("/mongo")}`}
+                    to="/mongo/reports"
+                  >
+                    🍃 MongoDB
                   </Link>
                 </li>
               </>
@@ -220,6 +236,14 @@ export default function Navbar() {
                     to="/my-profile"
                   >
                     👤 Mi Perfil
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${active("/mongo")}`}
+                    to="/mongo/search"
+                  >
+                    🍃 Catálogo
                   </Link>
                 </li>
               </>

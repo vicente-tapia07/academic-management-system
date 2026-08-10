@@ -15,8 +15,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * Vista materializada "certificado de notas" (enunciado, tarea 6).
@@ -31,11 +35,58 @@ public class CertificateChangeStreamService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CertificateChangeStreamService.class);
     private static final Set<String> HANDLED_OPERATIONS = Set.of("insert", "update", "replace");
     private static final int RECONNECT_DELAY_MS = 2_000;
+    private static final String CERTIFICATES_COLLECTION = "certificados_notas";
 
     private final MongoCollection<Document> grades;
+    private final MongoCollection<Document> certificates;
 
     public CertificateChangeStreamService(MongoDatabase mongoDatabase) {
         this.grades = mongoDatabase.getCollection("grades");
+        this.certificates = mongoDatabase.getCollection(CERTIFICATES_COLLECTION);
+    }
+
+    /**
+     * Certificado de notas materializado de un estudiante, listo para exponer por API.
+     * Convierte los tipos BSON (ObjectId, Date) a tipos JSON-friendly.
+     */
+    public Map<String, Object> getCertificate(String studentId) {
+        if (!ObjectId.isValid(studentId)) {
+            throw new IllegalArgumentException("studentId no es un ObjectId válido");
+        }
+        Document document = certificates.find(eq("_id", studentId)).first();
+        if (document == null) {
+            return null;
+        }
+        return toJsonSafeMap(document);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object toJsonSafe(Object value) {
+        if (value instanceof Document document) {
+            return toJsonSafeMap(document);
+        }
+        if (value instanceof List<?> list) {
+            List<Object> converted = new ArrayList<>(list.size());
+            for (Object item : list) {
+                converted.add(toJsonSafe(item));
+            }
+            return converted;
+        }
+        if (value instanceof ObjectId objectId) {
+            return objectId.toHexString();
+        }
+        if (value instanceof Date date) {
+            return date.toInstant().toString();
+        }
+        return value;
+    }
+
+    private Map<String, Object> toJsonSafeMap(Document document) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : document.entrySet()) {
+            result.put(entry.getKey(), toJsonSafe(entry.getValue()));
+        }
+        return result;
     }
 
     @PostConstruct
